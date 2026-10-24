@@ -44,6 +44,7 @@ QA helpers (need the dev/prod server running):
 
 ```bash
 node scripts/qa-layout.mjs     # browser assertions: overflow, a11y, reduced motion
+node scripts/qa-perf.mjs       # LCP under Slow 4G + 4x CPU throttling
 node scripts/screenshot.mjs    # writes PNG mockups to screenshots/
 ```
 
