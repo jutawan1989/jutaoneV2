@@ -35,6 +35,8 @@ Open http://localhost:3000 — `/` redirects to a locale based on
 | ------------------- | ---------------------------------------------- |
 | `npm run dev`       | Dev server                                     |
 | `npm run doctor`    | Probe every integration (GitHub, Supabase, Meta, Chip, Cloudflare) and report pass/fail |
+| `npm run build:worker` | Build the Worker with no secrets in the bundle, then scan for leaks |
+| `npm run deploy`    | Safe build + scan, then deploy to Cloudflare Workers |
 | `npm run migrate`   | Apply `supabase/schema.sql` and verify tables, RLS, indexes |
 | `npm run assets`    | Regenerate `public/assets/*.svg` from `lib/brand.ts` |
 | `npm run build`     | Production build                               |
@@ -170,18 +172,26 @@ purchase and redirects to Chip's hosted checkout; `/api/topup/callback` verifies
 the RSA signature against `CHIP_PUBLIC_KEY` and rejects unsigned callbacks in
 production.
 
-## Deploying to Cloudflare
+## Building and deploying the Worker
 
-The brief says Cloudflare Pages, but Pages requires every dynamic route on the
-edge runtime and our API routes need `node:crypto` for visitor hashing and RSA
-signature checks. The supported path is `@opennextjs/cloudflare`, which deploys
-to Cloudflare Workers with static assets — same network, free `*.workers.dev`
-URL, and `nodejs_compat` provides Node's crypto. Say the word if you want Pages
-specifically; it means replacing crypto with WebCrypto and re-verifying the Chip
-signature checks.
+**Never build with secrets present in `.env.local`.** OpenNext copies the whole
+file into `.open-next/cloudflare/next-env.mjs`, which is bundled into the worker:
+those values then live inside the deployed script, where they sit behind Worker
+secrets as a runtime fallback. Rotating a key does not remove the old value from
+the artefact.
+
+Use the wrapper, which builds with only `NEXT_PUBLIC_*` vars and fails if any
+secret reaches the bundle or the public assets:
 
 ```bash
-# secrets (once per environment)
+npm run build:worker   # safe build + secret scan
+npm run deploy         # safe build, scan, then deploy
+```
+
+Runtime secrets go in with `wrangler secret put` (or the dashboard field), never
+through the build:
+
+```bash
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put META_AI_API_KEY
@@ -191,17 +201,30 @@ npx wrangler secret put CHIP_API_KEY
 npx wrangler secret put CHIP_BRAND_ID
 npx wrangler secret put CHIP_PUBLIC_KEY
 npx wrangler secret put CHIP_TEST_EMAIL
-npx wrangler secret put VISITOR_HASH_SALT
-
-npm run preview   # build + run in the local Workers runtime
-npm run deploy    # build + deploy (staging only, see below)
 ```
 
-`wrangler.jsonc` already sets `nodejs_compat` and the assets binding. For local
-Workers preview, copy the runtime vars into `.dev.vars` (gitignored).
+`wrangler.jsonc` sets `nodejs_compat` and the assets binding. Cloudflare Pages
+was rejected: Pages requires every dynamic route on the edge runtime and these
+API routes need `node:crypto` for visitor hashing and RSA signature checks.
+
+### Staging deployment
+
+`https://jutaonev2.jutawan1989.workers.dev`
 
 Staging only: **no production deploy without written approval from Linda and
 Boss.**
+
+Staging currently runs **without** Supabase, because the only project available
+is in Seoul and Decision 1 requires Singapore. Consequences, verified against the
+live deployment:
+
+- The demo works and captions come from the local template (no AI cost).
+- **The 2-attempt limit is not enforced** — without a shared store each Worker
+  isolate counts from zero, so six consecutive attempts all returned `200`.
+- **The kill switch cannot trip** — daily spend always reads as `0`.
+
+The memory fallback is correct code, but it is not a security control. Do not
+share the staging URL publicly until the Singapore project is wired up.
 
 ## Compliance
 
