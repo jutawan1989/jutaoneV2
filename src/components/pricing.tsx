@@ -16,19 +16,18 @@ export function Pricing({
   variant: Variant;
 }) {
   return (
-    <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6">
-      <div className="grid gap-8 lg:grid-cols-[1fr_0.85fr] lg:items-center">
+    <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-20 sm:px-6">
+      <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
         <div>
-          <h2 className="text-2xl font-extrabold text-white sm:text-3xl">{dict.pricing.title}</h2>
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
+            {dict.pricing.title}
+          </h2>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">{dict.pricing.subtitle}</p>
 
-          <ul className="mt-6 space-y-2.5">
+          <ul className="mt-7 space-y-3">
             {dict.pricing.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-start gap-2.5 text-sm text-silver">
-                <span
-                  aria-hidden
-                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-brand/15 text-[10px] font-bold text-brand"
-                >
+              <li key={bullet} className="flex items-start gap-3 text-sm text-silver">
+                <span aria-hidden className="mt-0.5 text-xs font-semibold text-brand">
                   ✓
                 </span>
                 {bullet}
@@ -38,13 +37,15 @@ export function Pricing({
         </div>
 
         <div className="card p-6">
-          <p className="text-xs font-semibold tracking-wide text-muted uppercase">
+          <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
             {dict.pricing.tokenName}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-white">{price.display}</p>
-          <p className="mt-1 text-xs text-muted">{dict.pricing.priceLabel}</p>
+          <p className="mt-3 text-4xl font-semibold tracking-[-0.02em] text-white tabular-nums">
+            {price.display}
+          </p>
+          <p className="mt-1.5 text-xs text-muted">{dict.pricing.priceLabel}</p>
 
-          <div className="mt-5">
+          <div className="mt-6 border-t border-line pt-6">
             <TopUpButton
               locale={locale}
               variant={variant}

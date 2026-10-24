@@ -50,20 +50,22 @@ export function TopUpPanel({
   }
 
   return (
-    <div className="card mx-auto w-full max-w-lg p-6">
-      <h1 className="text-2xl font-extrabold text-white">{dict.topup.title}</h1>
+    <div className="card mx-auto w-full max-w-lg p-6 sm:p-8">
+      <h1 className="text-xl font-semibold tracking-[-0.02em] text-white sm:text-2xl">
+        {dict.topup.title}
+      </h1>
       <p className="mt-2 text-sm text-muted">{dict.topup.subtitle}</p>
 
-      <dl className="mt-6 space-y-3 text-sm">
-        <div className="flex items-center justify-between border-b border-line/70 pb-3">
+      <dl className="mt-7 space-y-3 text-sm">
+        <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.amount}</dt>
-          <dd className="font-bold text-white">{priceDisplay}</dd>
+          <dd className="font-semibold text-white tabular-nums">{priceDisplay}</dd>
         </div>
-        <div className="flex items-center justify-between border-b border-line/70 pb-3">
+        <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.tokens}</dt>
-          <dd className="font-semibold text-brand">{tokenName}</dd>
+          <dd className="font-medium text-silver">{tokenName}</dd>
         </div>
-        <div className="flex items-center justify-between border-b border-line/70 pb-3">
+        <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.status}</dt>
           <dd className="text-right text-silver">
             {state === "done" ? format(dict.topup.finished, { tokenName }) : dict.topup.statusMock}

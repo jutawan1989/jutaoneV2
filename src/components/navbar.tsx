@@ -14,7 +14,10 @@ export function LanguageSwitcher({
   label: string;
 }) {
   return (
-    <nav aria-label={label} className="flex items-center gap-1 rounded-full border border-line/80 bg-white/[0.03] p-1">
+    <nav
+      aria-label={label}
+      className="flex items-center gap-0.5 rounded-md border border-line bg-white/[0.02] p-0.5"
+    >
       {LOCALES.map((candidate) => {
         const active = candidate === locale;
         return (
@@ -23,8 +26,8 @@ export function LanguageSwitcher({
             href={localePath(candidate, pathSuffix)}
             hrefLang={LOCALE_META[candidate].hreflang}
             aria-current={active ? "true" : undefined}
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
-              active ? "bg-brand text-ink" : "text-muted hover:text-white"
+            className={`rounded-[5px] px-2.5 py-1 text-xs font-medium transition-colors ${
+              active ? "bg-surface-2 text-white" : "text-muted hover:text-white"
             }`}
           >
             {LOCALE_META[candidate].short}
@@ -47,11 +50,11 @@ export function Navbar({
   pathSuffix?: string;
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-ink/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-line bg-ink/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo locale={locale} />
 
-        <nav className="hidden items-center gap-7 text-sm font-medium text-muted md:flex">
+        <nav className="hidden items-center gap-8 text-sm text-muted md:flex">
           <Link href="#demo" className="transition-colors hover:text-white">
             {dict.nav.demo}
           </Link>
@@ -65,7 +68,7 @@ export function Navbar({
 
         <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher locale={locale} pathSuffix={pathSuffix} label={dict.nav.languageLabel} />
-          <Link href="#pricing" className="btn-brand hidden px-4 py-2 text-sm sm:inline-flex">
+          <Link href="#pricing" className="btn-brand hidden px-3.5 py-2 sm:inline-flex">
             {dict.nav.cta.replace("{price}", price.display)}
           </Link>
         </div>

@@ -13,20 +13,20 @@
 export type LogoVariant = "dark" | "light";
 
 export const BRAND_COLORS = {
-  /** Bright stops: legible on the dark UI. */
-  darkTop: "#8FDCFF",
-  darkMid: "#3FA9F5",
-  darkDeep: "#1E5FBF",
+  /** Corporate blue stops: legible on the dark UI without reading as neon. */
+  darkTop: "#93C5FD",
+  darkMid: "#3B82F6",
+  darkDeep: "#1D4ED8",
   /** Deep stops: the corporate gradient on light backgrounds. */
-  lightTop: "#4FB3F5",
-  lightMid: "#1C7BD6",
-  lightDeep: "#0A3E8C",
-  globeRim: "#7FD3FF",
+  lightTop: "#3B82F6",
+  lightMid: "#1D4ED8",
+  lightDeep: "#0F2E6B",
+  globeRim: "#60A5FA",
   globeCore: "#0B2A5B",
-  globeMid: "#134E9C",
-  land: "#2F8F5B",
-  landLight: "#46B072",
-  net: "#8FE3FF",
+  globeMid: "#1E40AF",
+  land: "#2F7A5B",
+  landLight: "#4A9E77",
+  net: "#93C5FD",
   wordmark: "#12345F",
   tagline: "#1F3D63",
 } as const;
@@ -144,7 +144,7 @@ export function buildLogoMark(variant: LogoVariant, idPrefix = "jo-logo"): strin
     `<stop offset="1" stop-color="#061A3A"/>`,
     `</radialGradient>`,
     `<radialGradient id="${idPrefix}-halo" cx="50%" cy="50%" r="50%">`,
-    `<stop offset="0.72" stop-color="${BRAND_COLORS.globeRim}" stop-opacity="0.55"/>`,
+    `<stop offset="0.72" stop-color="${BRAND_COLORS.globeRim}" stop-opacity="0.28"/>`,
     `<stop offset="1" stop-color="${BRAND_COLORS.globeRim}" stop-opacity="0"/>`,
     `</radialGradient>`,
     `<clipPath id="${idPrefix}-clip"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>`,
