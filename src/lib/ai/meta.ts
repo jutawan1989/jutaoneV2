@@ -4,9 +4,15 @@ import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionRe
  * Meta's Llama API exposes an OpenAI-compatible chat completions endpoint.
  * The base URL and model are configurable so the adapter survives a model
  * change without touching call sites.
+ *
+ * Defaults match the team key in use: `api.llama.com` rejects it with
+ * `invalid_api_key`, so the old default silently degraded every caption to the
+ * local template whenever only `META_AI_API_KEY` was set. The default model is
+ * the non-contributor tier; the `-contributor` variants contribute prompts to
+ * training and must be selected deliberately via `META_AI_MODEL`.
  */
-const DEFAULT_BASE_URL = "https://api.llama.com/compat/v1";
-const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
+const DEFAULT_BASE_URL = "https://api.meta.ai/v1";
+const DEFAULT_MODEL = "muse-spark-1.3";
 
 export function metaConfigured(): boolean {
   return Boolean(process.env.META_AI_API_KEY);
