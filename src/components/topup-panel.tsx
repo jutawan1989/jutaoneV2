@@ -61,7 +61,7 @@ export function TopUpPanel({
         </div>
         <div className="flex items-center justify-between border-b border-line/70 pb-3">
           <dt className="text-muted">{dict.topup.tokens}</dt>
-          <dd className="font-semibold text-gold">{tokenName}</dd>
+          <dd className="font-semibold text-brand">{tokenName}</dd>
         </div>
         <div className="flex items-center justify-between border-b border-line/70 pb-3">
           <dt className="text-muted">{dict.topup.status}</dt>
@@ -82,7 +82,7 @@ export function TopUpPanel({
           type="button"
           onClick={simulatePayment}
           disabled={state === "busy"}
-          className="btn-gold mt-6 w-full"
+          className="btn-brand mt-6 w-full"
         >
           {dict.topup.finish}
         </button>

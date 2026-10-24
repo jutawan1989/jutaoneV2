@@ -34,6 +34,7 @@ Open http://localhost:3000 — `/` redirects to a locale based on
 | Command             | Purpose                                        |
 | ------------------- | ---------------------------------------------- |
 | `npm run dev`       | Dev server                                     |
+| `npm run assets`    | Regenerate `public/assets/*.svg` from `lib/brand.ts` |
 | `npm run build`     | Production build                               |
 | `npm run lint`      | ESLint (Next config)                           |
 | `npm run typecheck` | `tsc --noEmit`                                 |
@@ -44,8 +45,10 @@ QA helpers (need the dev/prod server running):
 
 ```bash
 node scripts/qa-layout.mjs     # browser assertions: overflow, a11y, reduced motion
+node scripts/qa-logo.mjs       # structural checks on the generated logo SVGs
 node scripts/qa-perf.mjs       # LCP under Slow 4G + 4x CPU throttling
 node scripts/screenshot.mjs    # writes PNG mockups to screenshots/
+node scripts/render-logo.mjs   # writes logo previews to screenshots/
 ```
 
 ## Architecture
@@ -125,9 +128,18 @@ locale, region, A/B variant, UTM params and a pseudonymous visitor hash — no P
 
 ### Globe (UI)
 
-The "O" in JutaOne.Biz is an inline SVG globe: ~3KB, no video/GIF/canvas, and
-only `transform` animates. `prefers-reduced-motion` stops it (verified in
-`scripts/qa-layout.mjs`).
+The brand mark is **JOB**, where the O is a globe. Geometry lives in
+`src/lib/brand.ts`; the React component (`components/logo.tsx`) and the files in
+`public/assets/` are both generated from it, and `tests/brand.test.ts` fails if
+an asset is stale — run `npm run assets` after editing the mark.
+
+Two variants: `logo-mark.svg` (bright gradient, for the dark UI) and
+`logo-mark-light.svg` (deeper corporate blue, for white backgrounds). Lockups
+add `JUTAONE.BIZ` plus the tagline.
+
+The globe spins with a single CSS `rotate` transform inside the circular clip,
+which is seamless and costs ~3.4KB of markup — no video, GIF or canvas.
+`prefers-reduced-motion` stops it, verified by `scripts/qa-layout.mjs`.
 
 ## Supabase setup
 

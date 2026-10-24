@@ -47,7 +47,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
     <>
       <Navbar locale={locale} dict={dict} price={price} />
       <main id="main">
-        <Hero dict={dict} price={price} />
+        <Hero dict={dict} price={price} locale={locale} />
         <Billboard dict={dict} />
         <AdGenerator
           locale={locale}

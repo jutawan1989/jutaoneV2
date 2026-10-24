@@ -19,7 +19,7 @@ export function Billboard({ dict }: { dict: Dictionary }) {
               aria-hidden={index >= cards.length ? true : undefined}
               className="flex shrink-0 items-center gap-2 rounded-full border border-line/80 bg-surface/70 px-4 py-2 text-sm text-silver/90"
             >
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
               {text}
             </span>
           ))}

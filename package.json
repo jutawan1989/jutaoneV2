@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "assets": "node scripts/build-assets.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

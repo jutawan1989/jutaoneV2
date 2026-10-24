@@ -24,7 +24,7 @@ export function LanguageSwitcher({
             hrefLang={LOCALE_META[candidate].hreflang}
             aria-current={active ? "true" : undefined}
             className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
-              active ? "bg-gold text-ink" : "text-muted hover:text-white"
+              active ? "bg-brand text-ink" : "text-muted hover:text-white"
             }`}
           >
             {LOCALE_META[candidate].short}
@@ -65,7 +65,7 @@ export function Navbar({
 
         <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher locale={locale} pathSuffix={pathSuffix} label={dict.nav.languageLabel} />
-          <Link href="#pricing" className="btn-gold hidden px-4 py-2 text-sm sm:inline-flex">
+          <Link href="#pricing" className="btn-brand hidden px-4 py-2 text-sm sm:inline-flex">
             {dict.nav.cta.replace("{price}", price.display)}
           </Link>
         </div>

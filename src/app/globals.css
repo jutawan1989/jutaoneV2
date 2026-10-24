@@ -6,8 +6,9 @@
   --color-surface: #101725;
   --color-surface-2: #151d2e;
   --color-line: #212c40;
-  --color-gold: #f2c14b;
-  --color-gold-soft: #ffdf94;
+  --color-brand: #3fa9f5;
+  --color-brand-soft: #8fdcff;
+  --color-brand-deep: #1e5fbf;
   --color-silver: #ccd6e6;
   --color-muted: #8e9cb3;
   --font-sans:
@@ -37,79 +38,83 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(60rem 40rem at 12% -10%, rgba(242, 193, 75, 0.14), transparent 60%),
-    radial-gradient(50rem 40rem at 95% 8%, rgba(76, 124, 255, 0.16), transparent 62%),
-    radial-gradient(40rem 30rem at 50% 110%, rgba(242, 193, 75, 0.07), transparent 60%);
+    radial-gradient(60rem 40rem at 12% -10%, rgba(63, 169, 245, 0.16), transparent 60%),
+    radial-gradient(50rem 40rem at 95% 8%, rgba(30, 95, 191, 0.20), transparent 62%),
+    radial-gradient(40rem 30rem at 50% 110%, rgba(63, 169, 245, 0.08), transparent 60%);
 }
 
 ::selection {
-  background: rgba(242, 193, 75, 0.28);
+  background: rgba(63, 169, 245, 0.30);
   color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--color-brand);
   outline-offset: 3px;
   border-radius: 6px;
 }
 
-.card {
-  border: 1px solid var(--color-line);
-  border-radius: 1.25rem;
-  background: linear-gradient(180deg, rgba(21, 29, 46, 0.9), rgba(12, 17, 27, 0.9));
-  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(8px);
-}
+/* Component classes live in the components layer so Tailwind utilities
+   (hidden, w-full, px-4, ...) always win over them. */
+@layer components {
+  .card {
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    background: linear-gradient(180deg, rgba(21, 29, 46, 0.9), rgba(12, 17, 27, 0.9));
+    box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(8px);
+  }
 
-.btn-gold {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 999px;
-  padding: 0.85rem 1.6rem;
-  font-weight: 700;
-  color: #17130a;
-  background: linear-gradient(180deg, var(--color-gold-soft), var(--color-gold));
-  box-shadow:
-    0 10px 30px -12px rgba(242, 193, 75, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    filter 160ms ease;
-}
+  .btn-brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.85rem 1.6rem;
+    font-weight: 700;
+    color: #04121f;
+    background: linear-gradient(180deg, #a8e4ff, var(--color-brand));
+    box-shadow:
+      0 10px 30px -12px rgba(63, 169, 245, 0.75),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease,
+      filter 160ms ease;
+  }
 
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 999px;
-  padding: 0.85rem 1.5rem;
-  font-weight: 600;
-  border: 1px solid var(--color-line);
-  color: var(--color-silver);
-  background: rgba(255, 255, 255, 0.02);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease;
-}
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.85rem 1.5rem;
+    font-weight: 600;
+    border: 1px solid var(--color-line);
+    color: var(--color-silver);
+    background: rgba(255, 255, 255, 0.02);
+    transition:
+      border-color 160ms ease,
+      background 160ms ease;
+  }
 
-.btn-gold:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-}
+  .btn-brand:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
 
-.btn-gold:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
+  .btn-brand:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
 
-.btn-ghost:hover {
-  border-color: rgba(242, 193, 75, 0.5);
-  background: rgba(242, 193, 75, 0.08);
+  .btn-ghost:hover {
+    border-color: rgba(63, 169, 245, 0.55);
+    background: rgba(63, 169, 245, 0.10);
+  }
 }
 
 /* ---------- Moving billboard ---------- */
@@ -140,33 +145,20 @@ body::before {
   }
 }
 
-/* ---------- Spinning globe ---------- */
+/* ---------- Logo globe ---------- */
 
-.globe__meridians {
-  animation: globe-drift 14s linear infinite;
+.jo-globe__spin {
+  transform-box: view-box;
+  animation: jo-globe-spin 18s linear infinite;
   will-change: transform;
 }
 
-@keyframes globe-drift {
+@keyframes jo-globe-spin {
   from {
-    transform: translate3d(0, 0, 0);
+    transform: rotate(0deg);
   }
   to {
-    transform: translate3d(-64px, 0, 0);
-  }
-}
-
-.globe__sheen {
-  animation: sheen 9s ease-in-out infinite;
-}
-
-@keyframes sheen {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 0.7;
+    transform: rotate(360deg);
   }
 }
 
@@ -239,9 +231,8 @@ body::before {
     scroll-behavior: auto;
   }
 
+  .jo-globe__spin,
   .marquee__track,
-  .globe__meridians,
-  .globe__sheen,
   .signal-row,
   .signal-live,
   .widget-float,

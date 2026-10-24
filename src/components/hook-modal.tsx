@@ -82,7 +82,7 @@ export function HookModal({
           ✕
         </button>
 
-        <p className="text-xs font-semibold tracking-wide text-gold-soft uppercase">{copy.label}</p>
+        <p className="text-xs font-semibold tracking-wide text-brand-soft uppercase">{copy.label}</p>
         <h2 id="hook-title" className="mt-2 pr-8 text-2xl font-extrabold text-white">
           {copy.title}
         </h2>
@@ -90,7 +90,7 @@ export function HookModal({
 
         <div className="mt-5 flex items-baseline justify-between rounded-xl border border-line/80 bg-ink/60 px-4 py-3">
           <span className="text-sm text-muted">{dict.pricing.tokenName}</span>
-          <span className="text-xl font-extrabold text-gold">{priceDisplay}</span>
+          <span className="text-xl font-extrabold text-brand">{priceDisplay}</span>
         </div>
 
         <div className="mt-5">
@@ -98,7 +98,7 @@ export function HookModal({
             locale={locale}
             variant={variant}
             errorText={dict.generator.errorGeneric}
-            className="btn-gold w-full"
+            className="btn-brand w-full"
           >
             {format(copy.cta, values)}
           </TopUpButton>

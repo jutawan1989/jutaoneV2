@@ -27,7 +27,7 @@ export function Pricing({
               <li key={bullet} className="flex items-start gap-2.5 text-sm text-silver">
                 <span
                   aria-hidden
-                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold/15 text-[10px] font-bold text-gold"
+                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-brand/15 text-[10px] font-bold text-brand"
                 >
                   ✓
                 </span>
@@ -49,7 +49,7 @@ export function Pricing({
               locale={locale}
               variant={variant}
               errorText={dict.generator.errorGeneric}
-              className="btn-gold w-full"
+              className="btn-brand w-full"
             >
               {dict.pricing.cta}
             </TopUpButton>

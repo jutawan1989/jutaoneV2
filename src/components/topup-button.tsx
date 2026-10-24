@@ -11,7 +11,7 @@ import type { Variant } from "@/lib/analytics/variant";
 export function TopUpButton({
   locale,
   variant,
-  className = "btn-gold w-full",
+  className = "btn-brand w-full",
   children,
   errorText,
   disabled = false,

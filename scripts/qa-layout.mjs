@@ -88,7 +88,7 @@ for (const [locale, country, height] of [
   await page.goto(`${baseUrl}/ms`, { waitUntil: "networkidle" });
   const animations = await page.evaluate(() => {
     const track = document.querySelector(".marquee__track");
-    const meridians = document.querySelector(".globe__meridians");
+    const meridians = document.querySelector(".jo-globe__spin");
     return {
       marquee: track ? getComputedStyle(track).animationName : "missing",
       globe: meridians ? getComputedStyle(meridians).animationName : "missing",

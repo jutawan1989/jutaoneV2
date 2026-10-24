@@ -36,7 +36,7 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
         <div className="order-2 lg:order-1">
           <h2 className="text-2xl font-extrabold text-white sm:text-3xl">{dict.gold.title}</h2>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">{dict.gold.subtitle}</p>
-          <p className="mt-5 max-w-lg rounded-xl border border-gold/25 bg-gold/[0.06] p-4 text-sm leading-relaxed text-gold-soft">
+          <p className="mt-5 max-w-lg rounded-xl border border-brand/25 bg-brand/[0.06] p-4 text-sm leading-relaxed text-brand-soft">
             {dict.gold.note}
           </p>
         </div>
@@ -76,9 +76,9 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
                 ))}
               </ul>
 
-              <div className="mt-4 flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold" aria-hidden />
-                <p className="text-[11px] leading-snug font-semibold text-gold-soft">
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-brand/30 bg-brand/10 px-3 py-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden />
+                <p className="text-[11px] leading-snug font-semibold text-brand-soft">
                   {dict.gold.disclaimer}
                 </p>
               </div>

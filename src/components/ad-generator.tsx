@@ -158,7 +158,7 @@ export function AdGenerator({
               rows={4}
               disabled={demoDisabled}
               aria-describedby="product-hint"
-              className="mt-2 w-full resize-none rounded-xl border border-line bg-ink-2/80 px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-gold/60 focus:outline-none disabled:opacity-60"
+              className="mt-2 w-full resize-none rounded-xl border border-line bg-ink-2/80 px-4 py-3 text-sm text-white placeholder:text-muted/70 focus:border-brand/60 focus:outline-none disabled:opacity-60"
             />
             <div className="mt-1 flex items-center justify-between text-xs text-muted">
               <span id="product-hint">{dict.generator.hint}</span>
@@ -168,7 +168,7 @@ export function AdGenerator({
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={submitDisabled} className="btn-gold">
+              <button type="submit" disabled={submitDisabled} className="btn-brand">
                 {loading ? dict.generator.generating : dict.generator.submit}
               </button>
 
@@ -202,7 +202,7 @@ export function AdGenerator({
               <button
                 type="button"
                 onClick={copyCaption}
-                className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-silver transition-colors hover:border-gold/50 hover:text-white"
+                className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-silver transition-colors hover:border-brand/50 hover:text-white"
               >
                 {copied ? dict.generator.copied : dict.generator.copy}
               </button>
@@ -224,7 +224,7 @@ export function AdGenerator({
                 max: maxAttempts,
               })}
             </span>
-            <span className="rounded-full bg-gold/10 px-2 py-0.5 text-gold-soft">
+            <span className="rounded-full bg-brand/10 px-2 py-0.5 text-brand-soft">
               {dict.pricing.tokenName}
             </span>
           </div>
