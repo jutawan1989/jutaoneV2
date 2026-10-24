@@ -35,16 +35,21 @@ function loadEnv(path) {
 const env = loadEnv(join(repoRoot, ".env.local"));
 
 const results = [];
-function record(area, ok, detail) {
-  results.push({ area, ok, detail });
+/**
+ * Levels: pass | warn | fail. `warn` means a known, accepted exception — it is
+ * still printed with its reason and is not counted as a pass, so the output
+ * cannot be read as "everything is compliant".
+ */
+function record(area, level, detail) {
+  results.push({ area, level, detail });
 }
 
 async function probe(area, fn) {
   try {
-    const { ok, detail } = await fn();
-    record(area, ok, detail);
+    const { ok, detail, warn } = await fn();
+    record(area, warn ? "warn" : ok ? "pass" : "fail", detail);
   } catch (error) {
-    record(area, false, error.message.slice(0, 160));
+    record(area, "fail", error.message.slice(0, 160));
   }
 }
 
@@ -54,23 +59,32 @@ const REQUIRED = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "VISITOR_HASH_SALT",
   "CHIP_API_KEY",
-  "CHIP_BRAND_ID",
   "CHIP_PUBLIC_KEY",
   "META_AI_API_KEY",
   "META_AI_BASE_URL",
   "META_AI_MODEL",
 ];
+// Optional while Chip.Asia brand approval is pending: top-up stays in sandbox.
+const PENDING = ["CHIP_BRAND_ID"];
+
 const missing = REQUIRED.filter((key) => !env[key]);
 record(
   "env: required vars",
-  missing.length === 0,
+  missing.length === 0 ? "pass" : "fail",
   missing.length === 0 ? "all present" : `missing ${missing.join(", ")}`,
+);
+
+const pending = PENDING.filter((key) => !env[key]);
+record(
+  "env: pending vars",
+  pending.length === 0 ? "pass" : "warn",
+  pending.length === 0 ? "all present" : `awaiting approval: ${pending.join(", ")} (top-up stays sandbox)`,
 );
 
 const salt = env.VISITOR_HASH_SALT ?? "";
 record(
   "env: visitor salt strength",
-  salt.length >= 16,
+  salt.length >= 16 ? "pass" : "fail",
   salt.length >= 16 ? `${salt.length} chars` : "too short, use 32+ random chars",
 );
 
@@ -121,9 +135,19 @@ await probe("supabase: region (PDPA / UU PDP)", async () => {
   if (!response.ok) return { ok: false, detail: `HTTP ${response.status}` };
   const project = await response.json();
   const inSingapore = project.region === "ap-southeast-1";
+  if (inSingapore) {
+    return { ok: true, detail: `${project.name} region=${project.region}` };
+  }
+  const accepted = env.DOCTOR_ACCEPT_REGION === "1";
   return {
-    ok: inSingapore,
-    detail: `${project.name} region=${project.region}${inSingapore ? "" : " — must be ap-southeast-1"}`,
+    ok: false,
+    // Accepted for staging only; never reported as a pass.
+    warn: accepted,
+    detail:
+      `${project.name} region=${project.region} — ` +
+      (accepted
+        ? "accepted for STAGING ONLY, must move to ap-southeast-1 before public launch"
+        : "must be ap-southeast-1"),
   };
 });
 
@@ -171,7 +195,9 @@ await probe("meta ai: key + billing", async () => {
 
 // --- Chip.Asia -------------------------------------------------------------
 await probe("chip: api key + brand", async () => {
-  if (!env.CHIP_BRAND_ID) return { ok: false, detail: "CHIP_BRAND_ID not set" };
+  if (!env.CHIP_BRAND_ID) {
+    return { ok: false, warn: true, detail: "CHIP_BRAND_ID pending approval — top-up stays sandbox" };
+  }
   const base = (env.CHIP_API_BASE_URL || "https://gate.chip-in.asia/api/v1").replace(/\/$/, "");
   const response = await fetch(`${base}/purchases/`, {
     method: "POST",
@@ -215,11 +241,15 @@ await probe("cloudflare: api token", async () => {
 });
 
 // --- report ----------------------------------------------------------------
-let failures = 0;
+const label = { pass: "PASS", warn: "WARN", fail: "FAIL" };
+const failures = results.filter((entry) => entry.level === "fail").length;
+const warnings = results.filter((entry) => entry.level === "warn").length;
+const passes = results.filter((entry) => entry.level === "pass").length;
+
 for (const entry of results) {
-  if (!entry.ok) failures += 1;
-  console.log(`${entry.ok ? "PASS" : "FAIL"}  ${entry.area} — ${entry.detail}`);
+  console.log(`${label[entry.level]}  ${entry.area} — ${entry.detail}`);
 }
 
-console.log(`\n${results.length - failures}/${results.length} checks passed`);
+console.log(`\n${passes}/${results.length} passed, ${warnings} warning(s), ${failures} failed`);
+if (warnings > 0) console.log("WARN items are accepted for staging and must be resolved before public launch.");
 if (failures > 0) process.exitCode = 1;

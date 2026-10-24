@@ -214,17 +214,22 @@ API routes need `node:crypto` for visitor hashing and RSA signature checks.
 Staging only: **no production deploy without written approval from Linda and
 Boss.**
 
-Staging currently runs **without** Supabase, because the only project available
-is in Seoul and Decision 1 requires Singapore. Consequences, verified against the
-live deployment:
+Staging runs against the Seoul project (`ap-northeast-2`), accepted by Boss for
+staging only because Supabase cannot change a project's region. Data written
+there is pseudonymous (salted SHA-256 hashes, locale, region, variant) — no IP
+address, no device identifier, no PII — but **PDPA / UU PDP compliance still
+requires Singapore before public launch**.
 
-- The demo works and captions come from the local template (no AI cost).
-- **The 2-attempt limit is not enforced** — without a shared store each Worker
-  isolate counts from zero, so six consecutive attempts all returned `200`.
-- **The kill switch cannot trip** — daily spend always reads as `0`.
+Verified on the live deployment with Supabase wired up:
 
-The memory fallback is correct code, but it is not a security control. Do not
-share the staging URL publicly until the Singapore project is wired up.
+- Attempts 1-2 return `200`, attempts 3-6 return `429 visitor_limit`.
+- Events land in `events` with locale, region, variant and hooks.
+- No row contains a raw IP or device value (all hashes are 64-char hex).
+- The kill switch can now read real spend; it sat at `0` while Meta AI was
+  returning 402 and captions came from the free local template.
+
+`npm run doctor` prints `WARN` for both accepted staging exceptions and only
+`PASS` when a check truly passes, so the output cannot be misread as compliant.
 
 ## Compliance
 
