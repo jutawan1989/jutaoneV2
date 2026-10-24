@@ -11,8 +11,10 @@
   },
   "observability": {
     "enabled": true
-  },
-  "vars": {
-    "NEXT_PUBLIC_SITE_URL": "https://jutaonev2.jutawan1989.workers.dev"
   }
+  // NEXT_PUBLIC_SITE_URL is intentionally NOT set here: it is inlined at build
+  // time by Next.js, so a copy in this file would silently drift from the value
+  // used to build canonical URLs, hreflang, robots.txt and sitemap.xml.
+  // Set it in .env.local (or the deploy shell) instead, and confirm the real
+  // workers.dev URL after the first deploy.
 }

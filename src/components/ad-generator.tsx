@@ -210,7 +210,12 @@ export function AdGenerator({
           </div>
 
           {caption ? (
-            <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-silver">{caption}</p>
+            <p
+              aria-live="polite"
+              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-silver"
+            >
+              {caption}
+            </p>
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <p className="max-w-xs text-center text-sm text-muted/70">{dict.generator.placeholder}</p>

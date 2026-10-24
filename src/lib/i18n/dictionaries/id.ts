@@ -129,10 +129,6 @@ export const id: Dictionary = {
   footer: {
     tagline: "Teks iklan AI untuk pedagang kecil di Indonesia dan Malaysia.",
     rights: "© {year} JutaOne.Biz. Hak cipta dilindungi.",
-    links: {
-      privacy: "Privasi",
-      terms: "Ketentuan",
-    },
   },
   a11y: {
     skipToContent: "Lompat ke konten",

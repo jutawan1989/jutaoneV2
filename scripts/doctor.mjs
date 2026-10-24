@@ -74,6 +74,26 @@ record(
   salt.length >= 16 ? `${salt.length} chars` : "too short, use 32+ random chars",
 );
 
+// Canonical/hreflang/robots/sitemap/Chip redirects are all derived from this,
+// so a wrong value silently misconfigures every public URL.
+await probe("env: public site url", async () => {
+  const raw = env.NEXT_PUBLIC_SITE_URL ?? "";
+  if (!raw) return { ok: false, detail: "not set — canonical URLs will fall back to localhost" };
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return { ok: false, detail: `not a valid URL: ${raw}` };
+  }
+  if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+    return { ok: false, detail: `${raw} is local, not a staging origin` };
+  }
+  if (parsed.protocol !== "https:") {
+    return { ok: false, detail: `${raw} must use https` };
+  }
+  return { ok: true, detail: raw };
+});
+
 // --- GitHub ----------------------------------------------------------------
 await probe("github: token + repo", async () => {
   const response = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO}`, {

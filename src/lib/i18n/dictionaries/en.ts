@@ -128,10 +128,6 @@ export const en = {
   footer: {
     tagline: "AI ad copy for small merchants in Malaysia and Indonesia.",
     rights: "© {year} JutaOne.Biz. All rights reserved.",
-    links: {
-      privacy: "Privacy",
-      terms: "Terms",
-    },
   },
   a11y: {
     skipToContent: "Skip to content",

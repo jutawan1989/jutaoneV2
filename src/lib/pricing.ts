@@ -49,8 +49,3 @@ const PRICES: Record<Region, Price> = {
 export function getPrice(region: Region): Price {
   return PRICES[region] ?? PRICES.OTHER;
 }
-
-/** Currency name shown in copy, e.g. "RM (MYR)". */
-export function currencyLabel(price: Price): string {
-  return price.currency;
-}

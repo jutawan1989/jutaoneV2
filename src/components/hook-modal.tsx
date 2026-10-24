@@ -33,6 +33,7 @@ export function HookModal({
   onClose,
 }: HookModalProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const copy = variant === "A" ? dict.hook.variantA : dict.hook.variantB;
   const values = { price: priceDisplay, tokenName, currency };
 
@@ -45,8 +46,41 @@ export function HookModal({
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
 
+    function focusable(): HTMLElement[] {
+      const root = dialogRef.current;
+      if (!root) return [];
+      return Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) => element.offsetParent !== null || element === document.activeElement,
+      );
+    }
+
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      // Keep focus inside the dialog: this is what `aria-modal` promises.
+      const items = focusable();
+      if (items.length === 0) return;
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      const inside = Boolean(dialogRef.current?.contains(active));
+
+      if (event.shiftKey && (active === first || !inside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !inside)) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener("keydown", onKeyDown);
 
@@ -67,6 +101,7 @@ export function HookModal({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="hook-title"
