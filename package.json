@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "assets": "node scripts/build-assets.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "doctor": "node scripts/doctor.mjs",
+    "migrate": "node scripts/migrate-supabase.mjs --verify"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

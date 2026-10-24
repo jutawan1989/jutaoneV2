@@ -34,6 +34,8 @@ Open http://localhost:3000 — `/` redirects to a locale based on
 | Command             | Purpose                                        |
 | ------------------- | ---------------------------------------------- |
 | `npm run dev`       | Dev server                                     |
+| `npm run doctor`    | Probe every integration (GitHub, Supabase, Meta, Chip, Cloudflare) and report pass/fail |
+| `npm run migrate`   | Apply `supabase/schema.sql` and verify tables, RLS, indexes |
 | `npm run assets`    | Regenerate `public/assets/*.svg` from `lib/brand.ts` |
 | `npm run build`     | Production build                               |
 | `npm run lint`      | ESLint (Next config)                           |
@@ -143,13 +145,21 @@ which is seamless and costs ~3.4KB of markup — no video, GIF or canvas.
 
 ## Supabase setup
 
-1. Create the project in `ap-southeast-1`.
-2. Run `supabase/schema.sql` in the SQL editor.
-3. Put the project URL and service role key in `.env.local` (`SUPABASE_URL`,
+1. Create the project in `ap-southeast-1` (Singapore). PDPA and UU PDP
+   compliance require Singapore hosting; other regions are rejected by
+   `npm run doctor`.
+2. Put the management token and project ref in `.env.local`
+   (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`).
+3. Run `npm run migrate` — it applies `supabase/schema.sql` and verifies the
+   tables, RLS, indexes and the daily-cost function.
+4. Put the project URL and service role key in `.env.local` (`SUPABASE_URL`,
    `SUPABASE_SERVICE_ROLE_KEY`). The service role key is server-only.
 
 RLS is enabled on all tables with no policies: only the service role can read or
 write.
+
+Migrating to a new region is the same two steps against the new project — the
+schema is idempotent.
 
 ## Chip.Asia
 
