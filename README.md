@@ -159,12 +159,38 @@ purchase and redirects to Chip's hosted checkout; `/api/topup/callback` verifies
 the RSA signature against `CHIP_PUBLIC_KEY` and rejects unsigned callbacks in
 production.
 
-## Cloudflare Pages
+## Deploying to Cloudflare
 
-Next.js on Pages needs a Workers-compatible adapter — use
-`@opennextjs/cloudflare` with the `nodejs_compat` flag (the API routes use
-`node:crypto` for hashing and signature checks). Staging only:
-**no production deploy without written approval from Linda and Boss.**
+The brief says Cloudflare Pages, but Pages requires every dynamic route on the
+edge runtime and our API routes need `node:crypto` for visitor hashing and RSA
+signature checks. The supported path is `@opennextjs/cloudflare`, which deploys
+to Cloudflare Workers with static assets — same network, free `*.workers.dev`
+URL, and `nodejs_compat` provides Node's crypto. Say the word if you want Pages
+specifically; it means replacing crypto with WebCrypto and re-verifying the Chip
+signature checks.
+
+```bash
+# secrets (once per environment)
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler secret put META_AI_API_KEY
+npx wrangler secret put META_AI_BASE_URL
+npx wrangler secret put META_AI_MODEL
+npx wrangler secret put CHIP_API_KEY
+npx wrangler secret put CHIP_BRAND_ID
+npx wrangler secret put CHIP_PUBLIC_KEY
+npx wrangler secret put CHIP_TEST_EMAIL
+npx wrangler secret put VISITOR_HASH_SALT
+
+npm run preview   # build + run in the local Workers runtime
+npm run deploy    # build + deploy (staging only, see below)
+```
+
+`wrangler.jsonc` already sets `nodejs_compat` and the assets binding. For local
+Workers preview, copy the runtime vars into `.dev.vars` (gitignored).
+
+Staging only: **no production deploy without written approval from Linda and
+Boss.**
 
 ## Compliance
 

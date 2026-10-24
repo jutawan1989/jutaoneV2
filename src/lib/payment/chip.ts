@@ -103,8 +103,9 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
 
 /**
  * Chip signs callbacks with its private key; the matching public key is set in
- * `CHIP_PUBLIC_KEY`. Without a key configured, callbacks are rejected in
- * production instead of being trusted blindly.
+ * `CHIP_PUBLIC_KEY`. Without a key, callbacks are rejected: fail closed, so a
+ * missing secret can never turn into an open webhook. Local testing opts in
+ * explicitly with `CHIP_ALLOW_UNSIGNED_CALLBACKS=1`.
  */
 export function verifyCallbackSignature(
   rawBody: string,
@@ -112,11 +113,11 @@ export function verifyCallbackSignature(
 ): { ok: boolean; reason?: string } {
   const publicKey = process.env.CHIP_PUBLIC_KEY?.replace(/\\n/g, "\n");
   if (!publicKey) {
-    if (process.env.NODE_ENV === "production") {
-      return { ok: false, reason: "CHIP_PUBLIC_KEY is not configured" };
+    if (process.env.CHIP_ALLOW_UNSIGNED_CALLBACKS === "1") {
+      console.warn("[jutaone] accepting unsigned Chip callback because CHIP_ALLOW_UNSIGNED_CALLBACKS=1");
+      return { ok: true };
     }
-    console.warn("[jutaone] CHIP_PUBLIC_KEY missing, accepting callback in non-production only");
-    return { ok: true };
+    return { ok: false, reason: "CHIP_PUBLIC_KEY is not configured" };
   }
   if (!signatureHeader) return { ok: false, reason: "missing signature header" };
 

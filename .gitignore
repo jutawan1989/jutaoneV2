@@ -43,3 +43,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# wrangler local secrets
+.dev.vars
+*.dev.vars
+.open-next
+
+# wrangler local state
+.wrangler/

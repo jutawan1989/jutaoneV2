@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jutaonev2",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-25",
+  // Required: the API routes use node:crypto for hashing and RSA verification.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://jutaonev2.jutawan1989.workers.dev"
+  }
+}
