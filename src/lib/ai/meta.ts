@@ -24,7 +24,9 @@ function modelName(): string {
 
 function timeoutMs(): number {
   const raw = Number(process.env.META_AI_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 500 ? raw : 2500;
+  // 2500 was too tight once real generation replaced the mock path; the copy
+  // now says "in seconds" instead of "under 3 seconds".
+  return Number.isFinite(raw) && raw > 500 ? raw : 3500;
 }
 
 function costPer1kTokens(): number {

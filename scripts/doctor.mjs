@@ -193,6 +193,58 @@ await probe("meta ai: key + billing", async () => {
   return { ok: false, detail: reason };
 });
 
+// --- OpenRouter ------------------------------------------------------------
+// Probed with the real caption budget: a small max_tokens returns 200 with
+// content: null on this reasoning model, so a shallow probe would report a
+// broken provider as working.
+await probe("openrouter: key + real caption", async () => {
+  if (!env.OPENROUTER_API_KEY) {
+    return { ok: false, warn: true, detail: "no key — provider skipped, template used" };
+  }
+  if (env.OPENROUTER_ENABLED === "0") {
+    return { ok: false, warn: true, detail: "OPENROUTER_ENABLED=0 — provider skipped" };
+  }
+  const base = (env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, "");
+  const startedAt = Date.now();
+  const response = await fetch(`${base}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: env.OPENROUTER_MODEL || "recursive/flint-v1.0:free",
+      max_tokens: Number(env.OPENROUTER_MAX_TOKENS) || 2000,
+      messages: [
+        {
+          role: "user",
+          content:
+            "You write short marketing captions. Output one 20-word caption for a cake shop in Malay. No explanation.",
+        },
+      ],
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const elapsed = Date.now() - startedAt;
+  if (!response.ok) return { ok: false, detail: `HTTP ${response.status}` };
+  const payload = await response.json();
+  const caption = payload?.choices?.[0]?.message?.content ?? "";
+  if (!caption.trim()) {
+    const reasoning = payload?.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+    return {
+      ok: false,
+      detail: `HTTP 200 but no caption (reasoning_tokens=${reasoning}) — raise OPENROUTER_MAX_TOKENS`,
+    };
+  }
+  return {
+    ok: true,
+    // Latency is reported because this model runs far past the old 3s target.
+    detail:
+      `model ${env.OPENROUTER_MODEL} caption in ${(elapsed / 1000).toFixed(1)}s` +
+      (elapsed > 5000 ? " — slower than the 3s brief, see README" : ""),
+  };
+});
+
 // --- Chip.Asia -------------------------------------------------------------
 await probe("chip: api key + brand", async () => {
   if (!env.CHIP_BRAND_ID) {

@@ -19,11 +19,11 @@ export const id: Dictionary = {
     title: "Papan iklan bergerak",
     titleAccent: "untuk bisnis Anda",
     subtitle:
-      "Ketik apa yang Anda jual. Dapatkan caption TikTok atau Facebook yang bikin orang berhenti scroll dalam waktu kurang dari 3 detik — tanpa agensi, tanpa copywriter, tanpa akun.",
+      "Ketik apa yang Anda jual. Dapatkan caption TikTok atau Facebook yang bikin orang berhenti scroll dalam hitungan detik — tanpa agensi, tanpa copywriter, tanpa akun.",
     ctaPrimary: "Coba demo gratis",
     ctaSecondary: "Lihat harga token",
     stats: [
-      { value: "3 detik", label: "Rata-rata waktu pembuatan" },
+      { value: "Hitungan detik", label: "Rata-rata waktu pembuatan" },
       { value: "3 bahasa", label: "Indonesia, Melayu, Inggris" },
       { value: "Tanpa daftar", label: "Demo bisa dipakai tanpa akun" },
     ],

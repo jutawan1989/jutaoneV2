@@ -19,11 +19,11 @@ export const ms: Dictionary = {
     title: "Papan iklan bergerak",
     titleAccent: "untuk perniagaan anda",
     subtitle:
-      "Taip apa yang anda jual. Dapatkan kapsyen TikTok atau Facebook yang menarik perhatian dalam masa kurang 3 saat — tanpa agensi, tanpa penulis iklan, tanpa akaun.",
+      "Taip apa yang anda jual. Dapatkan kapsyen TikTok atau Facebook yang menarik perhatian dalam beberapa saat — tanpa agensi, tanpa penulis iklan, tanpa akaun.",
     ctaPrimary: "Cuba demo percuma",
     ctaSecondary: "Lihat harga token",
     stats: [
-      { value: "3 saat", label: "Masa purata jana kapsyen" },
+      { value: "Beberapa saat", label: "Masa purata jana kapsyen" },
       { value: "3 bahasa", label: "Melayu, Indonesia, Inggeris" },
       { value: "Tanpa daftar", label: "Demo boleh guna tanpa akaun" },
     ],

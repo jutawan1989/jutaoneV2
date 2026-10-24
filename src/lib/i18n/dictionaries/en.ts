@@ -18,11 +18,11 @@ export const en = {
     title: "A moving billboard",
     titleAccent: "for your business",
     subtitle:
-      "Type what you sell. Get a scroll-stopping TikTok or Facebook caption in under 3 seconds — no agency, no copywriter, no account.",
+      "Type what you sell. Get a scroll-stopping TikTok or Facebook caption in seconds — no agency, no copywriter, no account.",
     ctaPrimary: "Try the free demo",
     ctaSecondary: "See token pricing",
     stats: [
-      { value: "3 sec", label: "Average caption time" },
+      { value: "Seconds", label: "Average caption time" },
       { value: "3 languages", label: "Malay, Indonesian, English" },
       { value: "No signup", label: "Demo works without an account" },
     ],

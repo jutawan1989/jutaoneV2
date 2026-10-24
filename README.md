@@ -13,7 +13,7 @@ Commercial model: **token only** — RM3 or Rp10,000 = 1,000,000 tokens.
 | Framework | Next.js 15 (App Router) + React 19 + TypeScript         |
 | Styling   | Tailwind CSS v4                                         |
 | Database  | Supabase (Singapore, `ap-southeast-1`)                  |
-| AI        | Meta AI (Llama API, OpenAI-compatible) behind an adapter |
+| AI        | Provider chain: OpenRouter → Meta AI (Llama API) → local template |
 | Payments  | Chip.Asia (FPX / cards), sandbox-ready stub             |
 | Hosting   | Cloudflare Pages                                         |
 
@@ -112,12 +112,36 @@ Mock captions cost nothing, so the local template path never trips the switch.
 
 ### AI adapter (D1)
 
-`lib/ai/index.ts` is the only place that knows about providers:
+`lib/ai/index.ts` is the only place that knows about providers. Providers are
+tried in order and the first success wins:
 
-- `META_AI_API_KEY` set → Meta Llama API chat completions, 2.5s timeout.
-- Key missing → deterministic local templates (localized, zero cost).
-- Provider error/timeout → local template, so the visitor still gets a caption
-  inside the 3 second budget.
+1. **OpenRouter** (`openrouter.ts`) — once `OPENROUTER_API_KEY` is set. Tried
+   first because Meta currently answers `402 billing_not_configured`.
+2. **Meta** (`meta.ts`) — `muse-spark-1.3` (non-contributor tier), 3.5s timeout.
+   The `-contributor` variants send prompts to training and must stay an
+   explicit decision, not a default.
+3. **Local template** (`mock.ts`) — deterministic, localized, zero cost. Used
+   directly when no provider is configured, or as `mock-fallback` when every
+   configured provider failed.
+
+`OPENROUTER_ENABLED=0` drops back to the local template without removing the
+key, which is the one-line rollback if the free model misbehaves.
+
+**The free OpenRouter model does not fit a 3 second budget.**
+`recursive/flint-v1.0:free` is a reasoning model where reasoning is mandatory:
+it spends 946–1329 completion tokens thinking before it writes, and
+`reasoning.effort` / `reasoning.max_tokens` are accepted but ignored. Measured:
+
+| `max_tokens` | Result |
+| ------------ | ------ |
+| 220 / 400 / 600 / 1200 | `finish_reason: length`, `content: null` — would fall back |
+| 2000 | real caption, 5/5 runs, **8.7–13.7s** |
+
+So `OPENROUTER_MAX_TOKENS=2000` and `OPENROUTER_TIMEOUT_MS=15000`. Capping the
+output to make it faster is not possible on this model — a smaller budget does
+not shorten the caption, it removes it. Site copy therefore says "in seconds",
+not "under 3 seconds". A non-reasoning model is the fix for latency, not a
+tighter timeout.
 
 ### Conversion hook (D4)
 
