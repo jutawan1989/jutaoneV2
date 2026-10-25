@@ -1,3 +1,4 @@
+import { generateWithDeepSeek, deepSeekConfigured } from "./deepseek";
 import { generateWithMeta, metaConfigured } from "./meta";
 import { generateWithOpenRouter, openRouterConfigured } from "./openrouter";
 import { generateMockCaption } from "./mock";
@@ -12,11 +13,18 @@ type Provider = {
 };
 
 /**
- * Provider order is OpenRouter first, then Meta. Meta is currently blocked by
- * `402 billing_not_configured`, so putting it first would add a failing round
- * trip to every request for nothing. Reorder this list once billing is fixed.
+ * Order matters and is deliberate:
+ *
+ * 1. DeepSeek — paid and funded, so it is the intended production provider.
+ * 2. OpenRouter — free tier, kept as a zero-cost fallback. Once its daily quota
+ *    is exhausted (50/day) it 429s and the next provider runs.
+ * 3. Meta — wired but still blocked by `402 billing_not_configured`.
+ *
+ * A paid provider first means a visitor gets the good model while credits last,
+ * and the free tier covers the rest of the day instead of the reverse.
  */
 const PROVIDERS: Provider[] = [
+  { name: "deepseek", configured: deepSeekConfigured, generate: generateWithDeepSeek },
   { name: "openrouter", configured: openRouterConfigured, generate: generateWithOpenRouter },
   { name: "meta", configured: metaConfigured, generate: generateWithMeta },
 ];
@@ -54,4 +62,4 @@ export async function generateCaption(req: CaptionRequest): Promise<CaptionResul
   return { ...fallback, source: "mock-fallback", latencyMs: Date.now() - startedAt };
 }
 
-export { metaConfigured, openRouterConfigured };
+export { deepSeekConfigured, metaConfigured, openRouterConfigured };

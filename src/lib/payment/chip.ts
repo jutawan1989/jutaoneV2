@@ -33,6 +33,51 @@ export function chipConfigured(): boolean {
   return Boolean(process.env.CHIP_API_KEY && process.env.CHIP_BRAND_ID);
 }
 
+/**
+ * Whether the configured key is a live key or a test key, according to Chip.
+ *
+ * This cannot be inferred from the key's shape, and the adapter has no mode
+ * flag of its own: "switch to live" is not a code change, it is whatever key is
+ * installed. Asking Chip is therefore the only honest answer, and it matters
+ * because a sandbox top-up debits nobody while looking identical in the UI.
+ */
+export async function chipMode(): Promise<"live" | "test" | "unknown" | "unconfigured"> {
+  if (!chipConfigured()) return "unconfigured";
+
+  try {
+    const baseUrl = (process.env.CHIP_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+    const response = await fetch(`${baseUrl}/purchases/`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${process.env.CHIP_API_KEY}`,
+      },
+      body: JSON.stringify({
+        brand_id: process.env.CHIP_BRAND_ID,
+        reference: `JO-MODE-${Date.now()}`,
+        client: { email: process.env.CHIP_TEST_EMAIL || "sandbox@jutaone.biz" },
+        purchase: {
+          currency: "MYR",
+          language: "en",
+          // 1 sen: the smallest chargeable amount, so a mode probe cannot move
+          // meaningful money even if the key turns out to be live.
+          products: [{ name: "mode probe", price: 1, quantity: 1 }],
+        },
+        success_redirect: "https://example.com/ok",
+        failure_redirect: "https://example.com/fail",
+      }),
+      signal: AbortSignal.timeout(10_000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) return "unknown";
+    const payload = (await response.json()) as { is_test?: boolean };
+    return payload.is_test === false ? "live" : "test";
+  } catch {
+    return "unknown";
+  }
+}
+
 export function generateReference(locale: Locale): string {
   return `JO-${locale.toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${randomUUID()
     .slice(0, 8)
