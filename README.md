@@ -37,7 +37,8 @@ Open http://localhost:3000 — `/` redirects to a locale based on
 | `npm run doctor`    | Probe every integration (GitHub, Supabase, Meta, Chip, Cloudflare) and report pass/fail |
 | `npm run build:worker` | Build the Worker with no secrets in the bundle, then scan for leaks |
 | `npm run deploy`    | Safe build + scan, then deploy to Cloudflare Workers |
-| `npm run migrate`   | Apply `supabase/schema.sql` and verify tables, RLS, indexes |
+| `npm run migrate`   | Apply `supabase/schema.sql` + `supabase/affiliate.sql` and verify tables, RLS, indexes |
+| `npm run qa:affiliate` | Adversarial checks on the affiliate guards (self-referral, double credit, over-payout); cleans up after itself |
 | `npm run assets`    | Regenerate `public/assets/*.svg` from `lib/brand.ts` |
 | `npm run build`     | Production build                               |
 | `npm run lint`      | ESLint (Next config)                           |
@@ -177,6 +178,51 @@ add `JUTAONE.BIZ` plus the tagline.
 The globe spins with a single CSS `rotate` transform inside the circular clip,
 which is seamless and costs ~3.4KB of markup — no video, GIF or canvas.
 `prefers-reduced-motion` stops it, verified by `scripts/qa-layout.mjs`.
+
+## Affiliate system (Phase 2, database only)
+
+`supabase/affiliate.sql` holds the schema and every guard; `supabase/affiliate.qa.sql`
+is the adversarial proof that the guards fire. No frontend yet.
+
+**Money model.** 70% cash to the affiliate, 30% retained. Every amount is an
+integer in minor units (`sen` / `rupiah`), matching `topups.amount`, so no float
+reaches a payout. `commission_bps` is the single knob (7000 = 70%) and the
+company share is `gross - affiliate`, so the two always add back to the gross.
+
+| Table | Purpose |
+| ----- | ------- |
+| `referral_codes` | code, opaque `owner_ref`, `commission_bps`, active flag |
+| `affiliate_earnings` | one row per credited top-up, with gross, split and status |
+| `payout_requests` | manual payouts: requested → approved → paid / rejected / cancelled |
+| `affiliate_balances` (view) | unpaid, reserved and available per code and currency |
+
+**Anti-fraud is enforced in the database**, because a caller can be wrong or
+malicious and a webhook can be replayed:
+
+- one earning per top-up — unique index plus a trigger with a readable error, so
+a replayed Chip webhook cannot pay an affiliate twice;
+- the split is computed by a `before insert` trigger and caller-supplied money
+columns are overwritten, so nobody can inflate a commission;
+- a top-up must be `paid` before it can accrue anything;
+- the referral code recorded on the top-up wins, so a caller cannot credit a
+code the purchase was never attributed to;
+- self-referral is rejected by comparing the buyer's `visitor_key` with the code
+owner's — same salted hash the trial limiter already uses, so no new PII;
+- a payout cannot exceed `unpaid - already reserved`, and an open request
+reserves its amount;
+- marking a payout `paid` consumes earnings oldest-first and raises if any
+amount would be left unallocated.
+
+**No PII in this schema.** `owner_ref` is opaque and
+`payout_requests.payee_reference` points at a payee record held elsewhere. Bank
+account numbers are deliberately not columns here; collecting them would move
+the PDPA / UU PDP position that currently holds "no PII before top-up", and that
+is a decision for Linda and Boss, not a schema detail.
+
+```bash
+npm run migrate        # applies both files, verifies tables, RLS, indexes, split
+npm run qa:affiliate   # 8 adversarial checks, then deletes its own fixtures
+```
 
 ## Supabase setup
 

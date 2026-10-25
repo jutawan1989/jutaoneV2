@@ -15,6 +15,7 @@
     "deploy": "node scripts/build-worker.mjs && opennextjs-cloudflare deploy",
     "doctor": "node scripts/doctor.mjs",
     "migrate": "node scripts/migrate-supabase.mjs --verify",
+    "qa:affiliate": "node scripts/qa-affiliate.mjs",
     "qa:modal": "node scripts/qa-modal.mjs",
     "build:worker": "node scripts/build-worker.mjs"
   },

@@ -19,12 +19,14 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = join(repoRoot, ".env.local");
 
 const REQUESTED_TABLES = ["demo_attempts", "ai_usage", "events", "topups"];
+/** Phase 2 affiliate tables; applied by `supabase/affiliate.sql`. */
+const AFFILIATE_TABLES = ["referral_codes", "affiliate_earnings", "payout_requests"];
 
 function loadEnv(path) {
   let raw;
@@ -84,7 +86,10 @@ function report(label, ok, detail = "") {
   if (!ok) process.exitCode = 1;
 }
 
-const schema = readFileSync(join(repoRoot, "supabase", "schema.sql"), "utf8");
+const schemaFiles = [
+  join(repoRoot, "supabase", "schema.sql"),
+  join(repoRoot, "supabase", "affiliate.sql"),
+];
 
 const region = await projectRegion();
 console.log(`project ${ref} region ${region}`);
@@ -95,8 +100,10 @@ if (region !== "ap-southeast-1") {
   );
 }
 
-console.log("applying supabase/schema.sql ...");
-await query(schema);
+for (const file of schemaFiles) {
+  console.log(`applying ${relative(repoRoot, file)} ...`);
+  await query(readFileSync(file, "utf8"));
+}
 console.log("schema applied");
 
 if (!process.argv.includes("--verify")) {
@@ -113,13 +120,15 @@ const tables = await query(`
 `);
 
 const names = tables.map((row) => row.tablename);
-for (const table of REQUESTED_TABLES) {
+for (const table of [...REQUESTED_TABLES, ...AFFILIATE_TABLES]) {
   const row = tables.find((entry) => entry.tablename === table);
   report(`table ${table} exists`, Boolean(row));
   if (row) report(`table ${table} has RLS enabled`, row.rowsecurity === true);
 }
 
-const unexpected = names.filter((name) => !REQUESTED_TABLES.includes(name));
+const unexpected = names.filter(
+  (name) => ![...REQUESTED_TABLES, ...AFFILIATE_TABLES].includes(name),
+);
 if (unexpected.length > 0) {
   console.log(`note  other public tables present: ${unexpected.join(", ")}`);
 }
@@ -128,15 +137,42 @@ const functions = await query(`
   select proname
   from pg_proc p
   join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and proname = 'jutaone_daily_cost';
+  where n.nspname = 'public';
 `);
-report("function jutaone_daily_cost exists", functions.length === 1);
+const functionNames = functions.map((row) => row.proname);
+for (const expected of [
+  "jutaone_daily_cost",
+  "jutaone_affiliate_split",
+  "jutaone_guard_earning",
+  "jutaone_guard_payout_request",
+  "jutaone_settle_payout",
+]) {
+  report(`function ${expected} exists`, functionNames.includes(expected));
+}
 
 const costCheck = await query("select public.jutaone_daily_cost(current_date) as spent;");
 report(
   "jutaone_daily_cost is callable",
   Array.isArray(costCheck) && costCheck.length === 1,
   `spent=${costCheck?.[0]?.spent}`,
+);
+
+// The 70/30 split must never lose or invent a cent, including on the actual
+// RM3 and Rp10,000 prices.
+const splitCheck = await query(`
+  select g.gross,
+         s.affiliate_share_minor as affiliate,
+         s.company_share_minor as company,
+         s.affiliate_share_minor + s.company_share_minor as total
+  from (values (300::bigint), (10000::bigint), (1::bigint), (333::bigint)) as g(gross)
+  cross join lateral public.jutaone_affiliate_split(g.gross, 7000) s;
+`);
+const splitOk =
+  Array.isArray(splitCheck) && splitCheck.every((row) => Number(row.total) === Number(row.gross));
+report(
+  "70/30 split reconciles to the gross",
+  splitOk,
+  splitCheck.map((row) => `${row.gross}=${row.affiliate}+${row.company}`).join(" "),
 );
 
 const indexes = await query(`
@@ -153,6 +189,10 @@ for (const expected of [
   "events_created_at_idx",
   "events_variant_idx",
   "events_locale_idx",
+  "referral_codes_code_key",
+  "affiliate_earnings_topup_key",
+  "payout_requests_code_status_idx",
+  "topups_referral_code_idx",
 ]) {
   report(`index ${expected} exists`, indexNames.includes(expected));
 }
