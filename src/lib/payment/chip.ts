@@ -1,5 +1,10 @@
 import { randomUUID, verify as verifySignature } from "node:crypto";
-import { getPrice, type FxRates, type Price } from "@/lib/pricing";
+import {
+  BASE_PRICE_USD_CENTS,
+  getPriceForUsd,
+  type FxRates,
+  type Price,
+} from "@/lib/pricing";
 import type { Locale, Region } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
@@ -13,6 +18,8 @@ export type TopUpRequest = {
   origin: string;
   /** Live FX rates, so the local amount matches what the site displayed. */
   rates?: FxRates;
+  /** USD amount in cents; defaults to the single-unit base price. */
+  usdCents?: number;
 };
 
 export type TopUpSession = {
@@ -58,7 +65,7 @@ export function chipCheckoutLanguage(locale: Locale): string {
  * sandbox API can be exercised without a form.
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
-  const price = getPrice(req.region, req.rates);
+  const price = getPriceForUsd(req.usdCents ?? BASE_PRICE_USD_CENTS, req.region, req.rates);
   const reference = generateReference(req.locale);
   const localePath = `/${req.locale}/topup`;
 

@@ -114,19 +114,40 @@ function localMajor(usdCents: number, rate: number): number {
  * deliberate and recorded — the base USD figure is what the ledger keeps.
  */
 export function getPrice(region: Region, rates: FxRates = fxFromEnv()): Price {
-  const baseDisplay = `$${(BASE_PRICE_USD_CENTS / 100).toFixed(2)}`;
+  return getPriceForUsd(BASE_PRICE_USD_CENTS, region, rates);
+}
+
+/** Smallest top-up the API will charge. */
+export const MIN_TOPUP_USD_CENTS = 100;
+/** Ceiling that keeps a fat-fingered "1000" from becoming a five-figure charge. */
+export const MAX_TOPUP_USD_CENTS = 50_000;
+
+/**
+ * Same conversion as `getPrice`, for an arbitrary USD amount.
+ *
+ * Tokens are strictly `usd * 1,000,000`, so the grant is derived from the base
+ * price rather than the rounded local charge: a customer paying RM23.50 for $5
+ * gets exactly 5,000,000 tokens, not the count implied by RM23.50.
+ */
+export function getPriceForUsd(
+  usdCents: number,
+  region: Region,
+  rates: FxRates = fxFromEnv(),
+): Price {
+  const baseDisplay = `$${(usdCents / 100).toFixed(2)}`;
+  const tokens = Math.round((usdCents / 100) * TOKENS_PER_UNIT);
 
   if (region === "ID") {
     const fxRate = rates.IDR;
-    const amountMinor = roundMinor(localMajor(BASE_PRICE_USD_CENTS, fxRate) * 100);
+    const amountMinor = roundMinor(localMajor(usdCents, fxRate) * 100);
     return {
       currency: "IDR",
       amount: amountMinor / 100,
       amountMinor,
       display: formatLocal("IDR", amountMinor),
-      baseUsdCents: BASE_PRICE_USD_CENTS,
+      baseUsdCents: usdCents,
       baseDisplay,
-      tokens: TOKENS_PER_UNIT,
+      tokens,
       fxRate,
       fxSource: rates.source,
       tokensLabel: TOKEN_LABEL,
@@ -137,17 +158,45 @@ export function getPrice(region: Region, rates: FxRates = fxFromEnv()): Price {
   // visitor still pays the MYR price rather than a USD price they were never
   // quoted.
   const fxRate = rates.MYR;
-  const amountMinor = roundMinor(localMajor(BASE_PRICE_USD_CENTS, fxRate) * 100);
+  const amountMinor = roundMinor(localMajor(usdCents, fxRate) * 100);
   return {
     currency: "MYR",
     amount: amountMinor / 100,
     amountMinor,
     display: formatLocal("MYR", amountMinor),
-    baseUsdCents: BASE_PRICE_USD_CENTS,
+    baseUsdCents: usdCents,
     baseDisplay,
-    tokens: TOKENS_PER_UNIT,
+    tokens,
     fxRate,
     fxSource: rates.source,
     tokensLabel: TOKEN_LABEL,
   };
+}
+
+/**
+ * Validates a client-supplied USD amount.
+ *
+ * The client proposes, the server decides: the amount is parsed here and the
+ * tokens are recomputed from it, never taken from the request body.
+ */
+export function parseTopUpUsdCents(
+  raw: unknown,
+):
+  | { ok: true; usdCents: number }
+  | { ok: false; code: "amount_invalid" | "amount_below_minimum" | "amount_above_maximum" } {
+  const numeric =
+    typeof raw === "number"
+      ? raw
+      : typeof raw === "string" && raw.trim() !== ""
+        ? Number(raw)
+        : NaN;
+  if (!Number.isFinite(numeric) || numeric <= 0) return { ok: false, code: "amount_invalid" };
+
+  // Whole cents only: a request for $1.005 must not silently become $1.01.
+  const usdCents = Math.round(numeric * 100);
+  if (Math.abs(numeric * 100 - usdCents) > 1e-6) return { ok: false, code: "amount_invalid" };
+  if (usdCents < MIN_TOPUP_USD_CENTS) return { ok: false, code: "amount_below_minimum" };
+  if (usdCents > MAX_TOPUP_USD_CENTS) return { ok: false, code: "amount_above_maximum" };
+
+  return { ok: true, usdCents };
 }

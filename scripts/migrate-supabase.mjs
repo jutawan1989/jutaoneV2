@@ -24,7 +24,14 @@ import { dirname, join, relative } from "node:path";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = join(repoRoot, ".env.local");
 
-const REQUESTED_TABLES = ["demo_attempts", "ai_usage", "events", "topups", "fx_rates"];
+const REQUESTED_TABLES = [
+  "demo_attempts",
+  "ai_usage",
+  "events",
+  "topups",
+  "fx_rates",
+  "token_ledger",
+];
 
 function loadEnv(path) {
   let raw;
@@ -87,6 +94,7 @@ function report(label, ok, detail = "") {
 const schemaFiles = [
   join(repoRoot, "supabase", "schema.sql"),
   join(repoRoot, "supabase", "fx.sql"),
+  join(repoRoot, "supabase", "token_ledger.sql"),
 ];
 
 const region = await projectRegion();
@@ -150,6 +158,25 @@ report(
 report(
   "function jutaone_latest_fx_rate exists",
   functions.some((row) => row.proname === "jutaone_latest_fx_rate"),
+);
+
+report(
+  "function jutaone_token_balance exists",
+  functions.some((row) => row.proname === "jutaone_token_balance"),
+);
+
+report(
+  "function jutaone_guard_ledger exists",
+  functions.some((row) => row.proname === "jutaone_guard_ledger"),
+);
+
+const ledgerIndex = await query(`
+  select indexname from pg_indexes
+   where schemaname = 'public' and tablename = 'token_ledger';
+`);
+report(
+  "top-up grant is unique (double-credit guard)",
+  (ledgerIndex ?? []).some((row) => row.indexname === "token_ledger_topup_grant_key"),
 );
 
 // Every chargeable currency needs a usable rate, or checkout would quote a free

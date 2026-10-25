@@ -5,12 +5,13 @@ import { getFxRates } from "@/lib/fx";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
 import { createTopUpSession } from "@/lib/payment/chip";
+import { parseTopUpUsdCents } from "@/lib/pricing";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type TopUpBody = { locale?: unknown; variant?: unknown };
+type TopUpBody = { locale?: unknown; variant?: unknown; amount_usd?: unknown };
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as TopUpBody | null;
@@ -24,6 +25,17 @@ export async function POST(request: NextRequest) {
     : resolveVariant(visitor.visitorKey, request.nextUrl.searchParams.get("variant"));
   const utm = parseUtm(request.nextUrl.search);
 
+  // The client may propose an amount, but the server decides what it means:
+  // the token grant is recomputed from the parsed cents, never read from the
+  // request body. Absent amount keeps the single-unit base price.
+  const parsedAmount = parseTopUpUsdCents(body?.amount_usd ?? 1);
+  if (!parsedAmount.ok) {
+    return NextResponse.json(
+      { code: parsedAmount.code, min: 1, max: 500 },
+      { status: 400 },
+    );
+  }
+
   try {
     const rates = await getFxRates();
     const session = await createTopUpSession({
@@ -32,6 +44,7 @@ export async function POST(request: NextRequest) {
       variant,
       origin: request.nextUrl.origin,
       rates,
+      usdCents: parsedAmount.usdCents,
     });
 
     await logEvent({
@@ -49,6 +62,7 @@ export async function POST(request: NextRequest) {
         base_usd_cents: session.price.baseUsdCents,
         fx_rate: session.price.fxRate,
         fx_source: session.price.fxSource,
+        tokens: session.price.tokens,
       },
     });
 
