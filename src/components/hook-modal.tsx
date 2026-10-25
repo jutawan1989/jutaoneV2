@@ -112,20 +112,23 @@ export function HookModal({
           type="button"
           onClick={onClose}
           aria-label={dict.hook.dismissLabel}
-          className="absolute top-4 right-4 rounded-full border border-line px-2 py-1 text-xs text-muted transition-colors hover:text-white"
+          className="absolute top-4 right-4 rounded-md border border-line px-2 py-0.5 text-xs text-muted transition-colors hover:border-[#334155] hover:text-white"
         >
           ✕
         </button>
 
-        <p className="text-xs font-semibold tracking-wide text-brand-soft uppercase">{copy.label}</p>
-        <h2 id="hook-title" className="mt-2 pr-8 text-2xl font-extrabold text-white">
+        <p className="text-[11px] font-medium tracking-[0.12em] text-brand uppercase">{copy.label}</p>
+        <h2
+          id="hook-title"
+          className="mt-2.5 pr-8 text-xl font-semibold tracking-[-0.02em] text-white"
+        >
           {copy.title}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">{format(copy.body, values)}</p>
 
-        <div className="mt-5 flex items-baseline justify-between rounded-xl border border-line/80 bg-ink/60 px-4 py-3">
+        <div className="mt-5 flex items-baseline justify-between rounded-lg border border-line bg-ink/50 px-4 py-3">
           <span className="text-sm text-muted">{dict.pricing.tokenName}</span>
-          <span className="text-xl font-extrabold text-brand">{priceDisplay}</span>
+          <span className="text-xl font-semibold text-white tabular-nums">{priceDisplay}</span>
         </div>
 
         <div className="mt-5">
@@ -142,12 +145,12 @@ export function HookModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-3 w-full rounded-full py-2 text-sm font-medium text-muted transition-colors hover:text-white"
+          className="mt-3 w-full rounded-md py-2 text-sm font-medium text-muted transition-colors hover:text-white"
         >
           {dict.hook.close}
         </button>
 
-        <p className="mt-4 border-t border-line/70 pt-3 text-[11px] leading-relaxed text-muted/80">
+        <p className="mt-4 border-t border-line pt-3 text-[11px] leading-relaxed text-muted/80">
           {format(copy.note, values)}. {dict.compliance.noGuarantee}
         </p>
       </div>

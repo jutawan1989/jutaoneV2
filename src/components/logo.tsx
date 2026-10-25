@@ -71,9 +71,9 @@ export function Logo({
       <LogoMark
         idPrefix={idPrefix}
         size={Math.round((markHeight * 120) / 62)}
-        className="shrink-0 transition-transform duration-500 group-hover:scale-105"
+        className="shrink-0"
       />
-      <span className={`${text} font-extrabold tracking-[0.14em] text-white`}>
+      <span className={`${text} font-semibold tracking-[0.12em] text-white`}>
         JUTAONE<span className="text-brand">.BIZ</span>
       </span>
     </Link>

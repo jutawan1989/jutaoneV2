@@ -13,7 +13,7 @@ Commercial model: **token only** — RM3 or Rp10,000 = 1,000,000 tokens.
 | Framework | Next.js 15 (App Router) + React 19 + TypeScript         |
 | Styling   | Tailwind CSS v4                                         |
 | Database  | Supabase (Singapore, `ap-southeast-1`)                  |
-| AI        | Meta AI (Llama API, OpenAI-compatible) behind an adapter |
+| AI        | Provider chain: OpenRouter → Meta AI (Llama API) → local template |
 | Payments  | Chip.Asia (FPX / cards), sandbox-ready stub             |
 | Hosting   | Cloudflare Pages                                         |
 
@@ -112,12 +112,44 @@ Mock captions cost nothing, so the local template path never trips the switch.
 
 ### AI adapter (D1)
 
-`lib/ai/index.ts` is the only place that knows about providers:
+`lib/ai/index.ts` is the only place that knows about providers. Providers are
+tried in order and the first success wins:
 
-- `META_AI_API_KEY` set → Meta Llama API chat completions, 2.5s timeout.
-- Key missing → deterministic local templates (localized, zero cost).
-- Provider error/timeout → local template, so the visitor still gets a caption
-  inside the 3 second budget.
+1. **OpenRouter** (`openrouter.ts`) — once `OPENROUTER_API_KEY` is set. Tried
+   first because Meta currently answers `402 billing_not_configured`.
+2. **Meta** (`meta.ts`) — `muse-spark-1.3` (non-contributor tier), 3.5s timeout.
+   The `-contributor` variants send prompts to training and must stay an
+   explicit decision, not a default.
+3. **Local template** (`mock.ts`) — deterministic, localized, zero cost. Used
+   directly when no provider is configured, or as `mock-fallback` when every
+   configured provider failed.
+
+`OPENROUTER_ENABLED=0` drops back to the local template without removing the
+key, which is the one-line rollback if the free model misbehaves.
+
+**The free tier is fast only as a non-reasoning model.** The development-phase
+model is `dots-studio/dots-3-note-preview:free`, requested with
+`reasoning: { enabled: false }`. Measured against the production prompt, 4 runs
+each:
+
+| Model | Reasoning off | Result |
+| ----- | ------------- | ------ |
+| `dots-studio/dots-3-note-preview:free` | accepted | **1.6–1.9s**, 4/4, correct Malay/Indonesian/English, 3 hashtags |
+| `nvidia/nemotron-3.5-lightning:free` | accepted | 1.0–6.0s (unstable), odd spelling, 4/4 |
+| `recursive/flint-v1.0:free` | rejected | 9–14s; burns 946–1329 reasoning tokens, `content: null` below ~1500 `max_tokens` |
+| `openrouter/free` | rejected | 6–12s, empty at 800 `max_tokens` |
+
+The reasoning models ignore `reasoning.effort` and `reasoning.max_tokens`, so
+capping output cannot make them fast — it only removes the caption. That is why
+the free tier looked unusable before; disabling reasoning was the fix.
+
+`OPENROUTER_REASONING=on` keeps a model's own default. A model that rejects the
+flag ("Reasoning is mandatory for this endpoint") is retried once without it, so
+swapping the model — e.g. to DeepSeek at launch — degrades to "slow" rather than
+silently falling back to the local template.
+
+Cost stays at zero in this phase: `usage.cost` is `0` on `:free` models, and
+that is the value the kill switch records.
 
 ### Conversion hook (D4)
 
