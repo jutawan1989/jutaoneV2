@@ -1,0 +1,70 @@
+# Deploys staging when the default branch moves, so merging the PR is the only
+# step — nobody has to run `npm run deploy` from a laptop.
+#
+# Required repository secrets:
+#   CLOUDFLARE_API_TOKEN   — Workers Scripts:Edit (scoped, not a Global Key)
+#   CLOUDFLARE_ACCOUNT_ID  — account that owns the `jutaonev2` Worker
+#
+# The build runs through `node scripts/build-worker.mjs`, which refuses to build
+# if a secret reaches the bundle. That script reads `.env.local`, so the env file
+# is generated here from public values only; runtime secrets live on the Worker
+# (`wrangler secret put`) and are never supplied to the build.
+name: Deploy staging
+
+on:
+  push:
+    branches: [feat/phase1-mvp]
+  workflow_dispatch:
+
+# One deploy at a time; a queued run supersedes nothing it did not build itself.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # Inlined at build time by Next.js, so it must match the deployed origin.
+      NEXT_PUBLIC_SITE_URL: https://jutaonev2.jutawan1989.workers.dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Write public-only .env.local
+        # `build-worker.mjs` restores this file after building, and fails the
+        # build if any non-public value from it lands in the bundle.
+        run: |
+          printf 'NEXT_PUBLIC_SITE_URL=%s\n' "$NEXT_PUBLIC_SITE_URL" > .env.local
+          cat .env.local
+
+      - name: Build Worker and scan for leaked secrets
+        run: npm run build:worker
+
+      - name: Deploy to Cloudflare
+        run: npx opennextjs-cloudflare deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

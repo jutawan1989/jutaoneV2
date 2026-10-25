@@ -1,3 +1,4 @@
+import { normalizeCaption } from "./caption";
 import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionResult } from "./prompt";
 
 /**
@@ -35,17 +36,7 @@ function costPer1kTokens(): number {
 }
 
 /** Strips wrappers the model sometimes adds around a single caption. */
-export function normalizeCaption(raw: string): string {
-  let text = raw.trim();
-  text = text.replace(/^```[a-z]*\s*/i, "").replace(/```$/i, "").trim();
-  if (
-    (text.startsWith('"') && text.endsWith('"')) ||
-    (text.startsWith("'") && text.endsWith("'"))
-  ) {
-    text = text.slice(1, -1).trim();
-  }
-  return text.replace(/\n{3,}/g, "\n\n").slice(0, 400);
-}
+export { normalizeCaption };
 
 export async function generateWithMeta(req: CaptionRequest): Promise<CaptionResult> {
   const apiKey = process.env.META_AI_API_KEY;

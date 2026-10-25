@@ -12,9 +12,10 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 type FetchMock = ReturnType<typeof vi.fn>;
+type FetchArgs = [url: string, init?: RequestInit];
 
 function stubFetch(responses: Array<() => Response>): FetchMock {
-  const mock = vi.fn(async (_url: string, _init?: RequestInit) => {
+  const mock = vi.fn<(...args: FetchArgs) => Promise<Response>>(async () => {
     const next = responses.shift();
     if (!next) throw new Error("unexpected extra fetch call");
     return next();

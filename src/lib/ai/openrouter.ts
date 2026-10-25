@@ -1,3 +1,4 @@
+import { normalizeCaption } from "./caption";
 import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionResult } from "./prompt";
 
 /**
@@ -118,7 +119,7 @@ export async function generateWithOpenRouter(req: CaptionRequest): Promise<Capti
   }
 
   const choice = payload.choices?.[0];
-  const caption = normalize(choice?.message?.content ?? "");
+  const caption = normalizeCaption(choice?.message?.content ?? "");
 
   if (!caption) {
     // The token budget was consumed by reasoning before any caption was
@@ -141,17 +142,4 @@ export async function generateWithOpenRouter(req: CaptionRequest): Promise<Capti
 
 function isReasoningMandatory(payload: OpenRouterPayload | undefined): boolean {
   return /reasoning is mandatory/i.test(payload?.error?.message ?? "");
-}
-
-/** Same normalisation as the Meta adapter, kept local to avoid a shared util. */
-function normalize(raw: string): string {
-  let text = raw.trim();
-  text = text.replace(/^```[a-z]*\s*/i, "").replace(/```$/i, "").trim();
-  if (
-    (text.startsWith('"') && text.endsWith('"')) ||
-    (text.startsWith("'") && text.endsWith("'"))
-  ) {
-    text = text.slice(1, -1).trim();
-  }
-  return text.replace(/\n{3,}/g, "\n\n").slice(0, 400);
 }
