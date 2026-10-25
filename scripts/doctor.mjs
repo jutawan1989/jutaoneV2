@@ -194,9 +194,9 @@ await probe("meta ai: key + billing", async () => {
 });
 
 // --- OpenRouter ------------------------------------------------------------
-// Probed with the real caption budget: a small max_tokens returns 200 with
-// content: null on this reasoning model, so a shallow probe would report a
-// broken provider as working.
+// Probed with the real caption settings: reasoning disabled and the configured
+// token budget. A shallow probe would report a model as working when it would
+// actually spend its whole budget thinking and return no caption.
 await probe("openrouter: key + real caption", async () => {
   if (!env.OPENROUTER_API_KEY) {
     return { ok: false, warn: true, detail: "no key — provider skipped, template used" };
@@ -206,23 +206,26 @@ await probe("openrouter: key + real caption", async () => {
   }
   const base = (env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, "");
   const startedAt = Date.now();
+  const body = {
+    model: env.OPENROUTER_MODEL || "dots-studio/dots-3-note-preview:free",
+    max_tokens: Number(env.OPENROUTER_MAX_TOKENS) || 400,
+    messages: [
+      {
+        role: "user",
+        content:
+          "You write short marketing captions. Output one 20-word caption for a cake shop in Malay. No explanation.",
+      },
+    ],
+  };
+  if (env.OPENROUTER_REASONING !== "on") body.reasoning = { enabled: false };
+
   const response = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
     },
-    body: JSON.stringify({
-      model: env.OPENROUTER_MODEL || "recursive/flint-v1.0:free",
-      max_tokens: Number(env.OPENROUTER_MAX_TOKENS) || 2000,
-      messages: [
-        {
-          role: "user",
-          content:
-            "You write short marketing captions. Output one 20-word caption for a cake shop in Malay. No explanation.",
-        },
-      ],
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(30_000),
   });
   const elapsed = Date.now() - startedAt;
@@ -233,15 +236,17 @@ await probe("openrouter: key + real caption", async () => {
     const reasoning = payload?.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
     return {
       ok: false,
-      detail: `HTTP 200 but no caption (reasoning_tokens=${reasoning}) — raise OPENROUTER_MAX_TOKENS`,
+      detail: `HTTP 200 but no caption (reasoning_tokens=${reasoning}) — reasoning is on, raise OPENROUTER_MAX_TOKENS`,
     };
   }
   return {
     ok: true,
-    // Latency is reported because this model runs far past the old 3s target.
+    // Latency is part of the verdict: the brief is 1-2s, so a slow model is a
+    // warning even when it technically answers.
+    warn: elapsed > 4000,
     detail:
       `model ${env.OPENROUTER_MODEL} caption in ${(elapsed / 1000).toFixed(1)}s` +
-      (elapsed > 5000 ? " — slower than the 3s brief, see README" : ""),
+      (elapsed > 4000 ? " — slower than the 1-2s brief" : ""),
   };
 });
 

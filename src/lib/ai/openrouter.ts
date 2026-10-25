@@ -3,24 +3,22 @@ import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionRe
 /**
  * OpenRouter is OpenAI-compatible, so the request shape is the same as Meta's.
  *
- * Two things are specific to the free tier in use:
+ * The development-phase model is a free, non-reasoning one, because the free
+ * reasoning models cannot be made fast: they spend 650-1330 completion tokens
+ * before writing anything, and `reasoning.effort` / `reasoning.max_tokens` are
+ * ignored. Sending `reasoning: { enabled: false }` is what makes this path
+ * respond in 1-2 seconds instead of 9-14.
  *
- * 1. `recursive/flint-v1.0:free` is a reasoning model and reasoning is
- *    mandatory ("Reasoning is mandatory for this endpoint and cannot be
- *    disabled"). It spends 650-1330 completion tokens thinking before it
- *    writes anything, and `reasoning.effort` / `reasoning.max_tokens` are
- *    accepted but ignored. With a budget under ~1500 tokens the response comes
- *    back with `finish_reason: "length"` and `content: null`, so the budget
- *    here has to be generous — capping output tokens to make it faster is not
- *    possible on this model.
- * 2. That makes a real caption cost roughly 9-14 seconds. The caller's timeout
- *    must therefore be far higher than the Meta path's; a Meta-sized timeout
- *    would fall back to the local template on every single request.
+ * Not every model accepts that flag — some reject it with
+ * "Reasoning is mandatory for this endpoint" — so the request is retried once
+ * without the flag rather than dropping straight to the local template. That
+ * keeps a model swap (e.g. to DeepSeek at launch) from silently disabling real
+ * generation.
  */
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_MODEL = "recursive/flint-v1.0:free";
-/** Measured worst case (1330 reasoning tokens) plus room for a 240-char caption. */
-const DEFAULT_MAX_TOKENS = 2000;
+const DEFAULT_MODEL = "dots-studio/dots-3-note-preview:free";
+/** A 240-character caption needs ~120 tokens; 400 leaves room without waste. */
+const DEFAULT_MAX_TOKENS = 400;
 
 export function openRouterConfigured(): boolean {
   // Explicitly switchable so staging can drop back to the local template
@@ -38,7 +36,9 @@ function modelName(): string {
 
 function timeoutMs(): number {
   const raw = Number(process.env.OPENROUTER_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 500 ? raw : 15_000;
+  // Non-reasoning answers land in ~1.2-2.4s; 8s is generous, and timing out
+  // early is better than holding the visitor for a caption that never comes.
+  return Number.isFinite(raw) && raw > 500 ? raw : 8000;
 }
 
 function maxTokens(): number {
@@ -46,7 +46,13 @@ function maxTokens(): number {
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_MAX_TOKENS;
 }
 
+/** `OPENROUTER_REASONING=on` keeps the model's default (needed for reasoning-only models). */
+function reasoningDisabled(): boolean {
+  return process.env.OPENROUTER_REASONING !== "on";
+}
+
 type OpenRouterPayload = {
+  error?: { message?: string; code?: number };
   choices?: Array<{
     finish_reason?: string;
     message?: { content?: string | null; reasoning?: string | null };
@@ -59,12 +65,23 @@ type OpenRouterPayload = {
   };
 };
 
-export async function generateWithOpenRouter(req: CaptionRequest): Promise<CaptionResult> {
+async function callOpenRouter(
+  req: CaptionRequest,
+  opts: { reasoning: boolean },
+): Promise<{ response: Response; payload: OpenRouterPayload }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured");
 
-  const model = modelName();
-  const startedAt = Date.now();
+  const body: Record<string, unknown> = {
+    model: modelName(),
+    temperature: 0.8,
+    max_tokens: maxTokens(),
+    messages: [
+      { role: "system", content: buildSystemPrompt(req.locale, req.region) },
+      { role: "user", content: buildUserPrompt(req.text) },
+    ],
+  };
+  if (!opts.reasoning) body.reasoning = { enabled: false };
 
   const response = await fetch(`${baseUrl()}/chat/completions`, {
     method: "POST",
@@ -75,25 +92,31 @@ export async function generateWithOpenRouter(req: CaptionRequest): Promise<Capti
       "http-referer": process.env.NEXT_PUBLIC_SITE_URL ?? "https://jutaone.biz",
       "x-title": "JutaOne.Biz",
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.8,
-      max_tokens: maxTokens(),
-      messages: [
-        { role: "system", content: buildSystemPrompt(req.locale, req.region) },
-        { role: "user", content: buildUserPrompt(req.text) },
-      ],
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeoutMs()),
     cache: "no-store",
   });
 
+  const payload = (await response.json().catch(() => ({}))) as OpenRouterPayload;
+  return { response, payload };
+}
+
+export async function generateWithOpenRouter(req: CaptionRequest): Promise<CaptionResult> {
+  const startedAt = Date.now();
+
+  let { response, payload } = await callOpenRouter(req, { reasoning: !reasoningDisabled() });
+
+  // A reasoning-only model refuses the flag. Retry once with the model's own
+  // default so a model swap degrades to "slow" rather than "no AI at all".
+  if (reasoningDisabled() && !response.ok && isReasoningMandatory(payload)) {
+    ({ response, payload } = await callOpenRouter(req, { reasoning: true }));
+  }
+
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
+    const detail = payload?.error?.message ?? "";
     throw new Error(`OpenRouter responded ${response.status}: ${detail.slice(0, 200)}`);
   }
 
-  const payload = (await response.json()) as OpenRouterPayload;
   const choice = payload.choices?.[0];
   const caption = normalize(choice?.message?.content ?? "");
 
@@ -103,17 +126,21 @@ export async function generateWithOpenRouter(req: CaptionRequest): Promise<Capti
     // meaningless "empty response".
     const reasoningTokens = payload.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
     throw new Error(
-      `OpenRouter returned no caption (finish=${choice?.finish_reason ?? "unknown"}, reasoning_tokens=${reasoningTokens}); raise OPENROUTER_MAX_TOKENS`,
+      `OpenRouter returned no caption (finish=${choice?.finish_reason ?? "unknown"}, reasoning_tokens=${reasoningTokens}); raise OPENROUTER_MAX_TOKENS or pick a non-reasoning model`,
     );
   }
 
   return {
     caption,
     source: "openrouter",
-    model,
+    model: modelName(),
     costUsd: typeof payload.usage?.cost === "number" ? payload.usage.cost : 0,
     latencyMs: Date.now() - startedAt,
   };
+}
+
+function isReasoningMandatory(payload: OpenRouterPayload | undefined): boolean {
+  return /reasoning is mandatory/i.test(payload?.error?.message ?? "");
 }
 
 /** Same normalisation as the Meta adapter, kept local to avoid a shared util. */

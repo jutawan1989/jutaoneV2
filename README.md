@@ -127,21 +127,29 @@ tried in order and the first success wins:
 `OPENROUTER_ENABLED=0` drops back to the local template without removing the
 key, which is the one-line rollback if the free model misbehaves.
 
-**The free OpenRouter model does not fit a 3 second budget.**
-`recursive/flint-v1.0:free` is a reasoning model where reasoning is mandatory:
-it spends 946–1329 completion tokens thinking before it writes, and
-`reasoning.effort` / `reasoning.max_tokens` are accepted but ignored. Measured:
+**The free tier is fast only as a non-reasoning model.** The development-phase
+model is `dots-studio/dots-3-note-preview:free`, requested with
+`reasoning: { enabled: false }`. Measured against the production prompt, 4 runs
+each:
 
-| `max_tokens` | Result |
-| ------------ | ------ |
-| 220 / 400 / 600 / 1200 | `finish_reason: length`, `content: null` — would fall back |
-| 2000 | real caption, 5/5 runs, **8.7–13.7s** |
+| Model | Reasoning off | Result |
+| ----- | ------------- | ------ |
+| `dots-studio/dots-3-note-preview:free` | accepted | **1.6–1.9s**, 4/4, correct Malay/Indonesian/English, 3 hashtags |
+| `nvidia/nemotron-3.5-lightning:free` | accepted | 1.0–6.0s (unstable), odd spelling, 4/4 |
+| `recursive/flint-v1.0:free` | rejected | 9–14s; burns 946–1329 reasoning tokens, `content: null` below ~1500 `max_tokens` |
+| `openrouter/free` | rejected | 6–12s, empty at 800 `max_tokens` |
 
-So `OPENROUTER_MAX_TOKENS=2000` and `OPENROUTER_TIMEOUT_MS=15000`. Capping the
-output to make it faster is not possible on this model — a smaller budget does
-not shorten the caption, it removes it. Site copy therefore says "in seconds",
-not "under 3 seconds". A non-reasoning model is the fix for latency, not a
-tighter timeout.
+The reasoning models ignore `reasoning.effort` and `reasoning.max_tokens`, so
+capping output cannot make them fast — it only removes the caption. That is why
+the free tier looked unusable before; disabling reasoning was the fix.
+
+`OPENROUTER_REASONING=on` keeps a model's own default. A model that rejects the
+flag ("Reasoning is mandatory for this endpoint") is retried once without it, so
+swapping the model — e.g. to DeepSeek at launch — degrades to "slow" rather than
+silently falling back to the local template.
+
+Cost stays at zero in this phase: `usage.cost` is `0` on `:free` models, and
+that is the value the kill switch records.
 
 ### Conversion hook (D4)
 
