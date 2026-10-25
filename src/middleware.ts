@@ -4,7 +4,7 @@ import { isLocale } from "@/lib/i18n/config";
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|assets|favicon.ico|icon.png|apple-icon.png|robots.txt|sitemap.xml).*)",
+    "/((?!api|admin|_next/static|_next/image|assets|favicon.ico|icon.png|apple-icon.png|robots.txt|sitemap.xml).*)",
   ],
 };
 
@@ -12,6 +12,9 @@ export const config = {
  * D6 geo-routing: a visitor landing on `/` (or any path without a locale) is
  * redirected to the locale that matches their Cloudflare country. An explicit
  * language switch is remembered in a cookie and wins on later visits.
+ *
+ * `/admin` is excluded from the matcher: the internal playground is not a
+ * localized page, and rewriting it to `/en/admin/...` would 404.
  */
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
