@@ -30,7 +30,7 @@ describe("token pricing", () => {
     expect(price.localDisplay).toBe("≈ Rp16,000");
     expect(price.currency).toBe("IDR");
     expect(price.amount).toBe(16_000);
-    expect(price.amountMinor).toBe(16_000);
+    expect(price.amountMinor).toBe(1_600_000);
   });
 
   it("charges USD elsewhere and omits the local estimate", () => {
@@ -52,7 +52,10 @@ describe("token pricing", () => {
     const price = withUsdAmount(getPrice("ID"), 10);
     expect(price.tokens).toBe(10_000_000);
     expect(price.localDisplay).toBe("≈ Rp160,000");
-    expect(price.amountMinor).toBe(160_000);
+    // $10 -> Rp160,000 -> 16,000,000 minor units (Chip reads IDR as 2-decimal).
+    expect(price.amountMinor).toBe(16_000_000);
+    // Guard the 100x regression: whole rupiah would render as Rp1,600.00.
+    expect(price.amountMinor).toBe(price.amount * 100);
   });
 
   it("accepts quick picks and valid custom input", () => {
