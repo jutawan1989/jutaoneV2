@@ -9,7 +9,7 @@ import { identifyVisitor } from "@/lib/trial/visitor";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type TopUpBody = { locale?: unknown; variant?: unknown };
+type TopUpBody = { locale?: unknown; variant?: unknown; amountUsd?: unknown };
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as TopUpBody | null;
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       region,
       variant,
       origin: request.nextUrl.origin,
+      amountUsd: body?.amountUsd,
     });
 
     await logEvent({
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
       checkoutUrl: session.checkoutUrl,
       reference: session.reference,
       amount: session.price.display,
+      usd: session.price.usd,
       tokens: session.price.tokens,
     });
   } catch (error) {

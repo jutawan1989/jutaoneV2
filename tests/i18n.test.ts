@@ -70,8 +70,8 @@ describe("locale helpers", () => {
   });
 
   it("interpolates named placeholders only", () => {
-    expect(format("Top up {price} for {tokenName}", { price: "RM3", tokenName: "1 Juta Token" })).toBe(
-      "Top up RM3 for 1 Juta Token",
+    expect(format("Top up {price} for {tokenName}", { price: "$1", tokenName: "1 Juta Token" })).toBe(
+      "Top up $1 for 1 Juta Token",
     );
     expect(format("{missing} stays", {})).toBe("{missing} stays");
   });

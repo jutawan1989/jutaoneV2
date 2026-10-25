@@ -1,5 +1,5 @@
 import { randomUUID, verify as verifySignature } from "node:crypto";
-import { getPrice, type Price } from "@/lib/pricing";
+import { formatTokenCount, getPrice, parseTopUpAmount, withUsdAmount, type Price } from "@/lib/pricing";
 import type { Locale, Region } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
@@ -11,6 +11,8 @@ export type TopUpRequest = {
   variant: Variant;
   /** Absolute origin used for redirect URLs, e.g. https://jutaone.biz */
   origin: string;
+  /** Requested top-up size in USD. Defaults to $1 when absent or invalid. */
+  amountUsd?: unknown;
 };
 
 export type TopUpSession = {
@@ -38,7 +40,8 @@ export function generateReference(locale: Locale): string {
  * sandbox API can be exercised without a form.
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
-  const price = getPrice(req.region);
+  const usd = parseTopUpAmount(req.amountUsd) ?? 1;
+  const price = withUsdAmount(getPrice(req.region), usd);
   const reference = generateReference(req.locale);
   const localePath = `/${req.locale}/topup`;
 
@@ -47,7 +50,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
       mode: "mock",
       reference,
       price,
-      checkoutUrl: `${req.origin}${localePath}?ref=${reference}&mode=mock`,
+      checkoutUrl: `${req.origin}${localePath}?ref=${reference}&mode=mock&amount=${usd}`,
     };
   }
 
@@ -65,7 +68,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
       language: req.locale === "en" ? "en" : req.locale === "ms" ? "ms" : "id",
       products: [
         {
-          name: `JutaOne.Biz — ${price.tokensLabel[req.locale]}`,
+          name: `JutaOne.Biz - ${formatTokenCount(price.tokens, req.locale)}`,
           price: price.amountMinor,
           quantity: 1,
         },

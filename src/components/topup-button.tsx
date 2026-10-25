@@ -15,6 +15,7 @@ export function TopUpButton({
   children,
   errorText,
   disabled = false,
+  amountUsd,
 }: {
   locale: Locale;
   variant: Variant;
@@ -22,6 +23,8 @@ export function TopUpButton({
   children: ReactNode;
   errorText: string;
   disabled?: boolean;
+  /** Top-up size in USD. Defaults to $1 when omitted. */
+  amountUsd?: number;
 }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -34,7 +37,7 @@ export function TopUpButton({
       const response = await fetch("/api/topup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale, variant }),
+        body: JSON.stringify({ locale, variant, amountUsd }),
       });
       const data = (await response.json()) as { checkoutUrl?: string | null };
       if (data.checkoutUrl) {

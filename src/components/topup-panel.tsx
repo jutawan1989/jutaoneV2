@@ -11,6 +11,8 @@ type TopUpPanelProps = {
   variant: Variant;
   dict: Dictionary;
   priceDisplay: string;
+  priceLocal: string | null;
+  tokensDisplay: string;
   tokenName: string;
   reference: string | null;
   status: string | null;
@@ -26,6 +28,8 @@ export function TopUpPanel({
   variant,
   dict,
   priceDisplay,
+  priceLocal,
+  tokensDisplay,
   tokenName,
   reference,
   status,
@@ -59,11 +63,16 @@ export function TopUpPanel({
       <dl className="mt-7 space-y-3 text-sm">
         <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.amount}</dt>
-          <dd className="font-semibold text-white tabular-nums">{priceDisplay}</dd>
+          <dd className="text-right">
+            <span className="font-semibold text-white tabular-nums">{priceDisplay}</span>
+            {priceLocal && (
+              <span className="mt-0.5 block text-[11px] text-muted tabular-nums">{priceLocal}</span>
+            )}
+          </dd>
         </div>
         <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.tokens}</dt>
-          <dd className="font-medium text-silver">{tokenName}</dd>
+          <dd className="font-medium text-silver">{tokensDisplay}</dd>
         </div>
         <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.status}</dt>

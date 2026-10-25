@@ -82,9 +82,17 @@ export function Hero({
                   <p className="text-[11px] tracking-[0.1em] text-muted uppercase">
                     {dict.pricing.tokenName}
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-white tabular-nums">
-                    {price.display}
+                  <p className="mt-1 flex items-baseline gap-1.5 text-lg font-semibold text-white">
+                    <span className="tabular-nums">{price.display}</span>
+                    <span className="text-[10px] font-semibold tracking-[0.16em] text-muted uppercase">
+                      {price.usdCode}
+                    </span>
                   </p>
+                  {price.localDisplay && (
+                    <p className="mt-0.5 text-[11px] font-medium text-silver tabular-nums">
+                      {price.localDisplay}
+                    </p>
+                  )}
                 </div>
                 <span className="rounded-md border border-line px-2.5 py-1 text-[11px] font-medium text-silver" lang={locale}>
                   {dict.hero.stats[1]?.value}
