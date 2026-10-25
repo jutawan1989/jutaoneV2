@@ -4,7 +4,7 @@ import { isLocale } from "@/lib/i18n/config";
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|assets|favicon.ico|icon.png|apple-icon.png|robots.txt|sitemap.xml).*)",
+    "/((?!api|_next/static|_next/image|assets|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };
 
