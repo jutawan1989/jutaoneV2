@@ -82,6 +82,8 @@ export const ms: Dictionary = {
     subtitle: "Satu tambah nilai, satu baki. Tiada yuran bulanan, tiada kontrak.",
     tokenName: "1 Juta Token",
     priceLabel: "Jumlah",
+    baseLabel: "Harga asas",
+    localApprox: "≈ {local} pada kadar hari ini",
     cta: "Tambah nilai dengan FPX atau kad",
     bullets: [
       "Tiga bahasa: Melayu, Indonesia, Inggeris",

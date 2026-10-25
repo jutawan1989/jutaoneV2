@@ -81,6 +81,8 @@ export const en = {
     subtitle: "One top-up, one balance. No monthly fee, no contract.",
     tokenName: "1 Million Tokens",
     priceLabel: "Total",
+    baseLabel: "Base price",
+    localApprox: "≈ {local} at today's rate",
     cta: "Top up with FPX or card",
     bullets: [
       "Three languages: Malay, Indonesian, English",

@@ -82,6 +82,8 @@ export const id: Dictionary = {
     subtitle: "Satu top up, satu saldo. Tanpa biaya bulanan, tanpa kontrak.",
     tokenName: "1 Juta Token",
     priceLabel: "Total",
+    baseLabel: "Harga dasar",
+    localApprox: "≈ {local} pada kurs hari ini",
     cta: "Top up dengan FPX atau kartu",
     bullets: [
       "Tiga bahasa: Indonesia, Melayu, Inggris",
