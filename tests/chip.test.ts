@@ -1,6 +1,11 @@
 import { generateKeyPairSync, createSign } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { chipConfigured, generateReference, verifyCallbackSignature } from "@/lib/payment/chip";
+import {
+  chipCheckoutLanguage,
+  chipConfigured,
+  generateReference,
+  verifyCallbackSignature,
+} from "@/lib/payment/chip";
 
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
@@ -106,5 +111,18 @@ describe("Chip configuration", () => {
     expect(first).not.toBe(second);
     expect(first.startsWith("JO-MS-")).toBe(true);
     expect(first.length).toBeLessThan(64);
+  });
+});
+
+describe("Chip checkout language", () => {
+  // The sandbox rejects ms/id with 400 "not a valid choice", so passing the
+  // site locale through broke every Malay and Indonesian purchase.
+  it("falls back to English for locales Chip does not accept", () => {
+    expect(chipCheckoutLanguage("ms")).toBe("en");
+    expect(chipCheckoutLanguage("id")).toBe("en");
+  });
+
+  it("keeps a locale Chip does accept", () => {
+    expect(chipCheckoutLanguage("en")).toBe("en");
   });
 });

@@ -40,10 +40,15 @@ export function Pricing({
           <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
             {dict.pricing.tokenName}
           </p>
+          {/* USD is the commercial price; the local amount is what the card is
+              actually charged, so both are shown and the local figure is
+              marked as an approximation of today's rate. */}
           <p className="mt-3 text-4xl font-semibold tracking-[-0.02em] text-white tabular-nums">
-            {price.display}
+            {price.baseDisplay}
           </p>
-          <p className="mt-1.5 text-xs text-muted">{dict.pricing.priceLabel}</p>
+          <p className="mt-1.5 text-sm text-silver tabular-nums">
+            {format(dict.pricing.localApprox, { local: price.display })}
+          </p>
 
           <div className="mt-6 border-t border-line pt-6">
             <TopUpButton

@@ -281,6 +281,59 @@ await probe("chip: api key + brand", async () => {
   return { ok: false, detail: notFound ? "brand_id rejected by Chip" : `HTTP ${response.status}` };
 });
 
+// A sandbox key debits nobody while looking identical in the UI, so the mode is
+// reported explicitly rather than left to be assumed. Probing with 1 sen means
+// this check cannot move meaningful money even when the key is live.
+await probe("chip: live or sandbox key", async () => {
+  if (!env.CHIP_API_KEY || !env.CHIP_BRAND_ID) {
+    return { ok: false, warn: true, detail: "not configured" };
+  }
+  const base = (env.CHIP_API_BASE_URL || "https://gate.chip-in.asia/api/v1").replace(/\/$/, "");
+  const response = await fetch(`${base}/purchases/`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.CHIP_API_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      brand_id: env.CHIP_BRAND_ID,
+      reference: `JO-MODE-DOCTOR-${Date.now()}`,
+      client: { email: env.CHIP_TEST_EMAIL || "sandbox@jutaone.biz" },
+      purchase: { currency: "MYR", language: "en", products: [{ name: "mode probe", price: 1, quantity: 1 }] },
+      success_redirect: "https://example.com/ok",
+      failure_redirect: "https://example.com/fail",
+    }),
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!response.ok) return { ok: false, detail: `HTTP ${response.status}` };
+  const data = await response.json();
+  if (data.is_test === false) {
+    return { ok: true, detail: "LIVE key — a real charge moves real money" };
+  }
+  return {
+    ok: false,
+    warn: true,
+    detail: "SANDBOX key (is_test=true) — checkouts do not debit anyone",
+  };
+});
+
+// A live key with the sandbox placeholder email produces receipts nobody receives.
+await probe("chip: payer email", async () => {
+  const email = (env.CHIP_TEST_EMAIL || "").trim();
+  if (!email) {
+    return { ok: false, detail: "CHIP_TEST_EMAIL is empty — Chip requires a client email" };
+  }
+  if (/sandbox@|example\.com$/i.test(email)) {
+    return {
+      ok: false,
+      warn: true,
+      detail: `${email} is a placeholder — a live payment would produce an unusable receipt`,
+    };
+  }
+  return { ok: true, detail: email.replace(/^(.).*(@.*)$/, "$1***$2") };
+});
+
+
 // --- Cloudflare ------------------------------------------------------------
 await probe("cloudflare: api token", async () => {
   const response = await fetch("https://api.cloudflare.com/client/v4/user/tokens/verify", {

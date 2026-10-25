@@ -83,7 +83,10 @@ export function Hero({
                     {dict.pricing.tokenName}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-white tabular-nums">
-                    {price.display}
+                    {price.baseDisplay}{" "}
+                    <span className="text-sm font-normal text-muted">
+                      ≈ {price.display}
+                    </span>
                   </p>
                 </div>
                 <span className="rounded-md border border-line px-2.5 py-1 text-[11px] font-medium text-silver" lang={locale}>

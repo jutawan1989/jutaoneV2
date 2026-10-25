@@ -1,5 +1,10 @@
 import { randomUUID, verify as verifySignature } from "node:crypto";
-import { getPrice, type Price } from "@/lib/pricing";
+import {
+  BASE_PRICE_USD_CENTS,
+  getPriceForUsd,
+  type FxRates,
+  type Price,
+} from "@/lib/pricing";
 import type { Locale, Region } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
@@ -11,6 +16,10 @@ export type TopUpRequest = {
   variant: Variant;
   /** Absolute origin used for redirect URLs, e.g. https://jutaone.biz */
   origin: string;
+  /** Live FX rates, so the local amount matches what the site displayed. */
+  rates?: FxRates;
+  /** USD amount in cents; defaults to the single-unit base price. */
+  usdCents?: number;
 };
 
 export type TopUpSession = {
@@ -24,10 +33,73 @@ export function chipConfigured(): boolean {
   return Boolean(process.env.CHIP_API_KEY && process.env.CHIP_BRAND_ID);
 }
 
+/**
+ * Whether the configured key is a live key or a test key, according to Chip.
+ *
+ * This cannot be inferred from the key's shape, and the adapter has no mode
+ * flag of its own: "switch to live" is not a code change, it is whatever key is
+ * installed. Asking Chip is therefore the only honest answer, and it matters
+ * because a sandbox top-up debits nobody while looking identical in the UI.
+ */
+export async function chipMode(): Promise<"live" | "test" | "unknown" | "unconfigured"> {
+  if (!chipConfigured()) return "unconfigured";
+
+  try {
+    const baseUrl = (process.env.CHIP_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+    const response = await fetch(`${baseUrl}/purchases/`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${process.env.CHIP_API_KEY}`,
+      },
+      body: JSON.stringify({
+        brand_id: process.env.CHIP_BRAND_ID,
+        reference: `JO-MODE-${Date.now()}`,
+        client: { email: process.env.CHIP_TEST_EMAIL || "sandbox@jutaone.biz" },
+        purchase: {
+          currency: "MYR",
+          language: "en",
+          // 1 sen: the smallest chargeable amount, so a mode probe cannot move
+          // meaningful money even if the key turns out to be live.
+          products: [{ name: "mode probe", price: 1, quantity: 1 }],
+        },
+        success_redirect: "https://example.com/ok",
+        failure_redirect: "https://example.com/fail",
+      }),
+      signal: AbortSignal.timeout(10_000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) return "unknown";
+    const payload = (await response.json()) as { is_test?: boolean };
+    return payload.is_test === false ? "live" : "test";
+  } catch {
+    return "unknown";
+  }
+}
+
 export function generateReference(locale: Locale): string {
   return `JO-${locale.toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${randomUUID()
     .slice(0, 8)
     .toUpperCase()}`;
+}
+
+/**
+ * Languages Chip's hosted checkout actually accepts.
+ *
+ * Measured against the sandbox: `en` returns 201, while `ms` and `id` — the two
+ * markets this product is built for — return 400 `"ms" is not a valid choice.`
+ * Passing the locale straight through therefore failed every Malay and
+ * Indonesian purchase. `bm`, `in`, `zh`, `th`, `vi` and `en-MY` are rejected too.
+ *
+ * The checkout page falls back to English; the site around it stays in the
+ * visitor's language, and the product name is already localized.
+ */
+const CHIP_CHECKOUT_LANGUAGES = new Set<string>(["en"]);
+const CHIP_FALLBACK_LANGUAGE = "en";
+
+export function chipCheckoutLanguage(locale: Locale): string {
+  return CHIP_CHECKOUT_LANGUAGES.has(locale) ? locale : CHIP_FALLBACK_LANGUAGE;
 }
 
 /**
@@ -38,7 +110,7 @@ export function generateReference(locale: Locale): string {
  * sandbox API can be exercised without a form.
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
-  const price = getPrice(req.region);
+  const price = getPriceForUsd(req.usdCents ?? BASE_PRICE_USD_CENTS, req.region, req.rates);
   const reference = generateReference(req.locale);
   const localePath = `/${req.locale}/topup`;
 
@@ -62,7 +134,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
     },
     purchase: {
       currency: price.currency,
-      language: req.locale === "en" ? "en" : req.locale === "ms" ? "ms" : "id",
+      language: chipCheckoutLanguage(req.locale),
       products: [
         {
           name: `JutaOne.Biz — ${price.tokensLabel[req.locale]}`,
@@ -70,7 +142,12 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
           quantity: 1,
         },
       ],
-      notes: `variant=${req.variant};region=${req.region}`,
+      // The base price and the rate travel with the purchase, so the ledger and
+      // a support ticket can both explain the local amount without knowing what
+      // the FX rate was at the time.
+      notes:
+        `variant=${req.variant};region=${req.region};` +
+        `base=${price.baseUsdCents}usc;fx=${price.fxRate};fxsrc=${price.fxSource}`,
     },
     success_redirect: `${req.origin}${localePath}?status=success&ref=${reference}`,
     failure_redirect: `${req.origin}${localePath}?status=failed&ref=${reference}`,

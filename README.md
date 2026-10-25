@@ -85,8 +85,32 @@ tests/                       Vitest unit tests
 
 URLs are `/en`, `/ms`, `/id`; hreflang values are `ms-MY`, `id-ID`, `en` and
 `x-default`. **Locale and currency are independent**: a visitor from Malaysia
-reading the site in English still sees `RM3`, and an Indonesian visitor sees
-`Rp10,000`. Region comes from `cf-ipcountry`, currency from `lib/pricing.ts`.
+reading the site in English still pays in ringgit, and an Indonesian visitor
+pays in rupiah. Region comes from `cf-ipcountry`.
+
+**One USD base price.** `BASE_PRICE_USD_CENTS = 100` in `lib/pricing.ts` means
+$1.00 = 1,000,000 tokens. The local amount is derived from an FX rate at request
+time, so changing what a top-up costs in ringgit is one row, not a deploy.
+
+Rates live in the `fx_rates` table (effective-dated, positive-only), with
+`USD_TO_MYR_RATE` / `USD_TO_IDR_RATE` as the fallback when the database is
+unreachable, and hardcoded defaults behind that. The source (`db` / `env` /
+`default`) is recorded on every logged top-up, so a stale rate is discoverable
+after the fact rather than silently mispricing revenue.
+
+Every top-up records both figures: `amount` + `currency` (what the card was
+charged) and `base_usd_cents` + `fx_rate` (what it was worth in the base
+currency). The base and rate also ride along in the Chip purchase notes, so the
+webhook can write them without replaying a rate that has since moved.
+
+**IDR is a 2-decimal currency at Chip.** Verified at the gateway: sending
+`16000` renders `Rp160.00`, and `1600000` renders `Rp16,000.00`. The minor unit
+is therefore scaled by 100 for both currencies — passing whole rupiah would
+have undercharged Indonesia by 100x.
+
+Chip does accept USD directly (a USD purchase returns 201 and the checkout
+renders `$1.00`), but the local currency is kept on purpose: FPX and DuitNow are
+MYR-only rails, and a MYR/IDR charge is what a local card settles cleanly.
 
 ### Trial control (D3)
 
