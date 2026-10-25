@@ -77,8 +77,11 @@ function buildPrice(currency: CurrencyCode, usd: number): Price {
   const tokens = Math.round(usd * TOKENS_PER_USD);
   const amount =
     currency === "MYR" ? usd * MYR_PER_USD : currency === "IDR" ? usd * IDR_PER_USD : usd;
-  const amountMinor =
-    currency === "IDR" ? Math.round(amount) : Math.round(amount * 100);
+  // Chip treats IDR as a 2-decimal currency, the same as MYR: sending 16000
+  // renders "Rp160.00" and 1600000 renders "Rp16,000.00". Verified against the
+  // gateway, so the minor unit is scaled by 100 for both currencies. Sending
+  // whole rupiah undercharged Indonesia by 100x.
+  const amountMinor = Math.round(amount * 100);
   return {
     currency,
     usd,
