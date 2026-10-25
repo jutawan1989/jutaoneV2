@@ -1,63 +1,50 @@
+import Image from "next/image";
 import Link from "next/link";
-import { buildLogoMark, LOGO_MARK_VIEWBOX, type LogoVariant } from "@/lib/brand";
 import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/config";
 
+/**
+ * Brand mark supplied by the client (`logo.jpg`, JOB + globe). The dark
+ * background was keyed out to transparency so it sits cleanly on the ink
+ * surfaces; the artwork's own aspect ratio is preserved at every size.
+ */
+const MARK_SRC = "/assets/logo-job.png";
+const MARK_WIDTH = 448;
+const MARK_HEIGHT = 192;
+
 type LogoMarkProps = {
-  /** Keeps gradient and clip ids unique when several marks share a document. */
-  idPrefix: string;
+  /** Rendered width in px; height follows the artwork. */
   size?: number;
-  variant?: LogoVariant;
   className?: string;
-  /** Globe spins. Turn off where motion would be noise (e.g. footer). */
-  animated?: boolean;
   /** Accessible name. Omit when adjacent text already names the brand. */
   label?: string;
 };
 
-/**
- * The "JOB" mark with the globe as the O. The markup is generated from
- * `lib/brand.ts`, so it is byte-identical to the SVG in `public/assets/`.
- * Content is fully static and derived from constants, not from user input.
- */
-export function LogoMark({
-  idPrefix,
-  size = 32,
-  variant = "dark",
-  className,
-  animated = true,
-  label,
-}: LogoMarkProps) {
-  const height = Math.round((size * 62) / 120);
+export function LogoMark({ size = 32, className, label }: LogoMarkProps) {
+  const height = Math.round((size * MARK_HEIGHT) / MARK_WIDTH);
 
   return (
-    <svg
-      viewBox={LOGO_MARK_VIEWBOX}
+    <Image
+      src={MARK_SRC}
+      alt={label ?? ""}
       width={size}
       height={height}
-      className={[className, animated ? undefined : "[&_.jo-globe__spin]:[animation:none]"]
-        .filter(Boolean)
-        .join(" ")}
-      role={label ? "img" : "presentation"}
-      aria-label={label}
+      className={className}
       aria-hidden={label ? undefined : "true"}
-      focusable="false"
-      dangerouslySetInnerHTML={{ __html: buildLogoMark(variant, idPrefix) }}
+      unoptimized
     />
   );
 }
 
 /**
- * Mark plus the JUTAONE.BIZ wordmark, used in the navbar.
+ * Mark plus the JUTAONE.BIZ wordmark, used in the navbar and footer.
  */
 export function Logo({
   locale,
   size = "md",
-  idPrefix = "logo",
 }: {
   locale: Locale;
   size?: "sm" | "md";
-  idPrefix?: string;
 }) {
   const markHeight = size === "sm" ? 22 : 26;
   const text = size === "sm" ? "text-[13px]" : "text-sm";
@@ -69,8 +56,7 @@ export function Logo({
       aria-label="JutaOne.Biz"
     >
       <LogoMark
-        idPrefix={idPrefix}
-        size={Math.round((markHeight * 120) / 62)}
+        size={Math.round((markHeight * MARK_WIDTH) / MARK_HEIGHT)}
         className="shrink-0"
       />
       <span className={`${text} font-semibold tracking-[0.12em] text-white`}>

@@ -65,7 +65,6 @@ export function Hero({
 
             <div className="relative flex flex-col items-center gap-5">
               <LogoMark
-                idPrefix="hero"
                 size={232}
                 label={dict.a11y.globeLabel}
                 className="w-full max-w-[232px]"
