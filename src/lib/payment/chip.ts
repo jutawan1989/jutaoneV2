@@ -31,6 +31,24 @@ export function generateReference(locale: Locale): string {
 }
 
 /**
+ * Languages Chip's hosted checkout actually accepts.
+ *
+ * Measured against the sandbox: `en` returns 201, while `ms` and `id` — the two
+ * markets this product is built for — return 400 `"ms" is not a valid choice.`
+ * Passing the locale straight through therefore failed every Malay and
+ * Indonesian purchase. `bm`, `in`, `zh`, `th`, `vi` and `en-MY` are rejected too.
+ *
+ * The checkout page falls back to English; the site around it stays in the
+ * visitor's language, and the product name is already localized.
+ */
+const CHIP_CHECKOUT_LANGUAGES = new Set<string>(["en"]);
+const CHIP_FALLBACK_LANGUAGE = "en";
+
+export function chipCheckoutLanguage(locale: Locale): string {
+  return CHIP_CHECKOUT_LANGUAGES.has(locale) ? locale : CHIP_FALLBACK_LANGUAGE;
+}
+
+/**
  * Creates a Chip.Asia purchase (sandbox or production depending on the key).
  *
  * The local flow collects no PII before this point; the payer's email is
@@ -62,7 +80,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
     },
     purchase: {
       currency: price.currency,
-      language: req.locale === "en" ? "en" : req.locale === "ms" ? "ms" : "id",
+      language: chipCheckoutLanguage(req.locale),
       products: [
         {
           name: `JutaOne.Biz — ${price.tokensLabel[req.locale]}`,
