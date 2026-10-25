@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { logEvent, parseUtm } from "@/lib/analytics/events";
 import { isVariant, resolveVariant } from "@/lib/analytics/variant";
+import { getFxRates } from "@/lib/fx";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
 import { createTopUpSession } from "@/lib/payment/chip";
@@ -24,11 +25,13 @@ export async function POST(request: NextRequest) {
   const utm = parseUtm(request.nextUrl.search);
 
   try {
+    const rates = await getFxRates();
     const session = await createTopUpSession({
       locale,
       region,
       variant,
       origin: request.nextUrl.origin,
+      rates,
     });
 
     await logEvent({
@@ -38,7 +41,15 @@ export async function POST(request: NextRequest) {
       variant,
       utm,
       visitorKey: visitor.visitorKey,
-      props: { mode: session.mode, reference: session.reference, amount: session.price.amount },
+      props: {
+        mode: session.mode,
+        reference: session.reference,
+        amount: session.price.amount,
+        currency: session.price.currency,
+        base_usd_cents: session.price.baseUsdCents,
+        fx_rate: session.price.fxRate,
+        fx_source: session.price.fxSource,
+      },
     });
 
     return NextResponse.json({
@@ -46,6 +57,8 @@ export async function POST(request: NextRequest) {
       checkoutUrl: session.checkoutUrl,
       reference: session.reference,
       amount: session.price.display,
+      basePrice: session.price.baseDisplay,
+      currency: session.price.currency,
       tokens: session.price.tokens,
     });
   } catch (error) {

@@ -12,7 +12,7 @@ type ChipCallback = {
   id?: string;
   reference?: string;
   status?: string;
-  purchase?: { total?: number; currency?: string };
+  purchase?: { total?: number; currency?: string; notes?: string };
 };
 
 /**
@@ -41,6 +41,11 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabase();
   if (db && payload.id) {
+    // The USD base and the FX rate that produced the local charge are carried in
+    // the purchase notes, so historical revenue is readable in the base currency
+    // without replaying a rate that has since moved.
+    const notes = parsePurchaseNotes(payload.purchase?.notes);
+
     const { error } = await db.from("topups").upsert(
       {
         provider: "chip",
@@ -49,6 +54,9 @@ export async function POST(request: NextRequest) {
         status: payload.status,
         amount: payload.purchase?.total ?? null,
         currency: payload.purchase?.currency ?? null,
+        base_usd_cents: notes.baseUsdCents,
+        fx_rate: notes.fxRate,
+        fx_currency: payload.purchase?.currency ?? null,
       },
       { onConflict: "provider_id" },
     );
@@ -65,6 +73,20 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ ok: true });
+}
+
+function parsePurchaseNotes(notes: string | undefined): {
+  baseUsdCents: number | null;
+  fxRate: number | null;
+} {
+  const base = notes?.match(/base=(\d+)usc/);
+  const fx = notes?.match(/fx=([\d.]+)/);
+  const baseUsdCents = base ? Number(base[1]) : NaN;
+  const fxRate = fx ? Number(fx[1]) : NaN;
+  return {
+    baseUsdCents: Number.isFinite(baseUsdCents) ? baseUsdCents : null,
+    fxRate: Number.isFinite(fxRate) ? fxRate : null,
+  };
 }
 
 function safeParse(raw: string): ChipCallback | null {

@@ -1,5 +1,5 @@
 import { randomUUID, verify as verifySignature } from "node:crypto";
-import { getPrice, type Price } from "@/lib/pricing";
+import { getPrice, type FxRates, type Price } from "@/lib/pricing";
 import type { Locale, Region } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
@@ -11,6 +11,8 @@ export type TopUpRequest = {
   variant: Variant;
   /** Absolute origin used for redirect URLs, e.g. https://jutaone.biz */
   origin: string;
+  /** Live FX rates, so the local amount matches what the site displayed. */
+  rates?: FxRates;
 };
 
 export type TopUpSession = {
@@ -56,7 +58,7 @@ export function chipCheckoutLanguage(locale: Locale): string {
  * sandbox API can be exercised without a form.
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
-  const price = getPrice(req.region);
+  const price = getPrice(req.region, req.rates);
   const reference = generateReference(req.locale);
   const localePath = `/${req.locale}/topup`;
 
@@ -88,7 +90,12 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
           quantity: 1,
         },
       ],
-      notes: `variant=${req.variant};region=${req.region}`,
+      // The base price and the rate travel with the purchase, so the ledger and
+      // a support ticket can both explain the local amount without knowing what
+      // the FX rate was at the time.
+      notes:
+        `variant=${req.variant};region=${req.region};` +
+        `base=${price.baseUsdCents}usc;fx=${price.fxRate};fxsrc=${price.fxSource}`,
     },
     success_redirect: `${req.origin}${localePath}?status=success&ref=${reference}`,
     failure_redirect: `${req.origin}${localePath}?status=failed&ref=${reference}`,

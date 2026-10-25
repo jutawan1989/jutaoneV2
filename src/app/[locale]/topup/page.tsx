@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { TopUpPanel } from "@/components/topup-panel";
 import { resolveVariant } from "@/lib/analytics/variant";
+import { getFxRates } from "@/lib/fx";
 import { detectRegion } from "@/lib/geo";
 import { getDictionary } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n/config";
@@ -23,7 +24,7 @@ export default async function TopUpPage({ params, searchParams }: TopUpPageProps
 
   const dict = getDictionary(locale);
   const region = detectRegion(requestHeaders);
-  const price = getPrice(region);
+  const price = getPrice(region, await getFxRates());
   const visitor = identifyVisitor(requestHeaders);
   const variant = resolveVariant(visitor.visitorKey);
 

@@ -19,12 +19,12 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = join(repoRoot, ".env.local");
 
-const REQUESTED_TABLES = ["demo_attempts", "ai_usage", "events", "topups"];
+const REQUESTED_TABLES = ["demo_attempts", "ai_usage", "events", "topups", "fx_rates"];
 
 function loadEnv(path) {
   let raw;
@@ -84,7 +84,10 @@ function report(label, ok, detail = "") {
   if (!ok) process.exitCode = 1;
 }
 
-const schema = readFileSync(join(repoRoot, "supabase", "schema.sql"), "utf8");
+const schemaFiles = [
+  join(repoRoot, "supabase", "schema.sql"),
+  join(repoRoot, "supabase", "fx.sql"),
+];
 
 const region = await projectRegion();
 console.log(`project ${ref} region ${region}`);
@@ -95,8 +98,10 @@ if (region !== "ap-southeast-1") {
   );
 }
 
-console.log("applying supabase/schema.sql ...");
-await query(schema);
+for (const file of schemaFiles) {
+  console.log(`applying ${relative(repoRoot, file)} ...`);
+  await query(readFileSync(file, "utf8"));
+}
 console.log("schema applied");
 
 if (!process.argv.includes("--verify")) {
@@ -128,15 +133,48 @@ const functions = await query(`
   select proname
   from pg_proc p
   join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and proname = 'jutaone_daily_cost';
+  where n.nspname = 'public';
 `);
-report("function jutaone_daily_cost exists", functions.length === 1);
+report(
+  "function jutaone_daily_cost exists",
+  functions.some((row) => row.proname === "jutaone_daily_cost"),
+);
 
 const costCheck = await query("select public.jutaone_daily_cost(current_date) as spent;");
 report(
   "jutaone_daily_cost is callable",
   Array.isArray(costCheck) && costCheck.length === 1,
   `spent=${costCheck?.[0]?.spent}`,
+);
+
+report(
+  "function jutaone_latest_fx_rate exists",
+  functions.some((row) => row.proname === "jutaone_latest_fx_rate"),
+);
+
+// Every chargeable currency needs a usable rate, or checkout would quote a free
+// top-up. A zero or negative rate is rejected by the table constraint, but a
+// missing row would silently fall through to the env fallback at runtime — so it
+// is reported here instead.
+const fxCheck = await query(`
+  select c.currency, public.jutaone_latest_fx_rate(c.currency) as rate
+  from (values ('MYR'), ('IDR')) as c(currency);
+`);
+for (const row of fxCheck ?? []) {
+  const rate = Number(row.rate);
+  report(`fx rate for ${row.currency}`, Number.isFinite(rate) && rate > 0, `rate=${row.rate}`);
+}
+
+// The USD base has to survive the round trip through the local currency.
+const roundTrip = await query(`
+  select public.jutaone_latest_fx_rate('MYR') as myr,
+         public.jutaone_latest_fx_rate('IDR') as idr;
+`);
+const { myr, idr } = roundTrip?.[0] ?? {};
+report(
+  "USD base converts to a chargeable local amount",
+  Number(myr) > 0 && Number(idr) > 0,
+  `$1.00 = RM${(1 * Number(myr)).toFixed(2)} = Rp${Math.round(1 * Number(idr)).toLocaleString("en-US")}`,
 );
 
 const indexes = await query(`
