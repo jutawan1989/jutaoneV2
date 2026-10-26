@@ -17,7 +17,8 @@
     "migrate": "node scripts/migrate-supabase.mjs --verify",
     "qa:modal": "node scripts/qa-modal.mjs",
     "build:worker": "node scripts/build-worker.mjs",
-    "qa:store": "node scripts/qa-store.mjs"
+    "qa:store": "node scripts/qa-store.mjs",
+    "qa:matrix": "node scripts/qa-matrix.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
