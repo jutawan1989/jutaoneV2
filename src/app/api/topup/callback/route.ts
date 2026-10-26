@@ -146,22 +146,44 @@ async function activateRent(
   const applied = Boolean(row?.applied);
   const periodEnd = row?.period_end ?? null;
 
-  // Credit the referring affiliate only when a new period was actually bought.
-  let commission: number | null = null;
+  // Pay the upline matrix only when a new period was actually bought: a Chip
+  // retry must not pay 19 people twice.
+  let levelsPaid: number | null = null;
   const grossMinor = payload.purchase?.total ?? null;
   const currency = payload.purchase?.currency ?? null;
 
   if (applied && grossMinor && currency) {
-    const { data: earning, error: earningError } = await db.rpc(
-      "jutaone_credit_rent_affiliate",
-      { p_subscription: subscriptionId, p_gross_minor: grossMinor, p_currency: currency },
-    );
-    if (earningError) {
-      // Not fatal: the customer has paid and the store is open. The credit can
-      // be replayed from the payment row afterwards.
-      console.error("[jutaone] rent affiliate credit failed", earningError.message);
+    // `p_from_code_id` is the BUYER's own code; level 1 is its parent. A merchant
+    // who bought without a referral has no code, so nothing is paid.
+    const { data: buyerCode, error: codeError } = await db
+      .from("referral_codes")
+      .select("id")
+      .eq("owner_ref", ownerRef)
+      .maybeSingle();
+
+    if (codeError) {
+      console.error("[jutaone] affiliate lookup failed", codeError.message);
+    } else if (buyerCode?.id) {
+      const { data: written, error: matrixError } = await db.rpc(
+        "jutaone_distribute_commission",
+        {
+          p_source: "rent",
+          p_topup_id: null,
+          p_rent_id: subscriptionId,
+          p_from_code_id: buyerCode.id,
+          p_gross_minor: grossMinor,
+          p_currency: currency,
+        },
+      );
+      if (matrixError) {
+        // Not fatal: the customer has paid and the store is open. The matrix can
+        // be replayed from the payment row afterwards.
+        console.error("[jutaone] matrix distribution failed", matrixError.message);
+      } else {
+        levelsPaid = typeof written === "number" ? written : 0;
+      }
     } else {
-      commission = earning === null ? 0 : 1;
+      levelsPaid = 0; // no referrer, so no upline to pay
     }
   }
 
@@ -169,13 +191,14 @@ async function activateRent(
     ownerRef: ownerRef.slice(0, 12),
     applied,
     periodEnd,
+    levelsPaid,
   });
 
   return {
     activated: true,
     applied,
     paidUntil: periodEnd,
-    commission,
+    levelsPaid,
     replayed: !applied,
   };
 }
