@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { StoreSubscriptionModal } from "@/components/store-subscription-modal";
+
+type SubscriptionState = {
+  status: string;
+  isOpen: boolean;
+  trialDaysLeft: number | null;
+  trialEndsAt: string | null;
+} | null;
 
 type Order = {
   invoiceNumber: string;
@@ -13,8 +21,16 @@ type Order = {
 
 type AddedProduct = { id: number; shopSlug: string; name: string };
 
-export function MerchantDashboard({ initialOrders }: { initialOrders: Order[] }) {
+export function MerchantDashboard({
+  initialOrders,
+  subscription: initialSubscription,
+}: {
+  initialOrders: Order[];
+  subscription: SubscriptionState;
+}) {
   const [shopSlug, setShopSlug] = useState("");
+  const [subscription, setSubscription] = useState<SubscriptionState>(initialSubscription);
+  const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -85,7 +101,58 @@ export function MerchantDashboard({ initialOrders }: { initialOrders: Order[] })
         <p className="mt-1.5 text-sm text-muted">
           Tambah produk, kongsi pautan kedai, dan terima pesanan bertulis.
         </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2.5">
+          {!subscription ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setModalOpen(true)}
+                className="btn-brand px-3.5 py-2 text-sm"
+              >
+                Buka Kedai
+              </button>
+              <span className="text-xs text-muted">
+                7 hari percubaan percuma, kemudian $5.00/bulan
+              </span>
+            </>
+          ) : subscription.isOpen ? (
+            <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
+              Kedai aktif
+              {subscription.status === "trial" && subscription.trialDaysLeft !== null
+                ? ` · percubaan ${subscription.trialDaysLeft} hari lagi`
+                : " · Store Pro"}
+            </span>
+          ) : (
+            <>
+              <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                Kedai tidak aktif
+              </span>
+              <button
+                type="button"
+                onClick={() => setModalOpen(true)}
+                className="btn-brand px-3.5 py-2 text-sm"
+              >
+                Aktifkan semula — $5.00/bulan
+              </button>
+            </>
+          )}
+        </div>
       </header>
+
+      <StoreSubscriptionModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onTrialStarted={(trialEndsAt) => {
+          setSubscription({
+            status: "trial",
+            isOpen: true,
+            trialDaysLeft: 7,
+            trialEndsAt,
+          });
+          setModalOpen(false);
+        }}
+      />
 
       <form onSubmit={submit} className="card mt-6 p-5">
         <h2 className="text-base font-semibold text-white">Tambah produk</h2>

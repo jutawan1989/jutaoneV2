@@ -21,6 +21,29 @@ export type ShopInfo = {
   products: Product[];
 };
 
+/**
+ * Whether a shop is open, by subscription entitlement.
+ *
+ * A shop with no subscription row is treated as open: stores created before
+ * Store Rent existed must not vanish. A shop whose trial lapsed or whose
+ * subscription is cancelled is closed.
+ */
+export async function shopEntitlement(
+  slug: string,
+): Promise<{ isOpen: boolean; ownerRef: string | null; status: string }> {
+  const db = getSupabase();
+  if (!db || !isValidSlug(slug)) return { isOpen: false, ownerRef: null, status: "unknown" };
+
+  const { data, error } = await db.rpc("jutaone_shop_status", { p_slug: slug });
+  if (error || !data || data.length === 0) {
+    // No products at all means the shop does not exist.
+    return { isOpen: false, ownerRef: null, status: "missing" };
+  }
+
+  const row = data[0] as { owner_ref: string; is_open: boolean; status: string };
+  return { isOpen: row.is_open, ownerRef: row.owner_ref, status: row.status };
+}
+
 const SLUG = /^[a-z0-9][a-z0-9-]{2,31}$/;
 
 export function isValidSlug(slug: string): boolean {

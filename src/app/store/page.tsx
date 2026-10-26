@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { MerchantDashboard } from "@/components/merchant-dashboard";
 import { getMerchantOrders } from "@/lib/store";
+import { getSubscription } from "@/lib/subscription";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
@@ -22,10 +23,23 @@ export const metadata = {
 export default async function StoreDashboard() {
   const requestHeaders = await headers();
   const owner = identifyVisitor(requestHeaders).visitorKey;
-  const orders = await getMerchantOrders(owner);
+  const [orders, subscription] = await Promise.all([
+    getMerchantOrders(owner),
+    getSubscription(owner),
+  ]);
 
   return (
     <MerchantDashboard
+      subscription={
+        subscription
+          ? {
+              status: subscription.status,
+              isOpen: subscription.isOpen,
+              trialDaysLeft: subscription.trialDaysLeft,
+              trialEndsAt: subscription.trialEndsAt,
+            }
+          : null
+      }
       initialOrders={orders.map((order) => ({
         invoiceNumber: order.invoice_number,
         customerName: order.customer_name,

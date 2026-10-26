@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { CheckoutForm } from "@/components/checkout-form";
 import { LogoMark } from "@/components/logo";
-import { getShopProducts, isValidSlug } from "@/lib/store";
+import { getShopProducts, isValidSlug, shopEntitlement } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +40,39 @@ export default async function ShopPage({ params }: Props) {
 
   const products = await getShopProducts(slug);
   if (products.length === 0) notFound();
+
+  // A closed shop still renders its name so a customer who followed a link
+  // knows they reached the right place, but shows no products and no checkout.
+  const entitlement = await shopEntitlement(slug);
+  if (!entitlement.isOpen) {
+    return (
+      <main className="mx-auto w-full max-w-2xl px-4 pt-10 pb-20 sm:px-6">
+        <header className="border-b border-line pb-6">
+          <div className="flex items-center gap-2.5">
+            <LogoMark size={28} label="JutaOne.Biz" />
+            <span className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
+              JutaOne.Biz
+            </span>
+          </div>
+          <h1 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-white capitalize">
+            {slug.replace(/-/g, " ")}
+          </h1>
+        </header>
+
+        <section className="card mt-8 p-6">
+          <p className="text-[11px] font-medium tracking-[0.12em] text-amber-300 uppercase">
+            Kedai tidak aktif
+          </p>
+          <p className="mt-2.5 text-base leading-relaxed text-silver">
+            Kedai ini sedang tidak aktif. Hubungi peniaga.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            Produk tidak dipaparkan sementara langganan kedai tamat tempoh.
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-10 pb-20 sm:px-6">
