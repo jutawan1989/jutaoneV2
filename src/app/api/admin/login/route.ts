@@ -1,0 +1,71 @@
+import { NextResponse, type NextRequest } from "next/server";
+import {
+  ADMIN_COOKIE,
+  ADMIN_SESSION_SECONDS,
+  adminMisconfiguredReason,
+  issueSession,
+  passwordMatches,
+} from "@/lib/admin/auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/** In-memory throttle; a Worker isolate restart clears it. */
+const attempts = new Map<string, { count: number; first: number }>();
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_ATTEMPTS = 10;
+
+function clientKey(request: NextRequest): string {
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+/**
+ * Admin sign-in.
+ *
+ * One password, compared in constant time, exchanged for a signed httpOnly
+ * cookie. The password itself never travels on subsequent requests, and a short
+ * password disables the panel entirely rather than opening an unlimited route on
+ * "boss1".
+ */
+export async function POST(request: NextRequest) {
+  const misconfigured = adminMisconfiguredReason();
+  if (misconfigured) {
+    return NextResponse.json({ code: "admin_not_configured" }, { status: 503 });
+  }
+
+  const key = clientKey(request);
+  const now = Date.now();
+  const entry = attempts.get(key);
+  if (entry && now - entry.first <= WINDOW_MS && entry.count >= MAX_ATTEMPTS) {
+    return NextResponse.json({ code: "too_many_attempts" }, { status: 429 });
+  }
+
+  const body = (await request.json().catch(() => null)) as { password?: unknown } | null;
+  const password = typeof body?.password === "string" ? body.password : "";
+
+  if (!passwordMatches(password)) {
+    if (!entry || now - entry.first > WINDOW_MS) {
+      attempts.set(key, { count: 1, first: now });
+    } else {
+      entry.count += 1;
+    }
+    // Deliberately slow: this password guards the money dashboard.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return NextResponse.json({ code: "invalid_password" }, { status: 401 });
+  }
+
+  attempts.delete(key);
+  const response = NextResponse.json({ ok: true });
+  response.cookies.set(ADMIN_COOKIE, issueSession(now), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: ADMIN_SESSION_SECONDS,
+  });
+  return response;
+}
