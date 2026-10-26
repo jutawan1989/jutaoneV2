@@ -151,11 +151,22 @@ export function StoreSubscriptionModal({
         </h2>
 
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Dapatkan <span className="font-medium text-white">7 hari percubaan percuma</span>.
-          Seterusnya hanya{" "}
-          <span className="font-medium text-white">$5.00/bulan</span>{" "}
-          <span className="text-silver">(≈ RM23.50 / Rp80,000)</span>.
+          Aktifkan Kedai Anda Hari Ini. Dapatkan{" "}
+          <span className="font-medium text-white">7 Hari Percubaan Percuma</span>. Selepas itu,
+          hanya <span className="font-medium text-white">$5.00/bulan</span>{" "}
+          <span className="text-silver">(≈ RM23.50)</span>.
         </p>
+
+        <div className="mt-4 rounded-lg border border-line bg-ink/50 p-3.5">
+          <p className="text-[11px] font-medium tracking-[0.1em] text-muted uppercase">
+            Bandingkan
+          </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-silver">
+            Shopify caj <span className="font-medium text-white">RM136/bulan</span> untuk kedai
+            sahaja. JutaOne.Biz beri anda Kedai + AI Marketing + Pembekal hanya dengan{" "}
+            <span className="font-medium text-white">RM23.50</span>.
+          </p>
+        </div>
 
         <ul className="mt-4 space-y-2 border-y border-line py-4 text-sm text-silver">
           {[
@@ -179,7 +190,7 @@ export function StoreSubscriptionModal({
           disabled={busy !== null}
           className="btn-brand mt-5 w-full"
         >
-          {busy === "trial" ? "Mengaktifkan…" : "Mula Percubaan Percuma"}
+          {busy === "trial" ? "Mengaktifkan…" : "Start 7-Day Free Trial"}
         </button>
 
         <button
@@ -188,7 +199,7 @@ export function StoreSubscriptionModal({
           disabled={busy !== null}
           className="btn-ghost mt-2.5 w-full"
         >
-          {busy === "pay" ? "Membuka pembayaran…" : "Langgan Sekarang — $5.00/bulan"}
+          {busy === "pay" ? "Membuka pembayaran…" : "Subscribe Now ($5)"}
         </button>
 
         {error && (

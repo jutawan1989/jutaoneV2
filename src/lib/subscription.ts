@@ -9,6 +9,8 @@ import { getSupabase } from "@/lib/db";
 
 export const RENT_USD_CENTS = 500;
 export const TRIAL_DAYS = 7;
+/** Billing period granted by one payment. */
+export const RENT_DAYS = 30;
 /** Rough local estimates for the modal, at the same FX the top-up flow uses. */
 export const RENT_LOCAL_HINT = { MY: "RM23.50", ID: "Rp80,000" } as const;
 

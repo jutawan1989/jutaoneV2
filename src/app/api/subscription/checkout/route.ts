@@ -60,8 +60,9 @@ export async function POST(request: NextRequest) {
             products: [
               { name: "JutaOne.Biz — Store Pro (1 bulan)", price: amountMinor, quantity: 1 },
             ],
-            // The webhook distinguishes rent from tokens by this marker.
-            notes: `kind=rent;owner=${owner};usd=${RENT_USD_CENTS}`,
+            // The webhook distinguishes rent from a token top-up by this marker:
+            // both arrive on /api/topup/callback signed by the same key.
+            notes: `kind=rent;owner=${owner};usd=${RENT_USD_CENTS};monthly`,
           },
           success_redirect: `${origin}/store?sub=success`,
           failure_redirect: `${origin}/store?sub=failed`,

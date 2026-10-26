@@ -9,6 +9,10 @@ export const ANALYTICS_EVENTS = [
   "hook_view",
   "topup_click",
   "topup_success",
+  // Store Rent is a separate product from tokens, so it gets its own event
+  // rather than being folded into topup_success: revenue reporting has to be
+  // able to tell a subscription from a token sale.
+  "rent_success",
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
