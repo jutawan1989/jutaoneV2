@@ -4,7 +4,10 @@ import { isLocale } from "@/lib/i18n/config";
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|assets|favicon.ico|robots.txt|sitemap.xml).*)",
+    // Excluded because none of these are localized pages and rewriting them to
+    // /en/... would 404: API routes, static assets, the admin playground, and
+    // the standalone Auto-Store surfaces (public storefront, printable invoice).
+    "/((?!api|shop|invoice|store|admin|_next/static|_next/image|assets|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };
 
