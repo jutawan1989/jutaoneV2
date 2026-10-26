@@ -142,3 +142,29 @@ export async function createMember(input: {
     member: { ownerRef: input.ownerRef, email: input.email, displayName: input.displayName ?? null },
   };
 }
+
+/**
+ * Profile for the signed-in member.
+ *
+ * The session cookie carries only `owner_ref`, so the display name is read here
+ * rather than embedded: a name change should not require re-issuing a cookie,
+ * and the cookie stays small.
+ */
+export async function getMemberProfile(
+  ownerRef: string,
+): Promise<{ email: string; displayName: string | null } | null> {
+  const db = getSupabase();
+  if (!db) return null;
+
+  const { data, error } = await db
+    .from("members")
+    .select("email, display_name")
+    .eq("owner_ref", ownerRef)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return {
+    email: data.email as string,
+    displayName: (data.display_name as string | null) ?? null,
+  };
+}
