@@ -17,6 +17,7 @@ type DemoResponse = {
   remaining?: number | null;
   used?: number | null;
   max?: number | null;
+  copyAllowed?: boolean;
   variant?: Variant;
   code?: string;
 };
@@ -31,6 +32,8 @@ type AdGeneratorProps = {
   initialRemaining: number;
   initialUsed: number;
   maxAttempts: number;
+  /** Whether this generation's output may be copied; server-decided. */
+  initialCopyAllowed: boolean;
   demoDisabled: boolean;
 };
 
@@ -44,6 +47,7 @@ export function AdGenerator({
   initialRemaining,
   initialUsed,
   maxAttempts,
+  initialCopyAllowed,
   demoDisabled,
 }: AdGeneratorProps) {
   const [text, setText] = useState("");
@@ -54,6 +58,10 @@ export function AdGenerator({
   const [error, setError] = useState<string | null>(null);
   const [hookOpen, setHookOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Whether the current caption may be copied. Server-decided: the lock is a
+  // paid feature, so the client must not be able to unlock it by editing state.
+  const [copyAllowed, setCopyAllowed] = useState(initialCopyAllowed);
+  const [lockNotice, setLockNotice] = useState<string | null>(null);
   const hookTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -90,6 +98,8 @@ export function AdGenerator({
 
         if (response.ok && data.caption) {
           setCaption(data.caption);
+          if (typeof data.copyAllowed === "boolean") setCopyAllowed(data.copyAllowed);
+          setLockNotice(null);
           const nextRemaining = data.remaining ?? 0;
           setRemaining(nextRemaining);
           if (typeof data.used === "number") setUsed(data.used);
@@ -101,6 +111,10 @@ export function AdGenerator({
 
         if (response.status === 429) {
           setRemaining(0);
+          setCopyAllowed(false);
+          // The quota is spent, so the hook leads with the $1 top-up rather than
+          // a bare error.
+          setLockNotice(dict.generator.quotaExhausted);
           setError(dict.generator.errorLimit);
           openHook();
           return;
@@ -126,6 +140,15 @@ export function AdGenerator({
 
   async function copyCaption() {
     if (!caption) return;
+
+    // Locked: show the hook instead of copying. The visitor keeps seeing the
+    // text; paying is what unlocks using it.
+    if (!copyAllowed) {
+      setLockNotice(dict.generator.copyLocked);
+      openHook();
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(caption);
       setCopied(true);
@@ -183,6 +206,10 @@ export function AdGenerator({
               ) : (
                 <span className="rounded-md border border-line px-2.5 py-1 text-xs text-muted tabular-nums">
                   {format(remaining === 1 ? dict.generator.remaining : dict.generator.remainingPlural, {
+                    // The copy now reads "Kuota Harian: X/5", so it needs both
+                    // values; passing only `count` left the placeholders raw.
+                    remaining: Math.max(remaining, 0),
+                    max: maxAttempts,
                     count: Math.max(remaining, 0),
                   })}
                 </span>
@@ -206,9 +233,19 @@ export function AdGenerator({
               <button
                 type="button"
                 onClick={copyCaption}
-                className="rounded-md border border-line px-2.5 py-1 text-xs font-medium text-silver transition-colors hover:border-[#334155] hover:text-white"
+                aria-disabled={!copyAllowed}
+                title={copyAllowed ? undefined : dict.generator.copyLocked}
+                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  copyAllowed
+                    ? "border-line text-silver hover:border-[#334155] hover:text-white"
+                    : "border-amber-500/40 text-amber-300"
+                }`}
               >
-                {copied ? dict.generator.copied : dict.generator.copy}
+                {copied
+                  ? dict.generator.copied
+                  : copyAllowed
+                    ? dict.generator.copy
+                    : `🔒 ${dict.generator.copy}`}
               </button>
             )}
           </div>
@@ -224,6 +261,12 @@ export function AdGenerator({
             <div className="flex flex-1 items-center justify-center">
               <p className="max-w-xs text-center text-sm text-muted/70">{dict.generator.placeholder}</p>
             </div>
+          )}
+
+          {lockNotice && (
+            <p role="alert" className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
+              {lockNotice}
+            </p>
           )}
 
           <div className="mt-auto flex items-center justify-between border-t border-line pt-3 text-[11px] text-muted">

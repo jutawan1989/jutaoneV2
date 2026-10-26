@@ -10,6 +10,8 @@
  * Results are normalised into the same shape as `supplier_directory`, so the UI
  * renders one card component whether a row came from Exa or from our own table.
  */
+import { providerDomains, type SearchCountry } from "@/lib/geo-domains";
+
 const EXA_URL = "https://api.exa.ai/search";
 
 export type SupplierResult = {
@@ -104,7 +106,10 @@ export function normalizeExaResults(payload: ExaResponse): SupplierResult[] {
   return out;
 }
 
-export async function searchSuppliers(query: string): Promise<SupplierResult[]> {
+export async function searchSuppliers(
+  query: string,
+  country: SearchCountry,
+): Promise<SupplierResult[]> {
   const key = process.env.EXA_API_KEY;
   if (!key) throw new Error("EXA_API_KEY is not configured");
 
@@ -115,6 +120,9 @@ export async function searchSuppliers(query: string): Promise<SupplierResult[]> 
       query,
       // Highlights give the card a real description without shipping whole pages.
       contents: { highlights: true },
+      // Country-pinned. Exa rejects a bare suffix ("Domain must include a
+      // top-level domain: my"), so only registrable suffixes are sent.
+      includeDomains: providerDomains(country),
     }),
     signal: AbortSignal.timeout(15_000),
     cache: "no-store",

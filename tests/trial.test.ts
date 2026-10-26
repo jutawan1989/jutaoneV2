@@ -1,83 +1,117 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  DEMO_DEVICE_MAX_ATTEMPTS,
-  DEMO_MAX_ATTEMPTS,
+  COPY_FREE_GENERATIONS,
+  DAILY_GENERATION_QUOTA,
   evaluateDemoAccess,
+  localDay,
   recordDemoAttempt,
 } from "@/lib/trial/limit";
 import { memoryStore, resetMemoryStore } from "@/lib/trial/store";
-import { identifyVisitor } from "@/lib/trial/visitor";
+import type { Visitor } from "@/lib/trial/visitor";
 
-function requestHeaders(userAgent = "Mozilla/5.0 (iPhone) Safari/605", ip = "203.0.113.10") {
-  const headers = new Headers({
-    "user-agent": userAgent,
-    "accept-language": "ms-MY,ms;q=0.9",
-    "cf-connecting-ip": ip,
-  });
-  return headers;
+const VISITOR: Visitor = {
+  ipHash: "ip-hash-a",
+  deviceHash: "device-hash-a",
+  visitorKey: "visitor-hash-a",
+};
+
+/** Advances `records` generations for a visitor and returns the last decision. */
+async function useGenerations(count: number, visitor = VISITOR, now = new Date()) {
+  for (let i = 0; i < count; i += 1) {
+    await recordDemoAttempt(visitor, { locale: "ms", region: "MY" }, memoryStore);
+  }
+  return evaluateDemoAccess(visitor, memoryStore, now);
 }
 
-describe("demo trial control", () => {
-  beforeEach(() => {
-    resetMemoryStore();
-    process.env.VISITOR_HASH_SALT = "test-salt-that-is-long-enough";
+describe("daily generation quota", () => {
+  beforeEach(() => resetMemoryStore());
+
+  it("starts with a full daily quota, not a lifetime cap", async () => {
+    const decision = await evaluateDemoAccess(VISITOR, memoryStore);
+    expect(decision.max).toBe(DAILY_GENERATION_QUOTA);
+    expect(decision.used).toBe(0);
+    expect(decision.remaining).toBe(DAILY_GENERATION_QUOTA);
+    expect(decision.allowed).toBe(true);
   });
 
-  it(`allows ${DEMO_MAX_ATTEMPTS} attempts then blocks the visitor`, async () => {
-    const visitor = identifyVisitor(requestHeaders());
+  it("allows five generations then blocks with daily_limit", async () => {
+    const afterFour = await useGenerations(4);
+    expect(afterFour.allowed).toBe(true);
+    expect(afterFour.remaining).toBe(1);
 
-    const first = await evaluateDemoAccess(visitor, memoryStore);
-    expect(first).toMatchObject({ allowed: true, used: 0, max: DEMO_MAX_ATTEMPTS, remaining: 2 });
-
-    await recordDemoAttempt(visitor, { locale: "ms", region: "MY" }, memoryStore);
-    const second = await evaluateDemoAccess(visitor, memoryStore);
-    expect(second).toMatchObject({ allowed: true, used: 1, remaining: 1 });
-
-    await recordDemoAttempt(visitor, { locale: "ms", region: "MY" }, memoryStore);
-    const third = await evaluateDemoAccess(visitor, memoryStore);
-    expect(third).toMatchObject({ allowed: false, used: 2, remaining: 0, reason: "visitor_limit" });
+    const afterFive = await useGenerations(1);
+    expect(afterFive.allowed).toBe(false);
+    expect(afterFive.used).toBe(5);
+    expect(afterFive.remaining).toBe(0);
+    expect(afterFive.reason).toBe("daily_limit");
   });
 
-  it("persists the limit across requests with the same IP and device", async () => {
-    const a = identifyVisitor(requestHeaders());
-    const b = identifyVisitor(requestHeaders());
+  it("resets on the next local day", async () => {
+    await useGenerations(5);
+    const exhausted = await evaluateDemoAccess(VISITOR, memoryStore);
+    expect(exhausted.allowed).toBe(false);
 
-    await recordDemoAttempt(a, { locale: "ms", region: "MY" }, memoryStore);
-    await recordDemoAttempt(a, { locale: "ms", region: "MY" }, memoryStore);
-
-    const decision = await evaluateDemoAccess(b, memoryStore);
-    expect(decision.allowed).toBe(false);
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const fresh = await evaluateDemoAccess(VISITOR, memoryStore, tomorrow);
+    expect(fresh.allowed).toBe(true);
+    expect(fresh.used).toBe(0);
+    expect(fresh.remaining).toBe(DAILY_GENERATION_QUOTA);
+    expect(fresh.day).toBe(localDay(tomorrow));
   });
 
-  it("blocks a device that rotates its IP", async () => {
-    const device = "Mozilla/5.0 (Linux; Android 14) Chrome/126";
+  it("scopes the count to the visitor's local day", async () => {
+    await useGenerations(5);
+    const today = localDay();
+    expect(await memoryStore.countByVisitor(VISITOR.visitorKey, today)).toBe(5);
+    expect(await memoryStore.countByVisitor(VISITOR.visitorKey, "1999-01-01")).toBe(0);
+  });
+});
 
-    for (let index = 0; index < DEMO_DEVICE_MAX_ATTEMPTS; index += 1) {
-      const visitor = identifyVisitor(requestHeaders(device, `198.51.100.${index + 1}`));
-      await recordDemoAttempt(visitor, { locale: "ms", region: "MY" }, memoryStore);
-    }
+describe("copy-lock hook", () => {
+  beforeEach(() => resetMemoryStore());
 
-    const rotated = identifyVisitor(requestHeaders(device, "198.51.100.99"));
+  it("allows copy for the first two generations", async () => {
+    const first = await evaluateDemoAccess(VISITOR, memoryStore);
+    expect(first.copyAllowed).toBe(true);
+
+    await useGenerations(1);
+    const second = await evaluateDemoAccess(VISITOR, memoryStore);
+    expect(second.copyAllowed).toBe(true);
+    expect(COPY_FREE_GENERATIONS).toBe(2);
+  });
+
+  it("locks copy from the third generation while still allowing generation", async () => {
+    const third = await useGenerations(2);
+    // The text is still produced; only copying is locked.
+    expect(third.allowed).toBe(true);
+    expect(third.copyAllowed).toBe(false);
+
+    const fifth = await useGenerations(2);
+    expect(fifth.allowed).toBe(true);
+    expect(fifth.copyAllowed).toBe(false);
+  });
+
+  it("never allows copy once the quota is exhausted", async () => {
+    const exhausted = await useGenerations(5);
+    expect(exhausted.allowed).toBe(false);
+    expect(exhausted.copyAllowed).toBe(false);
+  });
+});
+
+describe("device fingerprint guard", () => {
+  beforeEach(() => resetMemoryStore());
+
+  it("does not let a new IP reset the quota for the same device", async () => {
+    await useGenerations(5);
+
+    // Same browser, new IP: the visitor hash changes, the device hash does not.
+    const rotated: Visitor = {
+      ipHash: "ip-hash-b",
+      deviceHash: VISITOR.deviceHash,
+      visitorKey: "visitor-hash-b",
+    };
     const decision = await evaluateDemoAccess(rotated, memoryStore);
     expect(decision.allowed).toBe(false);
-    expect(decision.reason).toBe("device_limit");
-  });
-
-  it("hashes the visitor identity instead of storing raw values", async () => {
-    const visitor = identifyVisitor(requestHeaders());
-    expect(visitor.ipHash).not.toContain("203.0.113.10");
-    expect(visitor.visitorKey).toHaveLength(64);
-    expect(visitor.ipHash).toHaveLength(64);
-  });
-
-  it("treats a different device as a new visitor", async () => {
-    const phone = identifyVisitor(requestHeaders("iPhone UA"));
-    await recordDemoAttempt(phone, { locale: "ms", region: "MY" }, memoryStore);
-    await recordDemoAttempt(phone, { locale: "ms", region: "MY" }, memoryStore);
-
-    const laptop = identifyVisitor(requestHeaders("MacBook UA", "203.0.113.10"));
-    const decision = await evaluateDemoAccess(laptop, memoryStore);
-    expect(decision.allowed).toBe(true);
-    expect(decision.remaining).toBe(DEMO_MAX_ATTEMPTS);
+    expect(decision.reason).toBe("daily_limit");
   });
 });

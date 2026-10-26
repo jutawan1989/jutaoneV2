@@ -14,6 +14,13 @@ export type SupplierResult = {
   verified: boolean;
 };
 
+type Billing = {
+  chargedTokens: number;
+  balanceAfter: number;
+  replayed?: boolean;
+  freeMode?: boolean;
+};
+
 type SearchResponse = {
   ok?: boolean;
   source?: "exa" | "directory" | "none";
@@ -21,6 +28,9 @@ type SearchResponse = {
   results?: SupplierResult[];
   degraded?: string | null;
   code?: string;
+  required?: number;
+  balance?: number;
+  billing?: Billing;
 };
 
 const EXAMPLES = [
@@ -54,6 +64,10 @@ export function BizMatchSearch({
   const [source, setSource] = useState<string | null>(null);
   const [degraded, setDegraded] = useState<string | null>(null);
   const [saved, setSaved] = useState<Record<string, "saving" | "saved" | "failed">>({});
+  const [billing, setBilling] = useState<Billing | null>(null);
+  const [insufficient, setInsufficient] = useState<{ required: number; balance: number } | null>(
+    null,
+  );
 
   const run = useCallback(
     async (event: FormEvent) => {
@@ -64,10 +78,23 @@ export function BizMatchSearch({
       setBusy(true);
       setError(null);
       setSaved({});
+      setInsufficient(null);
 
       try {
         const response = await fetch(`/api/biz-match/search?q=${encodeURIComponent(q)}`);
         const data = (await response.json()) as SearchResponse;
+
+        if (response.status === 402) {
+          // Not an error the visitor can fix by retrying, so it gets its own
+          // state rather than the generic failure text.
+          setInsufficient({
+            required: data.required ?? 10_000,
+            balance: data.balance ?? 0,
+          });
+          setResults(null);
+          setBilling(null);
+          return;
+        }
 
         if (!response.ok) {
           setError(
@@ -82,6 +109,7 @@ export function BizMatchSearch({
         setResults(data.results ?? []);
         setSource(data.source ?? null);
         setDegraded(data.degraded ?? null);
+        setBilling(data.billing ?? null);
       } catch {
         setError("Rangkaian bermasalah. Cuba lagi.");
       } finally {
@@ -169,10 +197,24 @@ export function BizMatchSearch({
           </div>
         )}
 
+        <p className="mt-2.5 text-[11px] text-muted">
+          10,000 Token akan ditolak hanya jika carian berjaya.
+        </p>
+
         {error && (
           <p role="alert" className="mt-3 text-sm text-red-300">
             {error}
           </p>
+        )}
+
+        {insufficient && (
+          <div role="alert" className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5">
+            <p className="text-sm font-medium text-amber-200">Token tidak mencukupi</p>
+            <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+              Carian ini memerlukan {insufficient.required.toLocaleString("en-US")} token.
+              Baki anda: {insufficient.balance.toLocaleString("en-US")} token.
+            </p>
+          </div>
         )}
       </form>
 
@@ -189,6 +231,14 @@ export function BizMatchSearch({
             {degraded && source === "directory" && (
               <p className="text-[11px] text-amber-300/80">
                 Carian web tidak tersedia — memaparkan direktori
+              </p>
+            )}
+            {billing && (
+              <p className="text-[11px] text-muted/80">
+                {billing.chargedTokens > 0
+                  ? `${billing.chargedTokens.toLocaleString("en-US")} token ditolak · baki ${billing.balanceAfter.toLocaleString("en-US")}`
+                  : "Tiada token ditolak untuk carian ini"}
+                {billing.replayed ? " · sudah dicaj sebelum ini" : ""}
               </p>
             )}
           </div>

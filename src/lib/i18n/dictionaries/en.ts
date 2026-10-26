@@ -46,9 +46,13 @@ export const en = {
     hint: "Max 200 characters. Include your price and area for a sharper caption.",
     submit: "Write my caption",
     generating: "Writing...",
-    remaining: "{count} free demo left",
-    remainingPlural: "{count} free demos left",
-    limitBadge: "Free demos used: {count}/{max}",
+    remaining: "Daily quota: {remaining}/{max}",
+    remainingPlural: "Daily quota: {remaining}/{max}",
+    limitBadge: "Daily quota used: {count}/{max}",
+    quotaExhausted:
+      "Your daily limit is used up. Top up $1 (1 million tokens) to keep generating unlimited ads today.",
+    copyLocked:
+      "Like this result? Top up $1 to copy and use this ad commercially.",
     outputLabel: "Your caption",
     copy: "Copy",
     copied: "Copied",

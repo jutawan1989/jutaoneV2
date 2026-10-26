@@ -47,9 +47,13 @@ export const id: Dictionary = {
     hint: "Maksimal 200 karakter. Sertakan harga dan area Anda agar caption lebih tajam.",
     submit: "Tulis caption saya",
     generating: "Sedang menulis...",
-    remaining: "{count} percobaan gratis tersisa",
-    remainingPlural: "{count} percobaan gratis tersisa",
-    limitBadge: "Percobaan gratis terpakai: {count}/{max}",
+    remaining: "Kuota Harian: {remaining}/{max}",
+    remainingPlural: "Kuota Harian: {remaining}/{max}",
+    limitBadge: "Kuota harian terpakai: {count}/{max}",
+    quotaExhausted:
+      "Kuota harian Anda habis. Top up $1 (1 juta token) untuk terus membuat iklan tanpa batas hari ini.",
+    copyLocked:
+      "Suka hasil ini? Top up $1 untuk menyalin dan memakai iklan ini secara komersial.",
     outputLabel: "Caption Anda",
     copy: "Salin",
     copied: "Tersalin",

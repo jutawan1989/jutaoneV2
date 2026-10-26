@@ -47,9 +47,13 @@ export const ms: Dictionary = {
     hint: "Maksimum 200 aksara. Sertakan harga dan kawasan anda untuk kapsyen yang lebih tepat.",
     submit: "Tulis kapsyen saya",
     generating: "Sedang menulis...",
-    remaining: "{count} percubaan percuma tinggal",
-    remainingPlural: "{count} percubaan percuma tinggal",
-    limitBadge: "Percubaan percuma digunakan: {count}/{max}",
+    remaining: "Kuota Harian: {remaining}/{max}",
+    remainingPlural: "Kuota Harian: {remaining}/{max}",
+    limitBadge: "Kuota harian digunakan: {count}/{max}",
+    quotaExhausted:
+      "Had harian anda telah habis. Sila Top-Up $1 (1 Juta Token) untuk terus menjana iklan tanpa had hari ini.",
+    copyLocked:
+      "Suka hasil ini? Top-Up $1 untuk salin dan guna iklan ini secara komersial.",
     outputLabel: "Kapsyen anda",
     copy: "Salin",
     copied: "Disalin",

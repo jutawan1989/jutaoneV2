@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabase } from "@/lib/db";
-import { exaConfigured, searchSuppliers, type SupplierResult } from "@/lib/exa";
+import { searchSuppliers, type SupplierResult } from "@/lib/search";
+import { emptyMessage, isSearchCountry, type SearchCountry } from "@/lib/geo-domains";
+import { SEARCH_COST_TOKENS, chargeTokens, getTokenBalance } from "@/lib/tokens";
+import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,15 +12,24 @@ const MIN_QUERY = 3;
 const MAX_QUERY = 200;
 
 /**
- * Supplier search for Biz-Match.
+ * Supplier search for Biz-Match, metered.
  *
- * Live semantic search from Exa, falling back to our own `supplier_directory`
- * when Exa is unavailable or returns nothing. The fallback matters: a supplier
- * page that shows an error because a third-party API is down is worse than one
- * that shows the 25 suppliers we already have.
+ * Money rule (Linda): charge 10,000 tokens only when the search actually
+ * succeeds. The order is therefore:
  *
- * Every result carries `origin`, so the UI can badge live results differently
- * and only offer "save" on the ones that are not already stored.
+ *   1. check the balance and refuse early with 402 — cheaper than calling Exa
+ *      and then discovering the visitor cannot pay;
+ *   2. call Exa;
+ *   3. charge only if Exa returned results;
+ *   4. a failure, a zero-result search, or the directory fallback is free.
+ *
+ * The charge is keyed by a request reference, so a retried request does not
+ * charge twice for one search.
+ *
+ * One caveat that matters: without a token grant flow, every visitor has a zero
+ * balance and gets 402. `BIZ_MATCH_FREE=1` keeps the directory usable while
+ * tokens are not yet issued; it exempts the search from the balance check but
+ * still records nothing, so enabling it cannot silently cost money.
  */
 export async function GET(request: NextRequest) {
   const raw = request.nextUrl.searchParams.get("q") ?? "";
@@ -36,34 +48,122 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  let exaError: string | null = null;
+  // Country scope. Explicit `?country=` wins; otherwise fall back to the
+  // Cloudflare geo header, which the site already relies on elsewhere. Never
+  // guess: an unscoped search is exactly the bug Boss reported.
+  const requestedCountry = request.nextUrl.searchParams.get("country")?.toUpperCase() ?? null;
+  const headerCountry = request.headers.get("cf-ipcountry")?.toUpperCase() ?? null;
+  const country: SearchCountry = isSearchCountry(requestedCountry)
+    ? requestedCountry
+    : isSearchCountry(headerCountry)
+      ? headerCountry
+      : "MY";
 
-  if (exaConfigured()) {
-    try {
-      const results = await searchSuppliers(query);
-      if (results.length > 0) {
-        return NextResponse.json({ ok: true, source: "exa", count: results.length, results });
-      }
-      // No results is not an error: fall through to the local directory rather
-      // than showing an empty page.
-      exaError = "exa_returned_no_results";
-    } catch (error) {
-      exaError = error instanceof Error ? error.message : String(error);
-      console.error("[jutaone] Exa search failed, falling back to directory", exaError);
-    }
-  } else {
-    exaError = "exa_not_configured";
+  const visitor = identifyVisitor(request.headers);
+  const freeMode = process.env.BIZ_MATCH_FREE === "1";
+
+  // A retried request reuses the same reference, so it cannot double-charge.
+  const reference =
+    request.nextUrl.searchParams.get("rid")?.slice(0, 64) ??
+    `search:${visitor.visitorKey.slice(0, 16)}:${Buffer.from(query).toString("base64url").slice(0, 24)}`;
+
+  const balance = await getTokenBalance(visitor.visitorKey);
+
+  // Step 1: refuse before spending an Exa request.
+  if (!freeMode && balance < SEARCH_COST_TOKENS) {
+    return NextResponse.json(
+      {
+        code: "insufficient_tokens",
+        required: SEARCH_COST_TOKENS,
+        balance,
+        rationale: "Carian ini memerlukan 10,000 token.",
+        results: [],
+        source: "none",
+      },
+      { status: 402 },
+    );
   }
 
+  // Primary provider with automatic fallback to the other. Which provider leads
+  // is configuration (SEARCH_PROVIDER), not code.
+  const { outcome, attempts } = await searchSuppliers(query, country);
+  const providerErrors = attempts
+    .filter((attempt) => !attempt.ok)
+    .map((attempt) => `${attempt.provider}: ${attempt.error}`)
+    .join(" | ");
+
+  {
+    {
+      const results = outcome.results;
+      if (results.length > 0) {
+        // Step 3: real results, so this one is billable.
+        const charge = freeMode
+          ? ({ ok: true, charged: false, balanceAfter: balance, replayed: false } as const)
+          : await chargeTokens({
+              visitorKey: visitor.visitorKey,
+              cost: SEARCH_COST_TOKENS,
+              reference,
+              note: `biz-match:${query.slice(0, 80)}`,
+            });
+
+        if (!charge.ok && charge.reason === "insufficient") {
+          // Lost the race against a concurrent charge: no results, no fee.
+          return NextResponse.json(
+            {
+              code: "insufficient_tokens",
+              required: SEARCH_COST_TOKENS,
+              balance,
+              results: [],
+              source: "none",
+            },
+            { status: 402 },
+          );
+        }
+
+        return NextResponse.json({
+          ok: true,
+          source: outcome.provider,
+          country,
+          count: results.length,
+          providerErrors: providerErrors || null,
+          results,
+          // The UI shows exactly what was charged, and why nothing was.
+          billing: {
+            chargedTokens: charge.ok && charge.charged ? SEARCH_COST_TOKENS : 0,
+            balanceAfter: charge.ok ? charge.balanceAfter : balance,
+            replayed: charge.ok ? charge.replayed : false,
+            freeMode,
+          },
+        });
+      }
+    }
+  }
+
+  const degraded = providerErrors || "no_results_for_country";
+  if (providerErrors) {
+    console.error("[jutaone] search providers failed, falling back to directory", providerErrors);
+  }
+
+  // Step 4: nothing usable came back, so the visitor is not charged.
   const results = await searchDirectory(query);
 
   return NextResponse.json({
     ok: true,
     source: "directory",
+    country,
     count: results.length,
-    // Surfaced so a silent degradation is visible in the UI and in logs.
-    degraded: exaError,
+    degraded,
+    // Country-scoped emptiness gets its own copy, and the other country is
+    // never substituted: showing Malaysian suppliers to an Indonesian buyer is
+    // the bug this feature exists to fix.
+    message: results.length === 0 ? emptyMessage(country) : null,
     results,
+    billing: {
+      chargeAfterSuccess: true,
+      chargedTokens: 0,
+      balanceAfter: balance,
+      freeMode,
+    },
   });
 }
 
@@ -92,7 +192,6 @@ async function searchDirectory(query: string): Promise<SupplierResult[]> {
     country: string;
     website: string | null;
     verified: boolean;
-    source: string;
   };
 
   return ((data ?? []) as Row[]).map((row) => ({

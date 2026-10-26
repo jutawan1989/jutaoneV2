@@ -13,7 +13,7 @@ import { detectRegion } from "@/lib/geo";
 import { getDictionary } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n/config";
 import { getPrice } from "@/lib/pricing";
-import { DEMO_MAX_ATTEMPTS, evaluateDemoAccess } from "@/lib/trial/limit";
+import { DAILY_GENERATION_QUOTA, evaluateDemoAccess } from "@/lib/trial/limit";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 type PageProps = {
@@ -57,8 +57,9 @@ export default async function HomePage({ params, searchParams }: PageProps) {
           currency={price.currency}
           tokenName={tokenName}
           initialRemaining={access.remaining}
+          initialCopyAllowed={access.copyAllowed}
           initialUsed={access.used}
-          maxAttempts={DEMO_MAX_ATTEMPTS}
+          maxAttempts={DAILY_GENERATION_QUOTA}
           demoDisabled={killSwitch.disabled}
         />
         <GoldWidget dict={dict} />

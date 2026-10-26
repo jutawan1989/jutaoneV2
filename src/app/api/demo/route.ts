@@ -5,7 +5,11 @@ import { logEvent, parseUtm } from "@/lib/analytics/events";
 import { resolveVariant } from "@/lib/analytics/variant";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
-import { evaluateDemoAccess, recordDemoAttempt } from "@/lib/trial/limit";
+import {
+  COPY_FREE_GENERATIONS,
+  evaluateDemoAccess,
+  recordDemoAttempt,
+} from "@/lib/trial/limit";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
@@ -71,7 +75,14 @@ export async function POST(request: NextRequest) {
       props: { reason: access.reason, used: access.used },
     });
     return NextResponse.json(
-      { code: access.reason, remaining: 0, used: access.used, max: access.max, variant },
+      {
+        code: access.reason,
+        remaining: 0,
+        used: access.used,
+        max: access.max,
+        copyAllowed: false,
+        variant,
+      },
       { status: 429 },
     );
   }
@@ -111,6 +122,12 @@ export async function POST(request: NextRequest) {
     remaining: after.remaining,
     used: after.used,
     max: after.max,
+    // The client must not decide this itself: the lock is a paid feature, so the
+    // server states whether this generation's output is copyable.
+    // Derived from `after`, not `access`: `access` is the count *before* this
+    // attempt was recorded, so reading it here made the third generation look
+    // like the second and left copy unlocked one generation too long.
+    copyAllowed: after.used <= COPY_FREE_GENERATIONS,
     variant,
   });
 }
