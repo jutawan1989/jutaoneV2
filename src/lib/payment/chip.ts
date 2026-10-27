@@ -22,6 +22,21 @@ export type TopUpSession = {
   checkoutUrl: string | null;
 };
 
+/**
+ * Languages Chip's hosted checkout accepts.
+ *
+ * Measured against the gateway: `en` returns 201 while `ms`, `id`, `bm`, `in`,
+ * `zh`, `th`, `vi` and `en-MY` all return 400 "not a valid choice". Passing the
+ * site locale through therefore failed every Malay and Indonesian purchase with
+ * a 502 from our own API. The checkout page is English-only; the site around it
+ * stays in the visitor's language and the product name is already localized.
+ */
+const CHIP_CHECKOUT_LANGUAGES = new Set<string>(["en"]);
+
+export function chipCheckoutLanguage(locale: Locale): string {
+  return CHIP_CHECKOUT_LANGUAGES.has(locale) ? locale : "en";
+}
+
 export function chipConfigured(): boolean {
   return Boolean(process.env.CHIP_API_KEY && process.env.CHIP_BRAND_ID);
 }
@@ -65,7 +80,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
     },
     purchase: {
       currency: price.currency,
-      language: req.locale === "en" ? "en" : req.locale === "ms" ? "ms" : "id",
+      language: chipCheckoutLanguage(req.locale),
       products: [
         {
           name: `JutaOne.Biz - ${formatTokenCount(price.tokens, req.locale)}`,
