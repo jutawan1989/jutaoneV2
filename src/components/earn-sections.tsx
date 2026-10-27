@@ -59,6 +59,26 @@ export function EarnSections({ dict }: { dict: Dictionary }) {
                   </li>
                 ))}
               </ul>
+              {section.id === "biz-match" && (
+                <Link
+                  href={section.href}
+                  aria-label={section.cta}
+                  className="mt-7 flex w-full items-center gap-2.5 rounded-lg border border-line bg-ink-2/70 px-3.5 py-3 text-sm text-muted/70 transition-colors hover:border-brand hover:text-silver"
+                >
+                  <svg
+                    aria-hidden
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className="shrink-0"
+                  >
+                    <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="m11 11 2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <span className="truncate">{dict.suppliers.searchPlaceholder}</span>
+                </Link>
+              )}
               <div className="mt-7">
                 <Link href={section.href} className="btn-brand w-full sm:w-auto">
                   {section.cta}

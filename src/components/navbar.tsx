@@ -68,6 +68,12 @@ export function Navbar({
           <Link href="#gold" className="transition-colors hover:text-white">
             {dict.nav.gold}
           </Link>
+          <Link
+            href={localePath(locale, "/directory")}
+            className="transition-colors hover:text-white"
+          >
+            {dict.nav.suppliers}
+          </Link>
           <Link href="#pricing" className="transition-colors hover:text-white">
             {dict.nav.pricing}
           </Link>

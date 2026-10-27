@@ -9,6 +9,7 @@ export const en = {
   nav: {
     demo: "Live demo",
     gold: "Gold widget",
+    suppliers: "Find Suppliers",
     pricing: "Token pricing",
     cta: "Start with {price}",
     languageLabel: "Language",
@@ -107,15 +108,16 @@ export const en = {
     cta: "Join Affiliate Now",
   },
   suppliers: {
-    eyebrow: "Find suppliers & distributors",
-    title: "Biz-Match — meet real suppliers, not scammers",
-    body: "Need to restock or find a new distributor? Just type what you're looking for — our AI finds real suppliers with company name, location and website.",
+    eyebrow: "Biz-Match — AI supplier search",
+    title: "Struggling to Find Wholesale Suppliers? Let AI Find Them.",
+    body: "Find manufacturers, wholesalers, or dropshippers across Malaysia & Indonesia in 2 seconds. Just type what you need — our AI finds real suppliers with company name, location and website.",
     bullets: [
       "Search in everyday language",
       "Results with name, location & web",
       "Save hours of manual surveying",
     ],
-    cta: "Find Suppliers Now",
+    cta: "Try Finding Suppliers Now",
+    searchPlaceholder: "E.g. cotton fabric supplier KL, cheap plastic bags…",
   },
   pricing: {
     title: "Token only. Nothing hidden.",

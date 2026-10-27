@@ -10,6 +10,7 @@ export const id: Dictionary = {
   nav: {
     demo: "Demo langsung",
     gold: "Widget emas",
+    suppliers: "Cari Supplier",
     pricing: "Harga token",
     cta: "Mulai dengan {price}",
     languageLabel: "Bahasa",
@@ -108,15 +109,16 @@ export const id: Dictionary = {
     cta: "Join Affiliate Sekarang",
   },
   suppliers: {
-    eyebrow: "Cari pemasok & distributor",
-    title: "Biz-Match — ketemu supplier asli, bukan penipu",
-    body: "Mau restock barang atau cari distributor baru? Ketik saja apa yang Anda cari — AI kami carikan pemasok beneran lengkap dengan nama perusahaan, lokasi, dan situs web.",
+    eyebrow: "Biz-Match — pencarian supplier AI",
+    title: "Susah Cari Supplier Grosir? Biar AI yang Carikan.",
+    body: "Cari produsen, grosir, atau dropship dari seluruh Indonesia & Malaysia dalam 2 detik. Ketik saja apa yang Anda cari — AI kami carikan pemasok beneran lengkap dengan nama perusahaan, lokasi, dan situs web.",
     bullets: [
       "Cari pakai bahasa sehari-hari",
       "Hasil lengkap nama, lokasi & web",
       "Hemat waktu survei berjam-jam",
     ],
-    cta: "Cari Pemasok Sekarang",
+    cta: "Coba Cari Supplier Sekarang",
+    searchPlaceholder: "Cth: supplier kain katun JKT, plastik murah…",
   },
   pricing: {
     title: "Hanya token. Tidak ada yang tersembunyi.",
