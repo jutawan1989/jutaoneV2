@@ -54,17 +54,17 @@ export const ms: Dictionary = {
     remainingPlural: "Kuota Harian: {remaining}/{max}",
     limitBadge: "Kuota harian digunakan: {count}/{max}",
     quotaExhausted:
-      "Had harian anda telah habis. Sila Top-Up $1 (1 Juta Token) untuk terus menjana iklan tanpa had hari ini.",
+      "Kuota percubaan anda dah habis. Jom Top-Up $1 (1 Juta Token) untuk sambung buat iklan tanpa had hari ni.",
     copyLocked:
       "Suka hasil ini? Top-Up $1 untuk salin dan guna iklan ini secara komersial.",
     outputLabel: "Kapsyen anda",
     copy: "Salin",
     copied: "Disalin",
     regenerateHint: "Belum sesuai? Ubah teks anda dan cuba lagi selagi percubaan masih ada.",
-    errorGeneric: "Maaf, ada masalah. Sila cuba sebentar lagi.",
-    errorLimit: "Percubaan percuma anda sudah habis. Tambah nilai untuk teruskan.",
+    errorGeneric: "Alamak, ada masalah teknikal. Cuba lagi sekejap ya.",
+    errorLimit: "Kuota percubaan anda dah habis. Jom Top-Up sekarang untuk sambung.",
     errorBlocked: "Demo dijeda untuk hari ini. Anda masih boleh tambah nilai.",
-    errorTooShort: "Sila tulis sekurang-kurangnya 5 aksara.",
+    errorTooShort: "Tulis sekurang-kurangnya 5 huruf ya.",
   },
   gold: {
     title: "Widget isyarat emas & perak",

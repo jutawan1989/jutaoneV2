@@ -1,8 +1,8 @@
-export const LOCALES = ["en", "ms", "id"] as const;
+export const LOCALES = ["ms", "id", "en"] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
-export const DEFAULT_LOCALE: Locale = "en";
+export const DEFAULT_LOCALE: Locale = "ms";
 
 export type Region = "MY" | "ID" | "OTHER";
 
@@ -22,7 +22,7 @@ export type LocaleMeta = {
 export const LOCALE_META: Record<Locale, LocaleMeta> = {
   en: { label: "English", short: "EN", htmlLang: "en", hreflang: "en", region: "OTHER" },
   ms: { label: "Bahasa Melayu", short: "BM", htmlLang: "ms-MY", hreflang: "ms-MY", region: "MY" },
-  id: { label: "Bahasa Indonesia", short: "BI", htmlLang: "id-ID", hreflang: "id-ID", region: "ID" },
+  id: { label: "Bahasa Indonesia", short: "ID", htmlLang: "id-ID", hreflang: "id-ID", region: "ID" },
 };
 
 export function isLocale(value: string | null | undefined): value is Locale {
@@ -31,16 +31,16 @@ export function isLocale(value: string | null | undefined): value is Locale {
 
 /**
  * Locale used for a visitor's region. Requirement D6: MY -> BM, ID -> BI,
- * everything else -> EN.
+ * everything else -> BM (Boss spec: BM-first default).
  */
 export function localeForRegion(region: Region): Locale {
+  // Boss requirement: BM first. MY -> BM, ID -> ID, everything else -> BM.
   switch (region) {
-    case "MY":
-      return "ms";
     case "ID":
       return "id";
+    case "MY":
     default:
-      return "en";
+      return "ms";
   }
 }
 

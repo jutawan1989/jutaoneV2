@@ -18,9 +18,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${siteUrl}/${locale}`,
     lastModified,
     changeFrequency: "weekly",
-    priority: locale === "en" ? 1 : 0.9,
+    priority: locale === "ms" ? 1 : 0.9,
     alternates: {
-      languages: { ...languages, "x-default": `${siteUrl}/en` },
+      languages: { ...languages, "x-default": `${siteUrl}/ms` },
     },
   }));
 }

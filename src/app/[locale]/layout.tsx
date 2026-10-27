@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
         "ms-MY": "/ms",
         "id-ID": "/id",
         en: "/en",
-        "x-default": "/en",
+        "x-default": "/ms",
       },
     },
     openGraph: {

@@ -57,10 +57,10 @@ describe("dictionaries", () => {
 });
 
 describe("locale helpers", () => {
-  it("maps regions to locales", () => {
+  it("maps regions to locales (BM-first default)", () => {
     expect(localeForRegion("MY")).toBe("ms");
     expect(localeForRegion("ID")).toBe("id");
-    expect(localeForRegion("OTHER")).toBe("en");
+    expect(localeForRegion("OTHER")).toBe("ms");
   });
 
   it("builds locale paths", () => {

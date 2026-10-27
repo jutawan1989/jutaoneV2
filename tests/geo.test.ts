@@ -14,10 +14,10 @@ describe("geo routing (D6)", () => {
     expect(detectLocale(headers)).toBe("id");
   });
 
-  it("routes other countries to English", () => {
+  it("routes other countries to Bahasa Melayu (BM-first default)", () => {
     for (const country of ["SG", "US", "GB", "AU"]) {
       expect(detectRegion(new Headers({ "cf-ipcountry": country }))).toBe("OTHER");
-      expect(detectLocale(new Headers({ "cf-ipcountry": country }))).toBe("en");
+      expect(detectLocale(new Headers({ "cf-ipcountry": country }))).toBe("ms");
     }
   });
 

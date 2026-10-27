@@ -59,15 +59,15 @@ describe("sitemap.xml", () => {
       expect(languages["ms-MY"]).toBe("https://jutaone.example/ms");
       expect(languages["id-ID"]).toBe("https://jutaone.example/id");
       expect(languages.en).toBe("https://jutaone.example/en");
-      expect(languages["x-default"]).toBe("https://jutaone.example/en");
+      expect(languages["x-default"]).toBe("https://jutaone.example/ms");
     }
   });
 
-  it("gives English the canonical priority", () => {
+  it("gives Bahasa Melayu the canonical priority", () => {
     const entries = sitemap();
     const english = entries.find((entry) => entry.url.endsWith("/en"));
     const malay = entries.find((entry) => entry.url.endsWith("/ms"));
-    expect(english?.priority).toBe(1);
-    expect(malay?.priority).toBeLessThan(1);
+    expect(malay?.priority).toBe(1);
+    expect(english?.priority).toBeLessThan(1);
   });
 });

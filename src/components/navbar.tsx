@@ -18,6 +18,7 @@ export function LanguageSwitcher({
       aria-label={label}
       className="flex items-center gap-0.5 rounded-md border border-line bg-white/[0.02] p-0.5"
     >
+      {/* Boss spec: order BM | ID | EN (LOCALES is ["ms","id","en"]), active pill is solid brand. */}
       {LOCALES.map((candidate) => {
         const active = candidate === locale;
         return (
@@ -26,8 +27,12 @@ export function LanguageSwitcher({
             href={localePath(candidate, pathSuffix)}
             hrefLang={LOCALE_META[candidate].hreflang}
             aria-current={active ? "true" : undefined}
-            className={`rounded-[5px] px-2.5 py-1 text-xs font-medium transition-colors ${
-              active ? "bg-surface-2 text-white" : "text-muted hover:text-white"
+            aria-label={LOCALE_META[candidate].label}
+            title={LOCALE_META[candidate].label}
+            className={`rounded-[5px] px-2.5 py-1 text-xs font-semibold transition-colors ${
+              active
+                ? "bg-brand text-white shadow-[0_2px_10px_-2px_rgba(37,99,235,0.8)]"
+                : "text-muted hover:bg-white/[0.06] hover:text-white"
             }`}
           >
             {LOCALE_META[candidate].short}
