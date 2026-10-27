@@ -53,6 +53,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LogoMark } from "@/components/logo";
+import { PremiumArt } from "@/components/premium-art";
 import { cn } from "@/lib/utils";
 import type { MemberOverview, MemberPayout } from "@/lib/member-data";
 import type { NetworkLevel } from "@/lib/affiliate";
@@ -964,10 +965,10 @@ export function MemberDashboard({
   const t = DASH_STR[lang];
 
   const TABS_UI = [
-    { id: "overview" as const, label: t.tabs.overview, hint: t.tabs.overviewHint, icon: LayoutDashboard },
-    { id: "store" as const, label: t.tabs.store, hint: t.tabs.storeHint, icon: Store },
-    { id: "affiliate" as const, label: t.tabs.affiliate, hint: t.tabs.affiliateHint, icon: Network },
-    { id: "tools" as const, label: t.tabs.tools, hint: t.tabs.toolsHint, icon: Sparkles },
+    { id: "overview" as const, label: t.tabs.overview, hint: t.tabs.overviewHint, icon: LayoutDashboard, art: null as string | null },
+    { id: "store" as const, label: t.tabs.store, hint: t.tabs.storeHint, icon: Store, art: null as string | null },
+    { id: "affiliate" as const, label: t.tabs.affiliate, hint: t.tabs.affiliateHint, icon: Network, art: null as string | null },
+    { id: "tools" as const, label: t.tabs.tools, hint: t.tabs.toolsHint, icon: Sparkles, art: "/assets/ai-robot.jpg" as string | null },
   ];
 
   const RANKS_UI = RANKS.map((rank, index) => ({
@@ -1096,7 +1097,11 @@ export function MemberDashboard({
                         : "text-muted hover:bg-white/[0.04] hover:text-white",
                     )}
                   >
-                    <Icon className={cn("size-[17px] shrink-0", active && "text-brand")} />
+                    {entry.art ? (
+                      <PremiumArt src={entry.art} alt="" size={22} glow="cyan" rounded="rounded-lg" />
+                    ) : (
+                      <Icon className={cn("size-[17px] shrink-0", active && "text-brand")} />
+                    )}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-medium">{entry.label}</span>
                       <span
@@ -1180,7 +1185,7 @@ export function MemberDashboard({
                   <div className="aurora -top-24 -right-14 h-56 w-56 bg-brand/25" />
                   <CardContent className="relative p-5">
                     <div className="flex items-start justify-between">
-                      <IconTile icon={Wallet} tone="brand" />
+                      <PremiumArt src="/assets/token.jpg" alt={t.tokenBalance} size={56} glow="cyan" />
                       <Pill tone="blue">
                         <CircleDollarSign className="size-3" /> {t.token}
                       </Pill>
@@ -2030,6 +2035,7 @@ export function MemberDashboard({
                     icon: Sparkles,
                     tone: "brand" as const,
                     tag: t.toolAdTag,
+                    art: "/assets/ai-robot.jpg" as string | null,
                     glow: "group-hover:border-brand/45 group-hover:shadow-[0_26px_60px_-38px_rgba(59,130,246,0.9)]",
                     wash: "from-brand/20",
                   },
@@ -2040,6 +2046,7 @@ export function MemberDashboard({
                     icon: Bot,
                     tone: "emerald" as const,
                     tag: t.toolBizTag,
+                    art: "/assets/silver.jpg" as string | null,
                     glow: "group-hover:border-emerald-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(16,185,129,0.9)]",
                     wash: "from-emerald-500/20",
                   },
@@ -2050,6 +2057,7 @@ export function MemberDashboard({
                     icon: Store,
                     tone: "amber" as const,
                     tag: t.toolShopTag,
+                    art: "/assets/gold.jpg" as string | null,
                     glow: "group-hover:border-amber-400/45 group-hover:shadow-[0_26px_60px_-38px_rgba(251,191,36,0.75)]",
                     wash: "from-amber-400/20",
                   },
@@ -2060,6 +2068,7 @@ export function MemberDashboard({
                     icon: Network,
                     tone: "violet" as const,
                     tag: t.toolNetTag,
+                    art: "/assets/token.jpg" as string | null,
                     glow: "group-hover:border-violet-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(139,92,246,0.85)]",
                     wash: "from-violet-500/20",
                   },
@@ -2081,6 +2090,15 @@ export function MemberDashboard({
                         )}
                       />
                       <div className="relative flex items-start justify-between">
+                        {tool.art ? (
+                          <PremiumArt
+                            src={tool.art}
+                            alt=""
+                            size={56}
+                            glow={tool.tone === "brand" ? "cyan" : tool.tone === "emerald" ? "silver" : tool.tone === "amber" ? "gold" : "violet"}
+                            rounded="rounded-2xl"
+                          />
+                        ) : (
                         <span
                           className={cn(
                             "flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-inset transition-transform duration-200 group-hover:scale-105",
@@ -2092,6 +2110,7 @@ export function MemberDashboard({
                         >
                           <Icon className="size-6" />
                         </span>
+                        )}
                         <span className="flex items-center gap-2">
                           <Pill tone="slate">{tool.tag}</Pill>
                           <ArrowUpRight className="size-4 text-muted transition-colors group-hover:text-white" />
@@ -2150,6 +2169,9 @@ export function MemberDashboard({
                     active ? "text-brand" : "text-muted",
                   )}
                 >
+                  {entry.art ? (
+                    <PremiumArt src={entry.art} alt="" size={32} glow="cyan" rounded="rounded-lg" />
+                  ) : (
                   <span
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
@@ -2158,6 +2180,7 @@ export function MemberDashboard({
                   >
                     <Icon className="size-[18px]" />
                   </span>
+                  )}
                   {entry.label}
                 </button>
               );

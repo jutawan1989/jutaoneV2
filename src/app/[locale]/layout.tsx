@@ -21,10 +21,11 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
     metadataBase: new URL(siteUrl),
     title: dict.meta.title,
     description: dict.meta.description,
-    // Versioned URLs: browsers pin favicons to the URL and Next serves the
-    // file-convention icons as immutable, so a new artwork needs a new name.
+    // Boss premium favicon.jpg: browsers pin favicons to the URL and Next
+    // serves file-convention icons as immutable, so it keeps its own name.
     icons: {
       icon: [
+        { url: "/assets/favicon.jpg", type: "image/jpeg", sizes: "1024x1024" },
         {
           url: "/assets/favicon-v2.ico",
           type: "image/x-icon",
@@ -32,7 +33,10 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
         },
         { url: "/assets/icon-v2.png", type: "image/png", sizes: "512x512" },
       ],
-      apple: [{ url: "/assets/apple-icon-v2.png", sizes: "180x180" }],
+      apple: [
+        { url: "/assets/favicon.jpg", sizes: "1024x1024" },
+        { url: "/assets/apple-icon-v2.png", sizes: "180x180" },
+      ],
     },
     alternates: {
       canonical: `/${locale}`,

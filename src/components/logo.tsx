@@ -1,19 +1,17 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/config";
+import { PremiumArt } from "@/components/premium-art";
 
 /**
- * Brand mark supplied by the client (`logo.jpg`, JOB + globe). The dark
- * background was keyed out to transparency so it sits cleanly on the ink
- * surfaces; the artwork's own aspect ratio is preserved at every size.
+ * Brand mark supplied by the client (`public/assets/logo.jpg`, JOB + globe).
+ * Square artwork with a dark background, so it is rendered cropped-rounded
+ * with a ring + cyan glow to lift it off the ink surfaces.
  */
-const MARK_SRC = "/assets/logo-job.png";
-const MARK_WIDTH = 448;
-const MARK_HEIGHT = 192;
+const MARK_SRC = "/assets/logo.jpg";
 
 type LogoMarkProps = {
-  /** Rendered width in px; height follows the artwork. */
+  /** Rendered width/height in px (square artwork). */
   size?: number;
   className?: string;
   /** Accessible name. Omit when adjacent text already names the brand. */
@@ -21,17 +19,14 @@ type LogoMarkProps = {
 };
 
 export function LogoMark({ size = 32, className, label }: LogoMarkProps) {
-  const height = Math.round((size * MARK_HEIGHT) / MARK_WIDTH);
-
   return (
-    <Image
+    <PremiumArt
       src={MARK_SRC}
-      alt={label ?? ""}
-      width={size}
-      height={height}
+      alt={label ?? "JutaOne.Biz"}
+      size={size}
+      glow="cyan"
       className={className}
-      aria-hidden={label ? undefined : "true"}
-      unoptimized
+      rounded="rounded-2xl"
     />
   );
 }
@@ -56,8 +51,8 @@ export function Logo({
       aria-label="JutaOne.Biz"
     >
       <LogoMark
-        size={Math.round((markHeight * MARK_WIDTH) / MARK_HEIGHT)}
-        className="shrink-0"
+        size={Math.round(markHeight * 1.6)}
+        className="shrink-0 rounded-lg"
       />
       <span className={`${text} font-semibold tracking-[0.12em] text-white`}>
         JUTAONE<span className="text-brand">.BIZ</span>

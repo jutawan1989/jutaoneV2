@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoMark } from "@/components/logo";
+import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { Price } from "@/lib/pricing";
@@ -64,10 +64,12 @@ export function Hero({
             />
 
             <div className="relative flex flex-col items-center gap-5">
-              <LogoMark
+              <PremiumArt
+                src="/assets/logo.jpg"
+                alt={dict.a11y.globeLabel}
                 size={232}
-                label={dict.a11y.globeLabel}
-                className="w-full max-w-[232px]"
+                glow="cyan"
+                className="h-auto w-full max-w-[232px]"
               />
 
               <p className="text-center text-[11px] font-semibold tracking-[0.2em] text-white uppercase">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 
 const SIGNALS = ["buy", "sell", "hold"] as const;
@@ -36,8 +37,18 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
   }, []);
 
   const rows = [
-    { name: dict.gold.instruments.gold, signal: SIGNALS[tick % SIGNALS.length] },
-    { name: dict.gold.instruments.silver, signal: SIGNALS[(tick + 1) % SIGNALS.length] },
+    {
+      name: dict.gold.instruments.gold,
+      signal: SIGNALS[tick % SIGNALS.length],
+      art: "/assets/gold.jpg",
+      glow: "gold" as const,
+    },
+    {
+      name: dict.gold.instruments.silver,
+      signal: SIGNALS[(tick + 1) % SIGNALS.length],
+      art: "/assets/silver.jpg",
+      glow: "silver" as const,
+    },
   ];
 
   return (
@@ -75,8 +86,11 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
 
               <ul className="mt-5 divide-y divide-line/80 border-y border-line/80">
                 {rows.map((row) => (
-                  <li key={row.name} className="signal-row flex items-center justify-between py-3.5">
-                    <span className="text-sm font-medium text-silver">{row.name}</span>
+                  <li key={row.name} className="signal-row flex items-center justify-between gap-3 py-3.5">
+                    <span className="flex min-w-0 items-center gap-3">
+                      <PremiumArt src={row.art} alt={row.name} size={44} glow={row.glow} rounded="rounded-xl" />
+                      <span className="truncate text-sm font-medium text-silver">{row.name}</span>
+                    </span>
                     <span
                       className={`flex items-center gap-2 text-[11px] font-semibold tracking-[0.1em] ${SIGNAL_TEXT[row.signal]}`}
                     >

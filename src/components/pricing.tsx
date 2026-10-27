@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Coins, Lock, ShieldCheck, Zap } from "lucide-react";
+import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
@@ -131,7 +132,10 @@ export function Pricing({
             <div className="seam my-6" aria-hidden />
 
             <div className="rounded-2xl border border-white/[0.07] bg-ink/60 px-5 py-5 text-center">
-              <p className="flex items-center justify-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
+              <div className="flex justify-center">
+                <PremiumArt src="/assets/token.jpg" alt={dict.pricing.tokensFor} size={64} glow="cyan" />
+              </div>
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
                 <Coins className="size-3.5 text-brand" aria-hidden />
                 {dict.pricing.tokensFor}
               </p>
