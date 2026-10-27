@@ -40,9 +40,9 @@ describe("dictionaries", () => {
   });
 
   it("translates the demo label in all three languages", () => {
-    expect(DICTIONARIES.ms.generator.label).toBe("Taip apa yang anda jual");
-    expect(DICTIONARIES.id.generator.label).toBe("Ketik apa yang Anda jual");
-    expect(DICTIONARIES.en.generator.label).toBe("Type what you sell");
+    expect(DICTIONARIES.ms.generator.label).toBe("Taip apa yang anda jual atau servis anda");
+    expect(DICTIONARIES.id.generator.label).toBe("Ketik apa yang Anda jual atau jasa Anda");
+    expect(DICTIONARIES.en.generator.label).toBe("Type what you sell or your service");
   });
 
   it("uses the approved Malay disclaimer verbatim", () => {

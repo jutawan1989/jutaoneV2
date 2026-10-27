@@ -44,6 +44,8 @@ export function Hero({
             </Link>
           </div>
 
+          <p className="mt-5 flex items-center gap-2 text-sm font-medium text-silver"><span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />{dict.hero.trustBadge}</p>
+
           <dl className="mt-11 grid grid-cols-3 gap-6 border-t border-line pt-6">
             {dict.hero.stats.map((stat) => (
               <div key={stat.label}>

@@ -5,6 +5,7 @@ import { AdGenerator } from "@/components/ad-generator";
 import { Billboard } from "@/components/billboard";
 import { Footer } from "@/components/footer";
 import { GoldWidget } from "@/components/gold-widget";
+import { EarnSections } from "@/components/earn-sections";
 import { Hero } from "@/components/hero";
 import { Navbar } from "@/components/navbar";
 import { Pricing } from "@/components/pricing";
@@ -68,6 +69,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
           demoDisabled={killSwitch.disabled}
         />
         <GoldWidget dict={dict} />
+        <EarnSections dict={dict} />
         <Pricing locale={locale} dict={dict} price={price} variant={variant} />
       </main>
       <Footer locale={locale} dict={dict} />

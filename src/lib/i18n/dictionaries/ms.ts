@@ -18,17 +18,29 @@ export const ms: Dictionary = {
     dashboard: "Dashboard",
   },
   hero: {
-    eyebrow: "Enjin iklan AI untuk peniaga kecil",
-    title: "Papan iklan bergerak",
-    titleAccent: "untuk perniagaan anda",
+    eyebrow: "Enjin Iklan AI untuk Peniaga & Penyedia Perkhidmatan",
+    title: "Peniaga penat tulis iklan?",
+    titleAccent: "Biar AI tulis dalam 1.5 saat.",
     subtitle:
-      "Taip apa yang anda jual. Dapatkan kapsyen TikTok atau Facebook yang menarik perhatian dalam beberapa saat — tanpa agensi, tanpa penulis iklan, tanpa akaun.",
+      "Taip apa yang anda jual atau servis yang anda tawarkan. Dapat kapsyen TikTok atau Facebook yang buat orang berhenti scroll — produk atau perkhidmatan, semua boleh — tanpa agensi, tanpa penulis iklan, tanpa daftar.",
     ctaPrimary: "Cuba demo percuma",
     ctaSecondary: "Lihat harga token",
+    trustBadge: "Dipercayai peniaga Malaysia & Indonesia",
     stats: [
       { value: "Beberapa saat", label: "Masa purata jana kapsyen" },
       { value: "3 bahasa", label: "Melayu, Indonesia, Inggeris" },
       { value: "Tanpa daftar", label: "Demo boleh guna tanpa akaun" },
+    ],
+  },
+  industries: {
+    label: "Sesuai untuk semua bidang",
+    items: [
+      "Makanan",
+      "Fesyen",
+      "Servis Rumah",
+      "Pendidikan",
+      "Kecantikan",
+      "Freelance",
     ],
   },
   billboard: {
@@ -44,10 +56,10 @@ export const ms: Dictionary = {
   generator: {
     title: "Cuba sekarang",
     subtitle:
-      "Dua kapsyen percuma untuk setiap pelawat. Tiada e-mel, tiada nombor telefon, tiada akaun — tiada apa perlu diisi.",
-    label: "Taip apa yang anda jual",
-    placeholder: "Contoh: Biskut mentega bakar sendiri, RM25 sebalang, penghantaran sekitar Lembah Klang.",
-    hint: "Maksimum 200 aksara. Sertakan harga dan kawasan anda untuk kapsyen yang lebih tepat.",
+      "Cuba AI kami sekarang. Dapatkan 5 kapsyen PERCUMA setiap hari. Tiada daftar diperlukan. Suka hasilnya? Top-Up $1 untuk salin dan guna.",
+    label: "Taip apa yang anda jual atau servis anda",
+    placeholder: "Contoh: Kerepek Pisang RM10 (Produk) ATAU Servis Cuci Aircond RM80 (Perkhidmatan).",
+    hint: "Maksimum 200 aksara. Produk atau servis — sertakan harga dan kawasan untuk kapsyen tepat.",
     submit: "Tulis kapsyen saya",
     generating: "Sedang menulis...",
     remaining: "Kuota Harian: {remaining}/{max}",
@@ -67,9 +79,9 @@ export const ms: Dictionary = {
     errorTooShort: "Tulis sekurang-kurangnya 5 huruf ya.",
   },
   gold: {
-    title: "Widget isyarat emas & perak",
+    title: "Duit untung jangan dibiarkan mati",
     subtitle:
-      "Pratonton bersaiz telefon untuk widget yang boleh anda letakkan pada laman perniagaan anda. Beranimasi dan mudah dibaca sepintas lalu.",
+      "Pantau pasaran Emas & Perak dengan mudah. AI kami beritahu bila masa sesuai untuk BELI, JUAL, atau SIMPAN — isyarat ringkas yang senang faham.",
     screenTitle: "Isyarat pasaran",
     priceRow: "Isyarat · tetingkap 24 jam",
     disclaimer: COMPLIANCE_DISCLAIMER_MS,
@@ -83,6 +95,28 @@ export const ms: Dictionary = {
       gold: "Emas 999",
       silver: "Perak 925",
     },
+  },
+  earn: {
+    eyebrow: "Jana pendapatan sampingan",
+    title: "Kuda Merah — kongsi pautan, dapat komisen tunai",
+    body: "Setiap kali kawan top-up guna pautan anda, anda dapat komisen tunai sehingga 19 level — level 1 dibayar 50%. Tiada stok, tiada pos barang. Kongsi je, duit jalan.",
+    bullets: [
+      "Komisen tunai, bukan mata ganjaran",
+      "Satu pautan je — track automatik",
+      "Boleh tarik duit bila cukup RM10",
+    ],
+    cta: "Join Affiliate Sekarang",
+  },
+  suppliers: {
+    eyebrow: "Cari pembekal & pengedar",
+    title: "Biz-Match — jumpa supplier betul, bukan scammer",
+    body: "Nak restock barang atau cari pengedar baru? Taip je apa yang anda cari — AI kami carikan pembekal sebenar dengan nama syarikat, lokasi dan laman web.",
+    bullets: [
+      "Cari guna Bahasa Melayu harian",
+      "Hasil siap nama, lokasi & web",
+      "Jimat masa survey berjam-jam",
+    ],
+    cta: "Cari Pembekal Sekarang",
   },
   pricing: {
     title: "Token sahaja. Tiada yang tersembunyi.",

@@ -18,17 +18,29 @@ export const id: Dictionary = {
     dashboard: "Dasbor",
   },
   hero: {
-    eyebrow: "Mesin iklan AI untuk pedagang kecil",
-    title: "Papan iklan bergerak",
-    titleAccent: "untuk bisnis Anda",
+    eyebrow: "Mesin Iklan AI untuk Pedagang & Penyedia Jasa",
+    title: "Capek nulis iklan?",
+    titleAccent: "Biar AI yang tulis dalam 1,5 detik.",
     subtitle:
-      "Ketik apa yang Anda jual. Dapatkan caption TikTok atau Facebook yang bikin orang berhenti scroll dalam hitungan detik — tanpa agensi, tanpa copywriter, tanpa akun.",
+      "Ketik apa yang Anda jual atau jasa yang Anda tawarkan. Dapat caption TikTok atau Facebook yang bikin orang berhenti scroll — produk atau jasa, semua bisa — tanpa agensi, tanpa copywriter, tanpa daftar.",
     ctaPrimary: "Coba demo gratis",
     ctaSecondary: "Lihat harga token",
+    trustBadge: "Dipercaya pedagang Indonesia & Malaysia",
     stats: [
       { value: "Hitungan detik", label: "Rata-rata waktu pembuatan" },
       { value: "3 bahasa", label: "Indonesia, Melayu, Inggris" },
       { value: "Tanpa daftar", label: "Demo bisa dipakai tanpa akun" },
+    ],
+  },
+  industries: {
+    label: "Cocok untuk semua bidang",
+    items: [
+      "Makanan",
+      "Fesyen",
+      "Servis Rumah",
+      "Pendidikan",
+      "Kecantikan",
+      "Freelance",
     ],
   },
   billboard: {
@@ -44,10 +56,10 @@ export const id: Dictionary = {
   generator: {
     title: "Coba sekarang",
     subtitle:
-      "Dua caption gratis untuk setiap pengunjung. Tanpa email, tanpa nomor telepon, tanpa akun — tidak ada yang perlu diisi.",
-    label: "Ketik apa yang Anda jual",
-    placeholder: "Contoh: Kopi susu gula aren, Rp15.000 per cup, COD area Bandung.",
-    hint: "Maksimal 200 karakter. Sertakan harga dan area Anda agar caption lebih tajam.",
+      "Coba AI kami sekarang. Dapat 5 caption GRATIS setiap hari. Tanpa daftar. Suka hasilnya? Top up $1 untuk salin dan pakai.",
+    label: "Ketik apa yang Anda jual atau jasa Anda",
+    placeholder: "Contoh: Keripik Pisang Rp15rb (Produk) ATAU Servis Cuci AC Rp80rb (Jasa).",
+    hint: "Maksimal 200 karakter. Produk atau jasa — sertakan harga dan area agar caption tajam.",
     submit: "Tulis caption saya",
     generating: "Sedang menulis...",
     remaining: "Kuota Harian: {remaining}/{max}",
@@ -67,9 +79,9 @@ export const id: Dictionary = {
     errorTooShort: "Tulis minimal 5 huruf ya.",
   },
   gold: {
-    title: "Widget sinyal emas & perak",
+    title: "Jangan biarkan untung menganggur",
     subtitle:
-      "Pratinjau seukuran ponsel untuk widget yang bisa Anda pasang di halaman bisnis Anda. Beranimasi dan mudah dibaca sekali lihat.",
+      "Pantau pasar Emas & Perak dengan gampang. AI kami kasih tahu kapan saat yang pas untuk BELI, JUAL, atau TAHAN — sinyal simpel yang gampang dimengerti.",
     screenTitle: "Sinyal pasar",
     priceRow: "Sinyal · jendela 24 jam",
     disclaimer: COMPLIANCE_DISCLAIMER_ID,
@@ -83,6 +95,28 @@ export const id: Dictionary = {
       gold: "Emas 999",
       silver: "Perak 925",
     },
+  },
+  earn: {
+    eyebrow: "Hasilkan penghasilan sampingan",
+    title: "Kuda Merah — bagikan tautan, dapat komisi tunai",
+    body: "Setiap kali teman top up lewat tautan Anda, Anda dapat komisi tunai sampai 19 level — level 1 dibayar 50%. Tanpa stok, tanpa kirim barang. Bagikan saja, duit jalan.",
+    bullets: [
+      "Komisi tunai, bukan poin reward",
+      "Satu tautan saja — tercatat otomatis",
+      "Bisa tarik duit kapan pun saldonya cukup",
+    ],
+    cta: "Join Affiliate Sekarang",
+  },
+  suppliers: {
+    eyebrow: "Cari pemasok & distributor",
+    title: "Biz-Match — ketemu supplier asli, bukan penipu",
+    body: "Mau restock barang atau cari distributor baru? Ketik saja apa yang Anda cari — AI kami carikan pemasok beneran lengkap dengan nama perusahaan, lokasi, dan situs web.",
+    bullets: [
+      "Cari pakai bahasa sehari-hari",
+      "Hasil lengkap nama, lokasi & web",
+      "Hemat waktu survei berjam-jam",
+    ],
+    cta: "Cari Pemasok Sekarang",
   },
   pricing: {
     title: "Hanya token. Tidak ada yang tersembunyi.",

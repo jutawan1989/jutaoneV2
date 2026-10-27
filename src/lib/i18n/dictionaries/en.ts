@@ -17,17 +17,29 @@ export const en = {
     dashboard: "Dashboard",
   },
   hero: {
-    eyebrow: "AI ad engine for small merchants",
-    title: "A moving billboard",
-    titleAccent: "for your business",
+    eyebrow: "AI Ad Engine for Merchants & Service Providers",
+    title: "Tired of writing ads?",
+    titleAccent: "Let AI write them in 1.5 seconds.",
     subtitle:
-      "Type what you sell. Get a scroll-stopping TikTok or Facebook caption in seconds — no agency, no copywriter, no account.",
+      "Type what you sell or the service you offer. Get a scroll-stopping TikTok or Facebook caption — products or services, both work — no agency, no copywriter, no signup.",
     ctaPrimary: "Try the free demo",
     ctaSecondary: "See token pricing",
+    trustBadge: "Trusted by merchants in Malaysia & Indonesia",
     stats: [
       { value: "Seconds", label: "Average caption time" },
       { value: "3 languages", label: "Malay, Indonesian, English" },
       { value: "No signup", label: "Demo works without an account" },
+    ],
+  },
+  industries: {
+    label: "Works for every trade",
+    items: [
+      "Food",
+      "Fashion",
+      "Home Services",
+      "Education",
+      "Beauty",
+      "Freelance",
     ],
   },
   billboard: {
@@ -43,10 +55,10 @@ export const en = {
   generator: {
     title: "Try it now",
     subtitle:
-      "Two free captions per visitor. No email, no phone number, no account — nothing to fill in.",
-    label: "Type what you sell",
-    placeholder: "Example: Hand-baked butter cookies, RM25 a jar, delivery in Klang Valley.",
-    hint: "Max 200 characters. Include your price and area for a sharper caption.",
+      "Try our AI now. Get 5 FREE captions every day. No signup needed. Like the result? Top up $1 to copy and use it.",
+    label: "Type what you sell or your service",
+    placeholder: "Example: Banana chips $2 (Product) OR aircond cleaning $18 (Service).",
+    hint: "Max 200 characters. Product or service — include price and area for a sharper caption.",
     submit: "Write my caption",
     generating: "Writing...",
     remaining: "Daily quota: {remaining}/{max}",
@@ -66,9 +78,9 @@ export const en = {
     errorTooShort: "Please write at least 5 characters.",
   },
   gold: {
-    title: "Gold & silver signal widget",
+    title: "Don't let your profit sit idle",
     subtitle:
-      "A phone-sized preview of the widget you can place on your business page. Animated and easy to read at a glance.",
+      "Track Gold & Silver markets the easy way. Our AI tells you when it's time to BUY, SELL, or HOLD — simple signals anyone can read.",
     screenTitle: "Market signals",
     priceRow: "Signal · 24h window",
     disclaimer: COMPLIANCE_DISCLAIMER_EN,
@@ -82,6 +94,28 @@ export const en = {
       gold: "Gold 999",
       silver: "Silver 925",
     },
+  },
+  earn: {
+    eyebrow: "Earn side income",
+    title: "Kuda Merah — share a link, earn cash commission",
+    body: "Every time a friend tops up through your link, you earn cash commission down to 19 levels — level 1 pays 50%. No stock, no shipping. Just share and earn.",
+    bullets: [
+      "Cash commission, not reward points",
+      "One link — tracked automatically",
+      "Withdraw once your balance qualifies",
+    ],
+    cta: "Join Affiliate Now",
+  },
+  suppliers: {
+    eyebrow: "Find suppliers & distributors",
+    title: "Biz-Match — meet real suppliers, not scammers",
+    body: "Need to restock or find a new distributor? Just type what you're looking for — our AI finds real suppliers with company name, location and website.",
+    bullets: [
+      "Search in everyday language",
+      "Results with name, location & web",
+      "Save hours of manual surveying",
+    ],
+    cta: "Find Suppliers Now",
   },
   pricing: {
     title: "Token only. Nothing hidden.",

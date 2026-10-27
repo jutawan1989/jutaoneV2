@@ -14,6 +14,12 @@ export function Billboard({ dict }: { dict: Dictionary }) {
       aria-label={dict.billboard.label}
       className="relative border-y border-line bg-white/[0.015] py-3.5"
     >
+      <p className="mx-auto mb-2.5 w-full max-w-6xl px-4 text-center text-[11px] font-medium tracking-[0.12em] text-muted uppercase sm:px-6">
+        {dict.industries.label}:{" "}
+        <span className="text-silver normal-case tracking-normal">
+          {dict.industries.items.join("  |  ")}
+        </span>
+      </p>
       <div className="marquee">
         <div className="marquee__track">
           {doubled.map((text, index) => (
