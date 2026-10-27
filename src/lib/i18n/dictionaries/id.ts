@@ -90,8 +90,11 @@ export const id: Dictionary = {
     amountTitle: "Jumlah top-up",
     customLabel: "Jumlah sendiri",
     customPlaceholder: "Masukkan jumlah (min $1)",
+    emailLabel: "Email untuk kode pembayaran",
+    emailPlaceholder: "anda@contoh.com",
     proceed: "Lanjutkan ke Pembayaran",
     invalidAmount: "Top-up minimum adalah $1.00",
+    invalidEmail: "Masukkan email yang valid — Chip mengirim kode pembayaran ke sana",
     tokenUnit: "Token",
     tokensFor: "Anda dapat",
     bullets: [

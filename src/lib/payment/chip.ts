@@ -15,6 +15,8 @@ export type TopUpRequest = {
   amountUsd?: unknown;
   /** Pseudonymous visitor hash, embedded in Chip notes so the webhook can credit tokens. */
   ownerRef?: string;
+  /** Payer email for Chip's client record — Chip sends the OTP/receipt here. */
+  customerEmail?: unknown;
 };
 
 export type TopUpSession = {
@@ -50,11 +52,28 @@ export function generateReference(locale: Locale): string {
 }
 
 /**
+ * Accepts a payer email from the checkout form. Returns the trimmed address
+ * when it looks deliverable, otherwise null so the caller can fall back.
+ * Deliberately strict: an invalid address must never reach Chip as the OTP
+ * destination — Chip would send the one-time passcode into the void and the
+ * customer could never complete payment.
+ */
+export function parseCustomerEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const email = value.trim();
+  if (email.length > 254) return null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return null;
+  return email;
+}
+
+/**
  * Creates a Chip.Asia purchase (sandbox or production depending on the key).
  *
- * The local flow collects no PII before this point; the payer's email is
- * entered on Chip's hosted checkout page. `CHIP_TEST_EMAIL` only exists so the
- * sandbox API can be exercised without a form.
+ * The payer's email arrives from the checkout form and is stored on Chip's
+ * client record — Chip sends the payment OTP/receipt to it, so it must be the
+ * real customer address, never a placeholder. `CHIP_FALLBACK_EMAIL` exists only
+ * as a last resort for API clients that predate the email field (e.g. Boss's
+ * live-test device).
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
   const usd = parseTopUpAmount(req.amountUsd) ?? 1;
@@ -72,13 +91,15 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
   }
 
   const baseUrl = (process.env.CHIP_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+  const customerEmail = parseCustomerEmail(req.customerEmail)
+    ?? parseCustomerEmail(process.env.CHIP_FALLBACK_EMAIL);
   const body = {
     brand_id: process.env.CHIP_BRAND_ID,
     reference,
     send_receipt: false,
     client: {
-      email: process.env.CHIP_TEST_EMAIL || "sandbox@jutaone.biz",
-      full_name: "JutaOne Sandbox",
+      email: customerEmail ?? "missing-email@jutaone.biz",
+      full_name: "JutaOne Customer",
     },
     purchase: {
       currency: price.currency,

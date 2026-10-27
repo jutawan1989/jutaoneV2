@@ -89,8 +89,12 @@ export const en = {
     amountTitle: "Top-up amount",
     customLabel: "Custom amount",
     customPlaceholder: "Enter amount (min $1)",
+    emailLabel: "Email Address",
+    emailPlaceholder: "For receipt and verification",
     proceed: "Proceed to Payment",
+    trustBadge: "Secure payment processed by Chip.Asia",
     invalidAmount: "Minimum top-up is $1.00",
+    invalidEmail: "Enter a valid email — Chip sends your payment code there",
     tokenUnit: "Tokens",
     tokensFor: "You get",
     bullets: [

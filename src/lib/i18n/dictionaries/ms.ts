@@ -90,8 +90,12 @@ export const ms: Dictionary = {
     amountTitle: "Jumlah top-up",
     customLabel: "Jumlah sendiri",
     customPlaceholder: "Masukkan jumlah (min $1)",
-    proceed: "Teruskan Bayar",
+    emailLabel: "Alamat Emel",
+    emailPlaceholder: "Untuk resit dan pengesahan",
+    proceed: "Teruskan ke Pembayaran",
+    trustBadge: "Pembayaran selamat diproses oleh Chip.Asia",
     invalidAmount: "Top-up minimum ialah $1.00",
+    invalidEmail: "Masukkan emel yang sah — Chip hantar kod pembayaran ke sana",
     tokenUnit: "Token",
     tokensFor: "Anda dapat",
     bullets: [

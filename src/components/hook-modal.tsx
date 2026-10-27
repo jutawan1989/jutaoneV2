@@ -136,7 +136,11 @@ export function HookModal({
             locale={locale}
             variant={variant}
             errorText={dict.generator.errorGeneric}
+            emailErrorText={dict.pricing.invalidEmail}
+            emailLabel={dict.pricing.emailLabel}
+            emailPlaceholder={dict.pricing.emailPlaceholder}
             className="btn-brand w-full"
+            collectEmail
           >
             {format(copy.cta, values)}
           </TopUpButton>

@@ -152,9 +152,13 @@ export function Pricing({
               locale={locale}
               variant={variant}
               errorText={dict.generator.errorGeneric}
+              emailErrorText={dict.pricing.invalidEmail}
+              emailLabel={dict.pricing.emailLabel}
+              emailPlaceholder={dict.pricing.emailPlaceholder}
               className="btn-brand w-full"
               amountUsd={valid ? (usd as number) : undefined}
               disabled={!valid}
+              collectEmail
             >
               {dict.pricing.proceed}
             </TopUpButton>

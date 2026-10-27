@@ -1,6 +1,6 @@
 import { generateKeyPairSync, createSign } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { chipConfigured, generateReference, verifyCallbackSignature } from "@/lib/payment/chip";
+import { chipConfigured, generateReference, parseCustomerEmail, verifyCallbackSignature } from "@/lib/payment/chip";
 
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
@@ -106,5 +106,19 @@ describe("Chip configuration", () => {
     expect(first).not.toBe(second);
     expect(first.startsWith("JO-MS-")).toBe(true);
     expect(first.length).toBeLessThan(64);
+  });
+});
+
+describe("customer email parsing (Chip OTP destination)", () => {
+  it("accepts a real customer address, trimmed", () => {
+    expect(parseCustomerEmail("  Boss@Example.com  ")).toBe("Boss@Example.com");
+  });
+
+  it("rejects blanks, non-emails, and non-strings", () => {
+    expect(parseCustomerEmail("")).toBeNull();
+    expect(parseCustomerEmail("not-an-email")).toBeNull();
+    expect(parseCustomerEmail("a@b")).toBeNull();
+    expect(parseCustomerEmail(undefined)).toBeNull();
+    expect(parseCustomerEmail(123)).toBeNull();
   });
 });

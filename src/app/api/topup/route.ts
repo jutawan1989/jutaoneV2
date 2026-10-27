@@ -9,7 +9,7 @@ import { identifyVisitor } from "@/lib/trial/visitor";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type TopUpBody = { locale?: unknown; variant?: unknown; amountUsd?: unknown };
+type TopUpBody = { locale?: unknown; variant?: unknown; amountUsd?: unknown; email?: unknown };
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as TopUpBody | null;
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await createTopUpSession({
       locale, region, variant, origin: request.nextUrl.origin, amountUsd: body?.amountUsd, ownerRef: visitor.visitorKey,
+      customerEmail: body?.email,
     });
 
     await logEvent({
