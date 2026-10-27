@@ -3,7 +3,7 @@ import { logEvent, parseUtm } from "@/lib/analytics/events";
 import { isVariant, resolveVariant } from "@/lib/analytics/variant";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
-import { createTopUpSession } from "@/lib/payment/chip";
+import { createTopUpSession, InvalidCustomerEmailError } from "@/lib/payment/chip";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
       amount: session.price.display, usd: session.price.usd, tokens: session.price.tokens,
     });
   } catch (error) {
+    if (error instanceof InvalidCustomerEmailError) {
+      return NextResponse.json({ code: "invalid_email" }, { status: 400 });
+    }
     console.error("[jutaone] top-up session failed", error);
     return NextResponse.json({ code: "topup_unavailable" }, { status: 502 });
   }

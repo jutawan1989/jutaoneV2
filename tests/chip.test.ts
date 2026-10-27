@@ -1,6 +1,6 @@
 import { generateKeyPairSync, createSign } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { chipConfigured, generateReference, parseCustomerEmail, verifyCallbackSignature } from "@/lib/payment/chip";
+import { chipConfigured, createTopUpSession, generateReference, InvalidCustomerEmailError, parseCustomerEmail, verifyCallbackSignature } from "@/lib/payment/chip";
 
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
@@ -120,5 +120,31 @@ describe("customer email parsing (Chip OTP destination)", () => {
     expect(parseCustomerEmail("a@b")).toBeNull();
     expect(parseCustomerEmail(undefined)).toBeNull();
     expect(parseCustomerEmail(123)).toBeNull();
+  });
+});
+
+describe("top-up session email (no dummy fallback)", () => {
+  const originalKey = process.env.CHIP_API_KEY;
+  const originalBrand = process.env.CHIP_BRAND_ID;
+
+  beforeEach(() => {
+    process.env.CHIP_API_KEY = "test-key";
+    process.env.CHIP_BRAND_ID = "test-brand";
+  });
+
+  afterEach(() => {
+    if (originalKey === undefined) delete process.env.CHIP_API_KEY;
+    else process.env.CHIP_API_KEY = originalKey;
+    if (originalBrand === undefined) delete process.env.CHIP_BRAND_ID;
+    else process.env.CHIP_BRAND_ID = originalBrand;
+  });
+
+  it("throws InvalidCustomerEmailError instead of a dummy address", async () => {
+    await expect(
+      createTopUpSession({ locale: "ms", region: "MY", variant: "A", origin: "https://x.test", customerEmail: "not-an-email" }),
+    ).rejects.toBeInstanceOf(InvalidCustomerEmailError);
+    await expect(
+      createTopUpSession({ locale: "ms", region: "MY", variant: "A", origin: "https://x.test", customerEmail: undefined }),
+    ).rejects.toBeInstanceOf(InvalidCustomerEmailError);
   });
 });

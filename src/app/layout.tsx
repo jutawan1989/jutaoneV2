@@ -22,7 +22,7 @@ const inter = Inter({
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`dark ${inter.variable}`}>
       <body className="min-h-dvh bg-ink font-sans antialiased">{children}</body>
     </html>
   );

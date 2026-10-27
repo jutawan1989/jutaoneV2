@@ -45,4 +45,11 @@ describe("AI adapter (D1)", () => {
     expect(prompt).toContain("Bahasa Melayu");
     expect(prompt).toContain("Never promise profit");
   });
+
+  it("covers services as well as physical products", () => {
+    const prompt = buildSystemPrompt("id", "ID");
+    expect(prompt).toContain("SERVICE");
+    expect(prompt).toContain("PHYSICAL PRODUCT");
+    expect(prompt).toContain("booking");
+  });
 });

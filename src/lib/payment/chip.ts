@@ -67,13 +67,25 @@ export function parseCustomerEmail(value: unknown): string | null {
 }
 
 /**
+ * Thrown when the payer email is missing or invalid. The caller (API route)
+ * maps this to a 400 so the form can highlight the email field instead of
+ * sending a dummy address to Chip — Chip sends the payment OTP to this
+ * address, so a placeholder means the customer can never complete payment.
+ */
+export class InvalidCustomerEmailError extends Error {
+  constructor() {
+    super("INVALID_CUSTOMER_EMAIL: a valid payer email is required for Chip purchase");
+    this.name = "InvalidCustomerEmailError";
+  }
+}
+
+/**
  * Creates a Chip.Asia purchase (sandbox or production depending on the key).
  *
  * The payer's email arrives from the checkout form and is stored on Chip's
  * client record — Chip sends the payment OTP/receipt to it, so it must be the
- * real customer address, never a placeholder. `CHIP_FALLBACK_EMAIL` exists only
- * as a last resort for API clients that predate the email field (e.g. Boss's
- * live-test device).
+ * real customer address. There is no dummy fallback: an invalid address
+ * throws InvalidCustomerEmailError and the API answers 400.
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
   const usd = parseTopUpAmount(req.amountUsd) ?? 1;
@@ -91,14 +103,14 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
   }
 
   const baseUrl = (process.env.CHIP_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
-  const customerEmail = parseCustomerEmail(req.customerEmail)
-    ?? parseCustomerEmail(process.env.CHIP_FALLBACK_EMAIL);
+  const customerEmail = parseCustomerEmail(req.customerEmail);
+  if (!customerEmail) throw new InvalidCustomerEmailError();
   const body = {
     brand_id: process.env.CHIP_BRAND_ID,
     reference,
     send_receipt: false,
     client: {
-      email: customerEmail ?? "missing-email@jutaone.biz",
+      email: customerEmail,
       full_name: "JutaOne Customer",
     },
     purchase: {

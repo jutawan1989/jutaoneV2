@@ -31,8 +31,14 @@ export type AffiliateSummary = {
   currency: string;
 };
 
-/** Matrix percentages, mirrored from `jutaone_level_bps` for display. */
-function percentFor(level: number): number {
+/**
+ * Matrix percentages, mirrored from `jutaone_level_bps` for display.
+ *
+ * Exported so the member dashboard can draw the full 19-level matrix without
+ * duplicating the table: two copies of a payout rate is exactly how a member
+ * ends up seeing a number that disagrees with their own payout.
+ */
+export function percentFor(level: number): number {
   if (level === 1) return 50;
   if (level === 2) return 4;
   if (level === 3) return 3;
