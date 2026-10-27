@@ -13,6 +13,8 @@ export type TopUpRequest = {
   origin: string;
   /** Requested top-up size in USD. Defaults to $1 when absent or invalid. */
   amountUsd?: unknown;
+  /** Pseudonymous visitor hash, embedded in Chip notes so the webhook can credit tokens. */
+  ownerRef?: string;
 };
 
 export type TopUpSession = {
@@ -88,7 +90,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
           quantity: 1,
         },
       ],
-      notes: `variant=${req.variant};region=${req.region}`,
+      notes: req.ownerRef ? `variant=${req.variant};region=${req.region};owner=${req.ownerRef};usd=${Math.round(usd * 100)}` : `variant=${req.variant};region=${req.region}`,
     },
     success_redirect: `${req.origin}${localePath}?status=success&ref=${reference}`,
     failure_redirect: `${req.origin}${localePath}?status=failed&ref=${reference}`,

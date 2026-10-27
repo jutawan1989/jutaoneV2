@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
   const locale = isLocale(requested) ? requested : detectLocale(headers);
   const region = detectRegion(headers);
   const visitor = identifyVisitor(headers);
+
   const variant = isVariant(body?.variant)
     ? body.variant
     : resolveVariant(visitor.visitorKey, request.nextUrl.searchParams.get("variant"));
@@ -25,30 +26,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const session = await createTopUpSession({
-      locale,
-      region,
-      variant,
-      origin: request.nextUrl.origin,
-      amountUsd: body?.amountUsd,
+      locale, region, variant, origin: request.nextUrl.origin, amountUsd: body?.amountUsd, ownerRef: visitor.visitorKey,
     });
 
     await logEvent({
-      event: "topup_click",
-      locale,
-      region,
-      variant,
-      utm,
-      visitorKey: visitor.visitorKey,
+      event: "topup_click", locale, region, variant, utm, visitorKey: visitor.visitorKey,
       props: { mode: session.mode, reference: session.reference, amount: session.price.amount },
     });
 
     return NextResponse.json({
-      mode: session.mode,
-      checkoutUrl: session.checkoutUrl,
-      reference: session.reference,
-      amount: session.price.display,
-      usd: session.price.usd,
-      tokens: session.price.tokens,
+      mode: session.mode, checkoutUrl: session.checkoutUrl, reference: session.reference,
+      amount: session.price.display, usd: session.price.usd, tokens: session.price.tokens,
     });
   } catch (error) {
     console.error("[jutaone] top-up session failed", error);
