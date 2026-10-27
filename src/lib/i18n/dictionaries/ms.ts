@@ -13,6 +13,9 @@ export const ms: Dictionary = {
     pricing: "Harga token",
     cta: "Mula dengan {price}",
     languageLabel: "Bahasa",
+    login: "Log Masuk",
+    register: "Daftar",
+    dashboard: "Dashboard",
   },
   hero: {
     eyebrow: "Enjin iklan AI untuk peniaga kecil",

@@ -13,7 +13,7 @@ import { identifyVisitor } from "@/lib/trial/visitor";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Body = { email?: unknown; password?: unknown; mode?: unknown };
+type Body = { email?: unknown; password?: unknown; mode?: unknown; displayName?: unknown };
 
 /** In-memory throttle; a Worker restart clears it, which is acceptable for login. */
 const attempts = new Map<string, { count: number; first: number }>();
@@ -64,6 +64,10 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Body | null;
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body?.password === "string" ? body.password : "";
+  const displayName =
+    typeof body?.displayName === "string" && body.displayName.trim().length > 0
+      ? body.displayName.trim().slice(0, 80)
+      : null;
   const mode = body?.mode === "register" ? "register" : "login";
 
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
   const ownerRef = identifyVisitor(request.headers).visitorKey;
 
   if (mode === "register") {
-    const created = await createMember({ email, password, ownerRef });
+    const created = await createMember({ email, password, displayName, ownerRef });
     if (!created.ok) {
       const taken = created.reason === "email_taken";
       return NextResponse.json(

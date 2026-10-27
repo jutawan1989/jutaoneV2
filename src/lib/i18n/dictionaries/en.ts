@@ -12,6 +12,9 @@ export const en = {
     pricing: "Token pricing",
     cta: "Start with {price}",
     languageLabel: "Language",
+    login: "Log in",
+    register: "Register",
+    dashboard: "Dashboard",
   },
   hero: {
     eyebrow: "AI ad engine for small merchants",

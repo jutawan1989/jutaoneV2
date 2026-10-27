@@ -13,6 +13,9 @@ export const id: Dictionary = {
     pricing: "Harga token",
     cta: "Mulai dengan {price}",
     languageLabel: "Bahasa",
+    login: "Masuk",
+    register: "Daftar",
+    dashboard: "Dasbor",
   },
   hero: {
     eyebrow: "Mesin iklan AI untuk pedagang kecil",
