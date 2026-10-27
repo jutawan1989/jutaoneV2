@@ -1,6 +1,6 @@
 import { generateKeyPairSync, createSign } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { chipConfigured, createTopUpSession, generateReference, InvalidCustomerEmailError, parseCustomerEmail, verifyCallbackSignature } from "@/lib/payment/chip";
+import { chipConfigured, createTopUpSession, generateReference, InvalidCustomerEmailError, parseCustomerEmail, paymentMethodWhitelist, verifyCallbackSignature } from "@/lib/payment/chip";
 
 const { publicKey, privateKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
@@ -146,5 +146,79 @@ describe("top-up session email (no dummy fallback)", () => {
     await expect(
       createTopUpSession({ locale: "ms", region: "MY", variant: "A", origin: "https://x.test", customerEmail: undefined }),
     ).rejects.toBeInstanceOf(InvalidCustomerEmailError);
+  });
+
+  it("redirects to the payment page, never the invoice view", async () => {
+    const realFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = (async () =>
+        new Response(
+          JSON.stringify({ id: "pur_1", invoice_url: "https://gate.chip-in.asia/invoice/pur_1", checkout_url: "https://gate.chip-in.asia/p/pur_1/" }),
+          { status: 201, headers: { "content-type": "application/json" } },
+        )) as typeof fetch;
+      const session = await createTopUpSession({ locale: "ms", region: "MY", variant: "A", origin: "https://x.test", customerEmail: "boss@example.com" });
+      expect(session.checkoutUrl).toBe("https://gate.chip-in.asia/p/pur_1/");
+      expect(session.checkoutUrl).not.toContain("/invoice");
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+
+describe("payment method whitelist (international + ID payments)", () => {
+  const original = process.env.CHIP_PAYMENT_METHODS;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.CHIP_PAYMENT_METHODS;
+    else process.env.CHIP_PAYMENT_METHODS = original;
+  });
+
+  it("is omitted by default so the brand offers all methods", () => {
+    delete process.env.CHIP_PAYMENT_METHODS;
+    expect(paymentMethodWhitelist()).toBeUndefined();
+  });
+
+  it("parses an explicit restriction list", () => {
+    process.env.CHIP_PAYMENT_METHODS = " fpx, VISA ,mastercard,duitnow_qr ";
+    expect(paymentMethodWhitelist()).toEqual(["fpx", "visa", "mastercard", "duitnow_qr"]);
+  });
+
+  it("sends no whitelist field to Chip unless restricted", async () => {
+    delete process.env.CHIP_PAYMENT_METHODS;
+    process.env.CHIP_API_KEY = "test-key";
+    process.env.CHIP_BRAND_ID = "test-brand";
+    let sentBody: Record<string, unknown> = {};
+    const realFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = (async (_url: unknown, init?: { body?: string }) => {
+        sentBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+        return new Response(JSON.stringify({ id: "pur_1", checkout_url: "https://gate.chip-in.asia/p/pur_1/" }), {
+          status: 201, headers: { "content-type": "application/json" },
+        });
+      }) as unknown as typeof fetch;
+      await createTopUpSession({ locale: "id", region: "ID", variant: "A", origin: "https://x.test", customerEmail: "user@example.id" });
+      expect(sentBody).not.toHaveProperty("payment_method_whitelist");
+      expect((sentBody.purchase as Record<string, unknown>).currency).toBe("IDR");
+    } finally {
+      globalThis.fetch = realFetch;
+      delete process.env.CHIP_API_KEY;
+      delete process.env.CHIP_BRAND_ID;
+    }
+  });
+});
+
+  it("fails closed when Chip returns an invoice link as the checkout URL", async () => {
+    const realFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = (async () =>
+        new Response(
+          JSON.stringify({ id: "pur_2", checkout_url: "https://gate.chip-in.asia/invoice/pur_2" }),
+          { status: 201, headers: { "content-type": "application/json" } },
+        )) as typeof fetch;
+      await expect(
+        createTopUpSession({ locale: "ms", region: "MY", variant: "A", origin: "https://x.test", customerEmail: "boss@example.com" }),
+      ).rejects.toThrow("usable checkout_url");
+    } finally {
+      globalThis.fetch = realFetch;
+    }
   });
 });

@@ -79,8 +79,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: "checkout_failed" }, { status: 502 });
     }
 
-    const payload = (await response.json()) as { checkout_url?: string };
-    if (!payload.checkout_url) {
+    const payload = (await response.json()) as { checkout_url?: string; invoice_url?: string };
+    // Only checkout_url opens the payment page; invoice_url has no Pay button.
+    if (!payload.checkout_url || payload.checkout_url.includes("/invoice")) {
       return NextResponse.json({ code: "checkout_failed" }, { status: 502 });
     }
 

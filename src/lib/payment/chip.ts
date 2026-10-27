@@ -80,6 +80,26 @@ export class InvalidCustomerEmailError extends Error {
 }
 
 /**
+ * Payment methods to offer at the Chip checkout.
+ *
+ * Read from `CHIP_PAYMENT_METHODS` (comma-separated, e.g.
+ * `fpx,visa,mastercard,duitnow_qr`). When unset, the field is OMITTED from the
+ * purchase request and Chip shows every method the brand has enabled —
+ * including foreign cards and DuitNow QR (Online), which is how Indonesian
+ * wallets (BCA, DANA, ShopeePay) pay cross-border via the DuitNow–QRIS
+ * linkage with settlement in MYR. Only set the env var to RESTRICT methods,
+ * never to enable them.
+ */
+export function paymentMethodWhitelist(): string[] | undefined {
+  const raw = process.env.CHIP_PAYMENT_METHODS;
+  if (!raw) return undefined;
+  const methods = raw
+    .split(",")
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+  return methods.length > 0 ? methods : undefined;
+}
+/**
  * Creates a Chip.Asia purchase (sandbox or production depending on the key).
  *
  * The payer's email arrives from the checkout form and is stored on Chip's
@@ -105,10 +125,14 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
   const baseUrl = (process.env.CHIP_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
   const customerEmail = parseCustomerEmail(req.customerEmail);
   if (!customerEmail) throw new InvalidCustomerEmailError();
+  const whitelist = paymentMethodWhitelist();
   const body = {
     brand_id: process.env.CHIP_BRAND_ID,
     reference,
     send_receipt: false,
+    // Omitted when CHIP_PAYMENT_METHODS is unset: Chip then offers every
+    // method the brand enables (FPX, local + foreign cards, DuitNow QR, wallets).
+    ...(whitelist ? { payment_method_whitelist: whitelist } : {}),
     client: {
       email: customerEmail,
       full_name: "JutaOne Customer",
@@ -146,9 +170,11 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
     throw new Error(`Chip.Asia responded ${response.status}: ${detail.slice(0, 200)}`);
   }
 
-  const payload = (await response.json()) as { id?: string; checkout_url?: string };
-  if (!payload.checkout_url) {
-    throw new Error("Chip.Asia response did not include a checkout_url");
+  const payload = (await response.json()) as { id?: string; checkout_url?: string; invoice_url?: string };
+  // `invoice_url` opens the invoice view (no Pay button) — only `checkout_url`
+  // opens the payment page. Fail closed if Chip ever returns an invoice link here.
+  if (!payload.checkout_url || payload.checkout_url.includes("/invoice")) {
+    throw new Error("Chip.Asia response did not include a usable checkout_url");
   }
 
   return { mode: "chip", reference, price, checkoutUrl: payload.checkout_url };
