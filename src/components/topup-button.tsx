@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
+import { Lock } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
@@ -17,6 +18,7 @@ export function TopUpButton({
   emailErrorText,
   emailLabel,
   emailPlaceholder,
+  trustBadge,
   disabled = false,
   amountUsd,
   collectEmail = false,
@@ -29,6 +31,8 @@ export function TopUpButton({
   emailErrorText?: string;
   emailLabel?: string;
   emailPlaceholder?: string;
+  /** Small trust line rendered under the CTA (e.g. "Secure payment by Chip.Asia"). */
+  trustBadge?: string;
   disabled?: boolean;
   /** Top-up size in USD. Defaults to $1 when omitted. */
   amountUsd?: number;
@@ -77,7 +81,7 @@ export function TopUpButton({
   return (
     <div className="w-full">
       {collectEmail && (
-        <div className="mb-3">
+        <div className="mb-4">
           <label
             htmlFor={emailId}
             className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase"
@@ -97,10 +101,15 @@ export function TopUpButton({
               if (emailInvalid) setEmailInvalid(false);
             }}
             aria-invalid={emailInvalid}
-            className="mt-1.5 w-full rounded-lg border border-line bg-white/[0.02] py-2.5 px-3 text-sm font-medium text-white placeholder:font-normal placeholder:text-muted/70 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+            aria-describedby={emailInvalid ? `${emailId}-error` : undefined}
+            className={`mt-1.5 w-full rounded-xl border bg-white/[0.02] px-3.5 py-3 text-sm font-medium text-white placeholder:font-normal placeholder:text-muted/70 focus:ring-1 focus:outline-none ${
+              emailInvalid
+                ? "border-red-400/60 focus:border-red-400 focus:ring-red-400/40"
+                : "border-white/[0.08] focus:border-brand focus:ring-brand"
+            }`}
           />
           {emailInvalid && emailErrorText && (
-            <p role="alert" className="mt-1.5 text-xs text-red-300">
+            <p id={`${emailId}-error`} role="alert" className="mt-1.5 text-xs text-red-300">
               {emailErrorText}
             </p>
           )}
@@ -119,12 +128,21 @@ export function TopUpButton({
             className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
           />
         ) : (
-          children
+          <span className="inline-flex items-center justify-center gap-2">
+            <Lock className="size-4" aria-hidden />
+            {children}
+          </span>
         )}
       </button>
       {failed && (
         <p role="alert" className="mt-2 text-center text-xs text-red-300">
           {errorText}
+        </p>
+      )}
+      {trustBadge && (
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-muted">
+          <Lock className="size-3 shrink-0 text-emerald-400" aria-hidden />
+          {trustBadge}
         </p>
       )}
     </div>
