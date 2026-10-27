@@ -1,5 +1,6 @@
 import { generateWithDeepSeek, deepSeekConfigured } from "./deepseek";
 import { generateWithGroq, groqConfigured } from "./groq";
+import { generateWithOpenAI, openAIConfigured } from "./openai";
 import { generateWithOpenRouter, openRouterConfigured } from "./openrouter";
 import { generateWithMeta, metaConfigured } from "./meta";
 import { generateMockCaption } from "./mock";
@@ -18,8 +19,9 @@ type Provider = {
  *
  *   1. DeepSeek  — primary, funded.
  *   2. Groq      — fallback 1, fastest of the three (~120ms measured).
- *   3. OpenRouter — fallback 2, free tier for when the paid providers fail.
- *   4. Meta      — kept last: still blocked by `402 billing_not_configured`, so
+ *   3. OpenAI    — fallback 2, gpt-4o-mini paid tier for when DeepSeek/Groq fail.
+ *   4. OpenRouter — fallback 3, free tier for when the paid providers fail.
+ *   5. Meta      — kept last: still blocked by `402 billing_not_configured`, so
  *                  it would only add a failing round trip if it came earlier.
  *
  * The local template is not in this list: it is the guaranteed floor, applied
@@ -28,6 +30,7 @@ type Provider = {
 const PROVIDERS: Provider[] = [
   { name: "deepseek", configured: deepSeekConfigured, generate: generateWithDeepSeek },
   { name: "groq", configured: groqConfigured, generate: generateWithGroq },
+  { name: "openai", configured: openAIConfigured, generate: generateWithOpenAI },
   { name: "openrouter", configured: openRouterConfigured, generate: generateWithOpenRouter },
   { name: "meta", configured: metaConfigured, generate: generateWithMeta },
 ];
@@ -74,4 +77,4 @@ export function providerChain(): Array<{ name: string; configured: boolean }> {
   return PROVIDERS.map((provider) => ({ name: provider.name, configured: provider.configured() }));
 }
 
-export { deepSeekConfigured, groqConfigured, metaConfigured, openRouterConfigured };
+export { deepSeekConfigured, groqConfigured, metaConfigured, openAIConfigured, openRouterConfigured };
