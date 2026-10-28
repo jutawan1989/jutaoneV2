@@ -31,7 +31,7 @@ import {
 import { LogoMark } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import type { AdminMember, AdminPayout, AdminStats } from "@/lib/admin/data";
-import { sanitizeAmountInput } from "@/lib/admin/tokens";
+import { sanitizeAmountInput, topupErrorMessage } from "@/lib/admin/tokens";
 
 const PANEL = "panel gap-0 py-0 ring-0";
 
@@ -177,15 +177,7 @@ export function AdminPanel({
         setTopupEmail("");
         setTopupAmount("");
       } else {
-        setTopupError(
-          data?.code === "member_not_found"
-            ? "E-mel tidak dijumpai. Pastikan pengguna sudah daftar."
-            : data?.code === "invalid_amount"
-              ? "Jumlah tidak sah. Masukkan nombor bulat melebihi 0."
-              : data?.code === "invalid_email"
-                ? "Format e-mel tidak sah."
-                : "Gagal tambah token. Sila cuba lagi.",
-        );
+        setTopupError(topupErrorMessage(data?.code));
       }
     } catch {
       setTopupError("Rangkaian bermasalah.");

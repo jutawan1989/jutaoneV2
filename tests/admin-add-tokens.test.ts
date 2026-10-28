@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAddTokensInput, sanitizeAmountInput } from "@/lib/admin/tokens";
+import { parseAddTokensInput, sanitizeAmountInput, topupErrorMessage } from "@/lib/admin/tokens";
 
 describe("admin manual token top-up input", () => {
   it("accepts a valid email and 1,000,000 tokens", () => {
@@ -27,6 +27,16 @@ describe("admin manual token top-up input", () => {
 
   it("rejects absurd amounts that are likely a typo", () => {
     expect(parseAddTokensInput({ user_email: "a@b.co", amount: 999_999_999 }).ok).toBe(false);
+  });
+});
+
+describe("topupErrorMessage", () => {
+  it("maps every API code to a message, including server-blind codes", () => {
+    expect(topupErrorMessage("store_unavailable")).toContain("tidak disambung");
+    expect(topupErrorMessage("credit_failed")).toContain("Gagal menyimpan");
+    expect(topupErrorMessage("unauthorised")).toContain("Sesi");
+    expect(topupErrorMessage("amount_too_large")).toContain("terlalu besar");
+    expect(topupErrorMessage("sesuatu_yang_baru")).toContain("Gagal tambah token");
   });
 });
 
