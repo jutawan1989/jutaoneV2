@@ -4,30 +4,33 @@ import { useEffect, useState } from "react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
-import type { PublicMetalCurrency } from "@/lib/goldprice";
+import { publicCurrencyForLocale, type PublicMetalCurrency } from "@/lib/goldprice";
+
+type QuoteView = { gold: number | null; silver: number | null };
 
 type MetalApiResponse = {
   ok?: boolean;
   currency?: string;
+  /** Tri-quote views (Hermes backend): every response carries all three. */
+  usd?: QuoteView | null;
+  myr?: QuoteView | null;
+  idr?: QuoteView | null;
+  /** Legacy display pair (kept as fallback for stale caches). */
   gold?: number | null;
   silver?: number | null;
   source?: "live" | "cache";
   fetchedAt?: string;
 };
 
-type SinglePrices = {
+type TriPrices = {
   status: "loading" | "ready" | "unavailable";
-  gold: number | null;
-  silver: number | null;
+  usd: QuoteView;
+  myr: QuoteView;
+  idr: QuoteView;
   fetchedAt: string | null;
 };
 
-/** Boss spec (Global Startup): one currency per locale — ms→RM, id→Rp, en→USD. */
-function currencyForLocale(locale: Locale): PublicMetalCurrency {
-  if (locale === "id") return "IDR";
-  if (locale === "en") return "USD";
-  return "MYR";
-}
+const EMPTY_VIEW: QuoteView = { gold: null, silver: null };
 
 function formatPrice(value: number | null, currency: PublicMetalCurrency): string {
   if (value === null || value === undefined) return "—";
@@ -43,9 +46,10 @@ function formatPrice(value: number | null, currency: PublicMetalCurrency): strin
   }
 }
 
-async function fetchOne(currency: PublicMetalCurrency): Promise<MetalApiResponse | null> {
+/** One call — the response already carries usd/myr/idr, locale just picks the view. */
+async function fetchTriQuotes(): Promise<MetalApiResponse | null> {
   try {
-    const res = await fetch(`/api/metals/public?currency=${currency}`, { cache: "no-store" });
+    const res = await fetch("/api/metals/public", { cache: "no-store" });
     if (!res.ok) return null;
     return (await res.json()) as MetalApiResponse;
   } catch {
@@ -56,44 +60,50 @@ async function fetchOne(currency: PublicMetalCurrency): Promise<MetalApiResponse
 /**
  * Homepage metals widget — FREE Goldprice.dev feed (cached 4h server-side).
  *
- * Single-currency display: the quote follows the active locale
- * (ms→MYR, id→IDR, en→USD raw spot). No BUY/SELL/HOLD signals here: signals
- * live in the premium dashboard analysis (2,000 tokens), not on the free
- * page — the free page must never look like investment advice. The compliance
- * disclaimer stays. When the feed is down, the widget hides itself rather
- * than showing stale-looking numbers.
+ * Single-currency display from the tri-quote API: one fetch returns
+ * res.usd/res.myr/res.idr and the active locale picks the view
+ * (ms→MYR, id→IDR, en→USD raw spot via Hermes `publicCurrencyForLocale`).
+ * No BUY/SELL/HOLD signals here: signals live in the premium dashboard
+ * analysis (2,000 tokens), not on the free page — the free page must never
+ * look like investment advice. The compliance disclaimer stays. When the
+ * feed is down, the widget hides itself rather than showing stale-looking
+ * numbers.
  */
 export function GoldWidget({ dict, locale }: { dict: Dictionary; locale: Locale }) {
-  const currency = currencyForLocale(locale);
-  const [prices, setPrices] = useState<SinglePrices>({
+  // Single source of truth shared with the backend (Hermes).
+  const currency = publicCurrencyForLocale(locale);
+  const [prices, setPrices] = useState<TriPrices>({
     status: "loading",
-    gold: null,
-    silver: null,
+    usd: EMPTY_VIEW,
+    myr: EMPTY_VIEW,
+    idr: EMPTY_VIEW,
     fetchedAt: null,
   });
 
   useEffect(() => {
     let cancelled = false;
-    setPrices({ status: "loading", gold: null, silver: null, fetchedAt: null });
-    fetchOne(currency).then((res) => {
+    fetchTriQuotes().then((res) => {
       if (cancelled) return;
-      if (!res?.ok || (res.gold == null && res.silver == null)) {
+      // Prefer the tri-quote views; fall back to the legacy display pair.
+      const usd = res?.usd ?? (res?.currency === "USD" ? { gold: res?.gold ?? null, silver: res?.silver ?? null } : EMPTY_VIEW);
+      const myr = res?.myr ?? (res?.currency === "MYR" ? { gold: res?.gold ?? null, silver: res?.silver ?? null } : EMPTY_VIEW);
+      const idr = res?.idr ?? (res?.currency === "IDR" ? { gold: res?.gold ?? null, silver: res?.silver ?? null } : EMPTY_VIEW);
+      const hasAny =
+        res?.ok && (usd.gold != null || usd.silver != null || myr.gold != null || myr.silver != null || idr.gold != null || idr.silver != null);
+      if (!hasAny) {
         setPrices((prev) => ({ ...prev, status: "unavailable" }));
         return;
       }
-      setPrices({
-        status: "ready",
-        gold: res.gold ?? null,
-        silver: res.silver ?? null,
-        fetchedAt: res.fetchedAt ?? null,
-      });
+      setPrices({ status: "ready", usd, myr, idr, fetchedAt: res?.fetchedAt ?? null });
     });
     return () => {
       cancelled = true;
     };
-  }, [currency]);
+  }, []);
 
   if (prices.status === "unavailable") return null;
+
+  const view = currency === "IDR" ? prices.idr : currency === "USD" ? prices.usd : prices.myr;
 
   let updatedLabel: string | null = null;
   if (prices.fetchedAt) {
@@ -112,13 +122,13 @@ export function GoldWidget({ dict, locale }: { dict: Dictionary; locale: Locale 
   const rows = [
     {
       name: dict.gold.instruments.gold,
-      price: prices.status === "ready" ? `${formatPrice(prices.gold, currency)}${dict.gold.perOunce}` : "…",
+      price: prices.status === "ready" ? `${formatPrice(view.gold, currency)}${dict.gold.perOunce}` : "…",
       art: "/assets/gold.jpg",
       glow: "gold" as const,
     },
     {
       name: dict.gold.instruments.silver,
-      price: prices.status === "ready" ? `${formatPrice(prices.silver, currency)}${dict.gold.perOunce}` : "…",
+      price: prices.status === "ready" ? `${formatPrice(view.silver, currency)}${dict.gold.perOunce}` : "…",
       art: "/assets/silver.jpg",
       glow: "silver" as const,
     },
