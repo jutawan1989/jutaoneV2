@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
   const { error } = await db.from("token_ledger").insert({
     visitor_key: found.member.ownerRef,
     delta: parsed.amount,
+    // First-class grant reason, registered by
+    // `supabase/token_manual_topup.sql`. The old `adjustment` fallback hid
+    // admin grants in the ledger; this reads what actually happened.
     reason: "admin_manual_topup",
     tokens: parsed.amount,
   });
