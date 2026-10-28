@@ -4,11 +4,11 @@ import { localePath } from "@/lib/i18n/config";
 import { PremiumArt } from "@/components/premium-art";
 
 /**
- * Brand mark supplied by the client (`public/assets/logo.jpg`, JOB + globe).
+ * Brand mark supplied by the client (`public/assets/logo2.jpg`, JOB + globe).
  * Square artwork with a dark background, so it is rendered cropped-rounded
  * with a ring + cyan glow to lift it off the ink surfaces.
  */
-const MARK_SRC = "/assets/logo.jpg";
+const MARK_SRC = "/assets/logo2.jpg";
 
 type LogoMarkProps = {
   /** Rendered width/height in px (square artwork). */

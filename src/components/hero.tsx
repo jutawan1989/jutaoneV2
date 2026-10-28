@@ -84,16 +84,13 @@ export function Hero({
 
             <div className="relative flex flex-col items-center gap-5">
               <PremiumArt
-                src="/assets/logo.jpg"
+                src="/assets/logo2.jpg"
                 alt={dict.a11y.globeLabel}
                 size={232}
                 glow="cyan"
                 className="h-auto w-full max-w-[232px]"
               />
 
-              <p className="text-center text-[11px] font-semibold tracking-[0.2em] text-white uppercase">
-                JutaOne<span className="text-brand">.Biz</span>
-              </p>
               <p className="max-w-[18rem] text-center text-[11px] leading-relaxed text-white/60">
                 {dict.footer.tagline}
               </p>
