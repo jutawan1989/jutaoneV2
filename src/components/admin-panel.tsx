@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
   ArrowUpRight,
   ArrowDownRight,
   CheckCircle2,
   Clock3,
+  Coins,
   CreditCard,
   Search,
   ShieldCheck,
@@ -39,7 +40,7 @@ function money(minor: number, currency = "MYR"): string {
   return `RM${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-type Tab = "overview" | "members" | "payouts";
+type Tab = "overview" | "members" | "payouts" | "tokens";
 
 function StatusBadge({
   children,
@@ -91,6 +92,11 @@ export function AdminPanel({
   const [note, setNote] = useState<string | null>(null);
   const [memberQuery, setMemberQuery] = useState("");
   const [payoutQuery, setPayoutQuery] = useState("");
+  const [topupEmail, setTopupEmail] = useState("");
+  const [topupAmount, setTopupAmount] = useState("");
+  const [topupBusy, setTopupBusy] = useState(false);
+  const [topupNote, setTopupNote] = useState<string | null>(null);
+  const [topupError, setTopupError] = useState<string | null>(null);
 
   async function markPaid(id: number) {
     setBusy(id);
@@ -123,6 +129,7 @@ export function AdminPanel({
     { id: "overview", label: "Ringkasan" },
     { id: "members", label: "Pengguna", count: members.length },
     { id: "payouts", label: "Pembayaran", count: rows.length },
+    { id: "tokens", label: "Tambah Token Manual" },
   ];
 
   const filteredMembers = useMemo(() => {
@@ -140,6 +147,45 @@ export function AdminPanel({
     if (!query) return rows;
     return rows.filter((row) => `${row.code} ${row.status}`.toLowerCase().includes(query));
   }, [payoutQuery, rows]);
+
+  async function submitTopup(event: FormEvent) {
+    event.preventDefault();
+    if (topupBusy) return;
+    setTopupBusy(true);
+    setTopupNote(null);
+    setTopupError(null);
+    try {
+      const response = await fetch("/api/admin/add-tokens", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ user_email: topupEmail, amount: Number(topupAmount) }),
+      });
+      const data = await response.json().catch(() => null);
+      if (response.ok && data?.ok) {
+        const credited = Number(data.credited ?? 0).toLocaleString("en-US");
+        const after = Number(data.balanceAfter ?? 0).toLocaleString("en-US");
+        setTopupNote(
+          `Berjaya! Token telah ditambah. ${credited} token kepada ${data.email ?? topupEmail.trim()}. Baki kini ${after}.`,
+        );
+        setTopupEmail("");
+        setTopupAmount("");
+      } else {
+        setTopupError(
+          data?.code === "member_not_found"
+            ? "E-mel tidak dijumpai. Pastikan pengguna sudah daftar."
+            : data?.code === "invalid_amount"
+              ? "Jumlah tidak sah. Masukkan nombor bulat melebihi 0."
+              : data?.code === "invalid_email"
+                ? "Format e-mel tidak sah."
+                : "Gagal tambah token. Sila cuba lagi.",
+        );
+      }
+    } catch {
+      setTopupError("Rangkaian bermasalah.");
+    } finally {
+      setTopupBusy(false);
+    }
+  }
 
   const statCards = [
     {
@@ -492,6 +538,87 @@ export function AdminPanel({
                 )}
               </Card>
             )}
+          </section>
+        )}
+
+        {tab === "tokens" && (
+          <section className="mt-4 space-y-3">
+            <Card className={PANEL}>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand-soft ring-1 ring-brand/25 ring-inset">
+                    <Coins className="size-4" />
+                  </span>
+                  <div>
+                    <h2 className="text-[13px] font-semibold text-white">Tambah Token Manual</h2>
+                    <p className="mt-0.5 text-[11px] text-muted">
+                      Kredit terus ke lejar pengguna. Dashboard ahli memaparkan baki baharu serta-merta.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={submitTopup} className="mt-4 grid gap-3 sm:max-w-md">
+                  <div>
+                    <label htmlFor="topup-email" className="mb-1.5 block text-[11px] font-medium text-silver">
+                      E-mel pengguna
+                    </label>
+                    <Input
+                      id="topup-email"
+                      type="email"
+                      required
+                      value={topupEmail}
+                      onChange={(event) => setTopupEmail(event.target.value)}
+                      placeholder="ali@contoh.com"
+                      autoComplete="off"
+                      className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 text-xs text-silver placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="topup-amount" className="mb-1.5 block text-[11px] font-medium text-silver">
+                      Jumlah token
+                    </label>
+                    <Input
+                      id="topup-amount"
+                      type="number"
+                      required
+                      min={1}
+                      step={1}
+                      inputMode="numeric"
+                      value={topupAmount}
+                      onChange={(event) => setTopupAmount(event.target.value)}
+                      placeholder="1000000"
+                      className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 text-xs text-silver tabular-nums placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={topupBusy}
+                    className="h-10 gap-1.5 rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+                  >
+                    {topupBusy ? "Menambah…" : "Tambah Token"}
+                  </Button>
+                </form>
+
+                {topupNote && (
+                  <p
+                    role="status"
+                    className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-2.5 text-[11px] text-emerald-200"
+                  >
+                    <CheckCircle2 className="size-3.5 shrink-0 text-emerald-400" />
+                    {topupNote}
+                  </p>
+                )}
+                {topupError && (
+                  <p
+                    role="alert"
+                    className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/[0.08] px-3 py-2.5 text-[11px] text-red-200"
+                  >
+                    <X className="size-3.5 shrink-0 text-red-400" />
+                    {topupError}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </section>
         )}
 
