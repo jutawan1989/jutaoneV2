@@ -12,11 +12,14 @@
 const API_BASE = "https://api.telegram.org";
 const MAX_CHARS = 4096;
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+/**
+ * Escapes a DYNAMIC value for embedding inside an HTML-parsed Telegram
+ * message. Markup itself (<b>, <i>, <a>) must NOT pass through here —
+ * escaping the whole message turns tags into visible text (the bug Boss
+ * reported: `<b>` showing literally in the channel).
+ */
+export function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export function telegramConfigured(): boolean {
@@ -44,14 +47,21 @@ export async function sendTelegramMessage(
 
   const token = process.env.TELEGRAM_BOT_TOKEN as string;
   const chatId = process.env.TELEGRAM_CHAT_ID as string;
-  const body = escapeHtml(text).slice(0, MAX_CHARS);
+  // The caller owns the markup: only dynamic values are escaped at the call
+  // site (via escapeHtml), so tags here render as formatting, not text.
+  const body = text.slice(0, MAX_CHARS);
 
   let response: Response;
   try {
     response = await fetch(`${API_BASE}/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text: body, parse_mode: "HTML" }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: body,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      }),
       signal: AbortSignal.timeout(20_000),
     });
   } catch {

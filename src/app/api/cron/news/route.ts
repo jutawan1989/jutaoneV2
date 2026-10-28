@@ -3,7 +3,7 @@ import {
   getPublicMetalPrices,
   type PublicMetalCurrency,
 } from "@/lib/goldprice";
-import { sendTelegramMessage, telegramMisconfiguredReason } from "@/lib/telegram";
+import { sendTelegramMessage, escapeHtml, telegramMisconfiguredReason } from "@/lib/telegram";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,8 +36,34 @@ function authorised(request: NextRequest): boolean {
 function formatMoney(value: number | null, currency: PublicMetalCurrency): string {
   if (value === null) return "—";
   if (currency === "IDR") return `Rp${value.toLocaleString("id-ID")}`;
-  if (currency === "USD") return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return `RM${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (currency === "USD")
+    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `RM ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+const DIVIDER = "━━━━━━━━━━━━━━━━━━";
+
+/**
+ * Boss-approved premium layout. Markup (<b>, <i>, <a>) stays literal —
+ * only dynamic values (prices, timestamp) go through escapeHtml, so tags
+ * render as formatting and never as visible text.
+ */
+export function buildNewsMessage(
+  currency: PublicMetalCurrency,
+  gold: number | null,
+  silver: number | null,
+  when: string,
+  dashboardUrl: string,
+): string {
+  return (
+    `🏆 <b>JUTAONE.BIZ — PASARAN LOGAM</b>\n` +
+    `${DIVIDER}\n` +
+    `🟡 <b>Emas (999):</b> ${escapeHtml(formatMoney(gold, currency))} / oz\n` +
+    `⚪ <b>Perak (925):</b> ${escapeHtml(formatMoney(silver, currency))} / oz\n` +
+    `${DIVIDER}\n` +
+    `📅 <i>Dikemaskini: ${escapeHtml(when)}</i>\n` +
+    `🔗 <a href="${escapeHtml(dashboardUrl)}">Semak Analisis Lanjutan di Dashboard</a>`
+  );
 }
 
 export async function GET(request: NextRequest) {
@@ -58,15 +84,19 @@ export async function GET(request: NextRequest) {
     timeZone: "Asia/Kuala_Lumpur",
     day: "numeric",
     month: "short",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   });
-  const sourceTag = prices.source === "cache" ? " (cache)" : "";
-  const message =
-    `<b>JutaOne — Harga Emas &amp; Perak${sourceTag}</b>\n` +
-    `Emas: <b>${formatMoney(prices.gold, currency)}</b>/oz\n` +
-    `Perak: <b>${formatMoney(prices.silver, currency)}</b>/oz\n` +
-    `Dikemaskini pada: ${when} (MYT)`;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://jutaone.biz").replace(/\/$/, "");
+  const message = buildNewsMessage(
+    currency,
+    prices.gold,
+    prices.silver,
+    `${when} (MYT)`,
+    `${siteUrl}/ms`,
+  );
 
   if (request.nextUrl.searchParams.get("dry") === "1") {
     return NextResponse.json({ ok: true, dry: true, currency, message });
