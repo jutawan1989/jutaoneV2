@@ -70,7 +70,7 @@ export function Navbar({
           </Link>
           <Link
             href="/directory"
-            className="rounded-full border border-brand/40 bg-brand/10 px-3 py-1 font-semibold text-brand-soft transition-colors hover:border-brand hover:text-white"
+            className="btn-glow rounded-full border border-brand/40 bg-brand/10 px-3 py-1 font-semibold text-brand-soft transition-colors hover:border-brand hover:text-white"
           >
             {dict.nav.suppliers}
           </Link>
@@ -122,7 +122,7 @@ export function Navbar({
               </Link>
               <Link
                 href="/directory"
-                className="rounded-lg border border-brand/40 bg-brand/10 px-3 py-2.5 text-sm font-semibold text-brand-soft transition-colors hover:text-white"
+                className="btn-glow rounded-lg border border-brand/40 bg-brand/10 px-3 py-2.5 text-sm font-semibold text-brand-soft transition-colors hover:text-white"
               >
                 {dict.nav.suppliers}
               </Link>

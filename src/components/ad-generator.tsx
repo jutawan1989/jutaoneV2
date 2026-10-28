@@ -235,8 +235,40 @@ export function AdGenerator({
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={submitDisabled} className="btn-brand">
-                {loading ? dict.generator.generating : dict.generator.submit}
+              <button
+                type="submit"
+                disabled={submitDisabled}
+                aria-busy={loading}
+                className="btn-brand btn-glow"
+              >
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <svg
+                      aria-hidden
+                      width="15"
+                      height="15"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="ai-spinner"
+                    >
+                      <path
+                        d="M8 1.5a6.5 6.5 0 1 0 6.5 6.5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7" />
+                    </svg>
+                    <span>{dict.generator.generating}</span>
+                    <span aria-hidden className="ai-dots">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  </span>
+                ) : (
+                  dict.generator.submit
+                )}
               </button>
 
               {demoDisabled ? (

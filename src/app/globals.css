@@ -171,6 +171,107 @@ body::before {
     background-color: rgba(148, 163, 184, 0.08);
     color: #fff;
   }
+
+  /* Futuristic glow border (Boss spec): bright blue halo on hover for the
+     "Tulis Kapsyen AI" + "Cari Pembekal" CTAs. Works on dark hero and on
+     light Dual-Tone sections since it only adds light, not background. */
+  .btn-glow {
+    transition:
+      background-color 150ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .btn-glow:hover:not(:disabled) {
+    border-color: rgba(96, 165, 250, 0.9);
+    box-shadow:
+      0 0 0 1px rgba(59, 130, 246, 0.7),
+      0 0 18px rgba(59, 130, 246, 0.65),
+      0 8px 28px -12px rgba(59, 130, 246, 0.8),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+
+  .btn-glow:focus-visible {
+    border-color: rgba(96, 165, 250, 0.9);
+    box-shadow:
+      0 0 0 2px rgba(59, 130, 246, 0.8),
+      0 0 18px rgba(59, 130, 246, 0.65);
+  }
+}
+
+/* ---------- AI thinking indicator (Ad Generator loading) ---------- */
+
+.ai-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ai-dots > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.25;
+  animation: ai-dot-pulse 1.1s ease-in-out infinite;
+}
+
+.ai-dots > span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.ai-dots > span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes ai-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.ai-spinner {
+  animation: ai-spin 1s linear infinite;
+  will-change: transform;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Fast + smooth page transitions ---------- */
+
+/* App Router remounts page content on navigation, so a short fade-slide on
+   <main> reads as an instant-but-smooth transition (180ms, ease-out). */
+main {
+  animation: page-in 180ms ease-out both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* When the browser supports the View Transitions API, keep the cross-fade
+   equally snappy instead of the slow default. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease-out;
 }
 
 /* ---------- Deep Slate surfaces (members + admin) ---------- */
@@ -359,13 +460,24 @@ body::before {
     scroll-behavior: auto;
   }
 
+  main {
+    animation: none;
+  }
+
   .jo-globe__spin,
   .marquee__track,
   .signal-row,
   .signal-live,
   .widget-float,
-  .modal-enter {
+  .modal-enter,
+  .ai-dots > span,
+  .ai-spinner {
     animation: none !important;
+  }
+
+  .btn-glow:hover:not(:disabled),
+  .btn-glow:focus-visible {
+    box-shadow: none;
   }
 }
 @theme inline {

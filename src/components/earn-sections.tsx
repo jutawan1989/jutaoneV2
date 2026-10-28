@@ -50,7 +50,7 @@ export function BizMatchSection({ dict }: { dict: Dictionary }) {
             <span className="truncate">{dict.suppliers.searchPlaceholder}</span>
           </Link>
           <div className="mt-7">
-            <Link href="/directory" className="btn-brand w-full sm:w-auto">
+            <Link href="/directory" className="btn-brand btn-glow w-full sm:w-auto">
               {dict.suppliers.cta}
             </Link>
           </div>
