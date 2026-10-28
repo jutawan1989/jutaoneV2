@@ -62,6 +62,7 @@ export function AdGenerator({
   // paid feature, so the client must not be able to unlock it by editing state.
   const [copyAllowed, setCopyAllowed] = useState(initialCopyAllowed);
   const [lockNotice, setLockNotice] = useState<string | null>(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const hookTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -87,6 +88,7 @@ export function AdGenerator({
       setLoading(true);
       setError(null);
       setCopied(false);
+      setShareNotice(null);
 
       try {
         const response = await fetch("/api/demo", {
@@ -156,6 +158,44 @@ export function AdGenerator({
     } catch {
       setCopied(false);
     }
+  }
+
+  // Safe "Auto-Post" (Boss spec): no API integration. Copy the caption via
+  // navigator.clipboard.writeText, then open the upload page in a new tab.
+  async function shareTo(target: "tiktok" | "facebook") {
+    if (!caption) return;
+
+    // Same paid lock as copy: locked visitors get the top-up hook instead.
+    if (!copyAllowed) {
+      setLockNotice(dict.generator.copyLocked);
+      openHook();
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(caption);
+    } catch {
+      // Clipboard API can fail (non-secure context / denied permission).
+      // Fallback to a hidden textarea + execCommand so the flow still works.
+      try {
+        const area = document.createElement("textarea");
+        area.value = caption;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+      } catch {
+        setShareNotice(dict.generator.shareFailed);
+        return;
+      }
+    }
+
+    setShareNotice(dict.generator.shared);
+    const url = target === "tiktok" ? "https://www.tiktok.com/upload" : "https://www.facebook.com";
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   const exhausted = remaining <= 0 && !demoDisabled;
@@ -266,6 +306,31 @@ export function AdGenerator({
           {lockNotice && (
             <p role="alert" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
               {lockNotice}
+            </p>
+          )}
+
+          {caption && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => shareTo("tiktok")}
+                className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+              >
+                {dict.generator.postTiktok}
+              </button>
+              <button
+                type="button"
+                onClick={() => shareTo("facebook")}
+                className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+              >
+                {dict.generator.postFacebook}
+              </button>
+            </div>
+          )}
+
+          {shareNotice && (
+            <p role="status" className="mt-3 text-xs leading-relaxed text-slate-600">
+              {shareNotice}
             </p>
           )}
 
