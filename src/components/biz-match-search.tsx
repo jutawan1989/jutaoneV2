@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useState, type FormEvent } from "react";
+import {
+  BIZ_SEARCH_API,
+  isInsufficient,
+  paywallMessage,
+  readBalanceAfter,
+} from "@/lib/ai-tools";
 
 export type SupplierResult = {
   id: string;
@@ -81,18 +87,28 @@ export function BizMatchSearch({
       setInsufficient(null);
 
       try {
-        const response = await fetch(`/api/biz-match/search?q=${encodeURIComponent(q)}`);
+        const response = await fetch(
+          `${BIZ_SEARCH_API.url}?q=${encodeURIComponent(q)}`,
+        );
         const data = (await response.json()) as SearchResponse;
 
-        if (response.status === 402) {
+        if (response.status === 402 && isInsufficient(data)) {
           // Not an error the visitor can fix by retrying, so it gets its own
           // state rather than the generic failure text.
-          setInsufficient({
-            required: data.required ?? 10_000,
-            balance: data.balance ?? 0,
-          });
+          setInsufficient({ required: data.required, balance: data.balance });
           setResults(null);
           setBilling(null);
+          return;
+        }
+
+        if (response.status === 402) {
+          // Unknown 402 shape: still surface the paywall copy, never crash.
+          const fallback = paywallMessage(
+            typeof data.required === "number" ? data.required : BIZ_SEARCH_API.costTokens,
+            typeof data.balance === "number" ? data.balance : 0,
+          );
+          setError(fallback);
+          setResults(null);
           return;
         }
 
@@ -109,7 +125,10 @@ export function BizMatchSearch({
         setResults(data.results ?? []);
         setSource(data.source ?? null);
         setDegraded(data.degraded ?? null);
-        setBilling(data.billing ?? null);
+        const after = readBalanceAfter(data);
+        setBilling(
+          data.billing ?? (after !== null ? { chargedTokens: 0, balanceAfter: after } : null),
+        );
       } catch {
         setError("Rangkaian bermasalah. Cuba lagi.");
       } finally {
