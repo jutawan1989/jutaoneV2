@@ -27,15 +27,15 @@ describe("token pricing", () => {
 
   it("shows the Rupiah estimate for Indonesia and charges rupiah", () => {
     const price = getPrice("ID");
-    expect(price.localDisplay).toBe("≈ Rp16,000");
+    expect(price.localDisplay).toBe("≈ Rp17,900");
     expect(price.currency).toBe("IDR");
-    expect(price.amount).toBe(16_000);
-    expect(price.amountMinor).toBe(1_600_000);
+    expect(price.amount).toBe(17_900);
+    expect(price.amountMinor).toBe(1_790_000);
   });
 
-  it("shows the Rupiah estimate for Bahasa Indonesia readers outside Indonesia", () => {
-    expect(getPrice("MY", "id").localDisplay).toBe("≈ Rp16,000");
-    expect(getPrice("OTHER", "id").localDisplay).toBe("≈ Rp16,000");
+  it("shows the Rp17,900 Rupiah estimate for Bahasa Indonesia readers outside Indonesia", () => {
+    expect(getPrice("MY", "id").localDisplay).toBe("≈ Rp17,900");
+    expect(getPrice("OTHER", "id").localDisplay).toBe("≈ Rp17,900");
     expect(getPrice("MY", "ms").localDisplay).toBeNull();
     expect(getPrice("MY", "en").localDisplay).toBeNull();
   });
@@ -45,6 +45,15 @@ describe("token pricing", () => {
     expect(price.currency).toBe("USD");
     expect(price.amountMinor).toBe(100);
     expect(price.localDisplay).toBe("≈ $1.00");
+  });
+
+  it("quotes the Rp17,900 static IDR anchor with the RM4.70 headline", () => {
+    // CMO/Linda margin spec: USD 1 = RM4.70 = Rp17,900 (static display anchor).
+    const price = getPrice("ID");
+    expect(price.localDisplay).toBe("≈ Rp17,900");
+    expect(price.currency).toBe("IDR");
+    expect(price.amount).toBe(17_900);
+    expect(price.amountMinor).toBe(1_790_000);
   });
 
   it("scales tokens linearly: $5 buys five million", () => {
@@ -59,8 +68,8 @@ describe("token pricing", () => {
     const price = withUsdAmount(getPrice("ID"), 10);
     expect(price.display).toBe("RM47.00");
     expect(price.tokens).toBe(10_000_000);
-    expect(price.localDisplay).toBe("≈ Rp160,000");
-    expect(price.amountMinor).toBe(16_000_000);
+    expect(price.localDisplay).toBe("≈ Rp179,000");
+    expect(price.amountMinor).toBe(17_900_000);
   });
 
   it("accepts quick picks and valid custom input", () => {

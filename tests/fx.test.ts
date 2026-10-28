@@ -63,6 +63,17 @@ describe("RM-anchored FX (Boss spec)", () => {
     expect(price.fxRate).toBe(3600);
   });
 
+  it("checkout enforces the Rp16,000 floor when MYR strengthens", async () => {
+    // Rate 3,000 would give 4.70 x 3,000 = 14,100 -> floored to 16,000.
+    process.env.FX_RM_TO_IDR = "3000";
+    const price = await priceForCheckout("IDR", 1, "id");
+    expect(price.rmBase).toBeCloseTo(4.7, 10);
+    expect(price.amount).toBe(16_000);
+    expect(price.localDisplay).toBe("≈ Rp16,000");
+    expect(price.display).toBe("RM4.70");
+    expect(price.fxRate).toBe(3000);
+  });
+
   it("checkout passes non-IDR currencies through unchanged", async () => {
     const price = await priceForCheckout("MYR", 5, "ms");
     expect(price.rmBase).toBeNull();

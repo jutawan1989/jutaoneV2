@@ -43,8 +43,11 @@ const MYR_PER_USD = 4.7;
  * with the live/ops rate from `lib/fx.ts`; this constant only feeds the
  * synchronous display helpers (`formatIdrEstimate`, `getPrice`, and the
  * server-rendered headline) so they stay pure and cacheable.
+ *
+ * CMO margin spec (Linda): USD 1 = Rp17,900. The RM4.70 headline never moves;
+ * only the Rupiah anchor changes.
  */
-const IDR_PER_USD = 16_000;
+const IDR_PER_USD = 17_900;
 
 const BASE_CURRENCY: Record<Region, CurrencyCode> = {
   MY: "MYR",
@@ -102,10 +105,10 @@ function buildPrice(currency: CurrencyCode, usd: number, locale: Locale): Price 
   const tokens = Math.round(usd * TOKENS_PER_USD);
   const amount =
     currency === "MYR" ? usd * MYR_PER_USD : currency === "IDR" ? usd * IDR_PER_USD : usd;
-  // Chip treats IDR as a 2-decimal currency, like MYR: sending 16000 renders
-  // "Rp160.00" and 1600000 renders "Rp16,000.00". Verified against the gateway,
-  // so the minor unit is scaled by 100 for both. Sending whole rupiah
-  // undercharged Indonesia by 100x.
+  // Chip treats IDR as a 2-decimal currency, like MYR: the checkout path is
+  // the proof — `priceForCheckout` derives whole rupiah (e.g. 17,900) then
+  // scales by 100. Sending whole rupiah without that scale undercharged
+  // Indonesia by 100x, so the x100 is load-bearing for both currencies.
   const amountMinor = Math.round(amount * 100);
   return {
     currency,
@@ -134,10 +137,10 @@ export function withUsdAmount(base: Price, usd: number, locale: Locale = "ms"): 
  * Checkout price for Indonesia: RM-anchored via `getExchangeRate()`.
  *
  * Flow: USD amount -> RM base (MYR_PER_USD) -> IDR at the live/ops RM->IDR
- * rate, rounded with `roundIdr` so Chip receives a "cantik" whole-rupiah
- * amount (e.g. Rp16,000) instead of a raw conversion. The RM base is kept on
- * the returned `Price.rmBase` so the callback can record it in Supabase.
- * Non-IDR currencies pass through `withUsdAmount` unchanged.
+ * rate, clamped by `applyIdrFloor` (never below Rp16,000 per $1) then rounded
+ * with `roundIdr` so Chip receives a "cantik" whole-rupiah amount. The RM
+ * base is kept on the returned `Price.rmBase` so the callback can record it
+ * in Supabase. Non-IDR currencies pass through `withUsdAmount` unchanged.
  */
 export async function priceForCheckout(
   currency: CurrencyCode,
@@ -148,10 +151,10 @@ export async function priceForCheckout(
     const plain = buildPrice(currency, usd, locale);
     return { ...plain, rmBase: null, fxRate: null };
   }
-  const { getExchangeRate, roundIdr } = await import("@/lib/fx");
+  const { getExchangeRate, applyIdrFloor } = await import("@/lib/fx");
   const rate = await getExchangeRate("IDR");
   const rmBase = Math.round(usd * MYR_PER_USD * 100) / 100;
-  const idrAmount = roundIdr(rmBase * rate);
+  const idrAmount = applyIdrFloor(rmBase * rate, usd);
   const tokens = Math.round(usd * TOKENS_PER_USD);
   const amountMinor = Math.round(idrAmount * 100);
   return {

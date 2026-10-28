@@ -99,6 +99,19 @@ export function roundIdr(amount: number): number {
   return Math.max(500, Math.round(amount / step) * step);
 }
 
+/**
+ * CMO margin floor (Linda): the Indonesian checkout charge never drops below
+ * Rp16,000 for the $1 base, even when MYR strengthens and the raw conversion
+ * (RM base × rate) would land lower. Scales linearly for larger USD amounts.
+ */
+export const IDR_FLOOR_PER_USD = 16_000;
+
+/** Applies the floor, then `roundIdr`, so Chip always gets a cantik amount. */
+export function applyIdrFloor(rawIdr: number, usd: number): number {
+  const floored = Math.max(rawIdr, IDR_FLOOR_PER_USD * usd);
+  return roundIdr(floored);
+}
+
 /** Test helper: clears the in-memory rate so tests do not leak state. */
 export function __clearFxCache(): void {
   cache = null;
