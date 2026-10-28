@@ -69,7 +69,8 @@ const SEARCH_COST_TOKENS = 10_000;
 /** One USD buys one million tokens (`TOKENS_PER_USD` in `lib/pricing.ts`). */
 const TOKENS_PER_USD = 1_000_000;
 
-const PANEL = "panel gap-0 py-0 ring-0";
+/* Dual-Tone: kad putih bersih dengan border nipis (gaya Dynadot body). */
+const PANEL = "gap-0 rounded-2xl border border-slate-200 bg-white py-0 shadow-sm ring-0";
 
 const RANKS = [
   { id: "pemula" as const, min: 0, icon: Flame },
@@ -690,7 +691,7 @@ function LangSwitch({
   return (
     <nav
       aria-label={label}
-      className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5"
+      className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm"
     >
       {DASH_LANGS.map((entry) => {
         const selected = entry.id === lang;
@@ -702,7 +703,7 @@ function LangSwitch({
             aria-pressed={selected}
             className={cn(
               "min-h-[28px] rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors",
-              selected ? "bg-brand text-white shadow-sm" : "text-muted hover:text-white",
+              selected ? "bg-brand text-white shadow-sm" : "text-slate-500 hover:text-slate-900",
             )}
           >
             {entry.label}
@@ -785,11 +786,11 @@ function Pill({
   className?: string;
 }) {
   const tones = {
-    emerald: "border-emerald-500/25 bg-emerald-500/10 text-emerald-300",
-    amber: "border-amber-500/25 bg-amber-500/10 text-amber-300",
-    blue: "border-brand/30 bg-brand/10 text-brand-soft",
-    slate: "border-white/10 bg-white/[0.04] text-muted",
-    violet: "border-violet-500/25 bg-violet-500/10 text-violet-300",
+    emerald: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700",
+    amber: "border-amber-500/25 bg-amber-500/10 text-amber-700",
+    blue: "border-brand/30 bg-brand/10 text-brand-deep",
+    slate: "border-slate-200 bg-slate-50 text-slate-500",
+    violet: "border-violet-500/25 bg-violet-500/10 text-violet-700",
   } as const;
 
   return (
@@ -817,10 +818,10 @@ function IconTile({
 }) {
   const tones = {
     brand: "bg-brand/12 text-brand ring-brand/25",
-    emerald: "bg-emerald-500/12 text-emerald-400 ring-emerald-500/25",
-    amber: "bg-amber-400/12 text-amber-300 ring-amber-400/25",
-    violet: "bg-violet-500/12 text-violet-300 ring-violet-500/25",
-    slate: "bg-white/[0.05] text-silver ring-white/10",
+    emerald: "bg-emerald-500/12 text-emerald-700 ring-emerald-500/25",
+    amber: "bg-amber-400/12 text-amber-700 ring-amber-400/25",
+    violet: "bg-violet-500/12 text-violet-700 ring-violet-500/25",
+    slate: "bg-slate-100 text-slate-600 ring-slate-200",
   } as const;
 
   const sizes = {
@@ -869,8 +870,8 @@ function CopyField({
 
   return (
     <div className="space-y-1.5">
-      <div className="group flex items-stretch gap-2 rounded-xl border border-white/[0.08] bg-ink/60 p-1.5 transition-colors focus-within:border-brand/40">
-        <span className="hidden items-center pl-2 text-muted sm:flex">
+      <div className="group flex items-stretch gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5 transition-colors focus-within:border-brand/40">
+        <span className="hidden items-center pl-2 text-slate-400 sm:flex">
           <Link2 className="size-4" />
         </span>
         <Input
@@ -878,7 +879,7 @@ function CopyField({
           value={value}
           aria-label={`${linkWord} ${label}`}
           onFocus={(event) => event.currentTarget.select()}
-          className="h-9 min-w-0 flex-1 border-0 bg-transparent px-2 font-mono text-xs text-silver shadow-none focus-visible:ring-0"
+          className="h-9 min-w-0 flex-1 border-0 bg-transparent px-2 font-mono text-xs text-slate-700 shadow-none focus-visible:ring-0"
         />
         {onOpen && (
           <Tooltip>
@@ -887,7 +888,7 @@ function CopyField({
                 asChild
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0 rounded-lg text-muted hover:bg-white/[0.06] hover:text-white"
+                className="h-9 w-9 shrink-0 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
               >
                 <a href={onOpen} target="_blank" rel="noopener noreferrer" aria-label={`${openWord} ${label}`}>
                   <ExternalLink />
@@ -902,18 +903,18 @@ function CopyField({
           variant="outline"
           onClick={copy}
           className={cn(
-            "h-9 shrink-0 gap-1.5 rounded-lg border-white/10 bg-white/[0.04] px-3 text-xs font-medium",
+            "h-9 shrink-0 gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-xs font-medium",
             state === "failed"
-              ? "text-amber-300"
-              : "text-silver hover:border-brand/40 hover:bg-white/[0.08] hover:text-white",
+              ? "text-amber-700"
+              : "text-slate-600 hover:border-brand/40 hover:bg-slate-50 hover:text-slate-900",
           )}
         >
-          {state === "copied" ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
+          {state === "copied" ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
           {state === "copied" ? copiedLabel : state === "failed" ? manualLabel : copyLabel}
         </Button>
       </div>
       {state === "failed" && (
-        <p role="alert" className="text-[11px] leading-relaxed text-amber-300/90">
+        <p role="alert" className="text-[11px] leading-relaxed text-amber-700">
           {blocked}
         </p>
       )}
@@ -932,11 +933,11 @@ function MetricRow({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-2">
-      <span className="text-[11px] text-muted">{label}</span>
+      <span className="text-[11px] text-slate-500">{label}</span>
       <span
         className={cn(
           "text-xs font-medium tabular-nums",
-          tone === "emerald" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-silver",
+          tone === "emerald" ? "text-emerald-700" : tone === "amber" ? "text-amber-700" : "text-slate-700",
         )}
       >
         {value}
@@ -1160,10 +1161,10 @@ export function MemberDashboard({
                   <p className="text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">
                     {t.overviewEyebrow}
                   </p>
-                  <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-white break-words sm:text-3xl">
+                  <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-slate-900 break-words sm:text-3xl">
                     {t.greeting}, {name}
                   </h1>
-                  <p className="mt-1 text-[13px] text-muted">
+                  <p className="mt-1 text-[13px] text-slate-500">
                     {t.overviewSub}
                   </p>
                 </div>
@@ -1177,13 +1178,7 @@ export function MemberDashboard({
               </header>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <Card
-                  className={cn(
-                    PANEL,
-                    "border-brand/20 bg-gradient-to-br from-[#0b1c38] via-[#0a1322] to-card",
-                  )}
-                >
-                  <div className="aurora -top-24 -right-14 h-56 w-56 bg-brand/25" />
+                <Card className={cn(PANEL, "border-brand/30")}>
                   <CardContent className="relative p-5">
                     <div className="flex items-start justify-between">
                       <PremiumArt src="/assets/token.jpg" alt={t.tokenBalance} size={56} glow="cyan" />
@@ -1192,30 +1187,30 @@ export function MemberDashboard({
                       </Pill>
                     </div>
 
-                    <p className="mt-5 text-[10px] tracking-[0.16em] text-muted uppercase">{t.tokenBalance}</p>
+                    <p className="mt-5 text-[10px] tracking-[0.16em] text-slate-500 uppercase">{t.tokenBalance}</p>
                     <div className="mt-1 flex items-end gap-2">
-                      <p className="text-[clamp(2rem,8vw,2.5rem)] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums break-all">
+                      <p className="text-[clamp(2rem,8vw,2.5rem)] leading-none font-semibold tracking-[-0.03em] text-slate-900 tabular-nums break-all">
                         {compact(tokens)}
                       </p>
-                      <span className="pb-1 shrink-0 text-[11px] text-muted">{t.tokenUnit}</span>
+                      <span className="pb-1 shrink-0 text-[11px] text-slate-500">{t.tokenUnit}</span>
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-300">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
                         <Rocket className="size-3" /> ≈ {searchesLeft} {t.searches}
                       </span>
-                      <span className="text-muted">≈ ${tokenValueUsd.toFixed(2)} {t.valueSuffix}</span>
+                      <span className="text-slate-500">≈ ${tokenValueUsd.toFixed(2)} {t.valueSuffix}</span>
                     </div>
 
-                    <Separator className="my-4 bg-white/[0.06]" />
+                    <Separator className="my-4 bg-slate-100" />
 
-                    <div className="flex items-center justify-between text-[10px] text-muted">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500">
                       <span>{t.searchCapacity}</span>
                       <span className="tabular-nums">{searchesLeft}/50</span>
                     </div>
                     <Progress
                       value={capacityPercent}
-                      className="mt-2 h-1.5 bg-white/[0.07] [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-brand [&>[data-slot=progress-indicator]]:to-sky-400"
+                      className="mt-2 h-1.5 bg-slate-100 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-brand [&>[data-slot=progress-indicator]]:to-sky-400"
                     />
 
                     <Button
@@ -1229,13 +1224,7 @@ export function MemberDashboard({
                   </CardContent>
                 </Card>
 
-                <Card
-                  className={cn(
-                    PANEL,
-                    "border-emerald-500/20 bg-gradient-to-br from-[#061a19] via-[#08131f] to-card",
-                  )}
-                >
-                  <div className="aurora -top-24 -right-14 h-56 w-56 bg-emerald-500/20" />
+                <Card className={cn(PANEL, "border-emerald-200")}>
                   <CardContent className="relative p-5">
                     <div className="flex items-start justify-between">
                       <IconTile icon={Network} tone="emerald" />
@@ -1244,29 +1233,29 @@ export function MemberDashboard({
                       </Pill>
                     </div>
 
-                    <p className="mt-5 text-[10px] tracking-[0.16em] text-muted uppercase">
+                    <p className="mt-5 text-[10px] tracking-[0.16em] text-slate-500 uppercase">
                       {t.totalEarnings}
                     </p>
                     <div className="mt-1 flex items-end gap-2">
-                      <p className="text-[clamp(1.6rem,7vw,2.5rem)] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums break-all">
+                      <p className="text-[clamp(1.6rem,7vw,2.5rem)] leading-none font-semibold tracking-[-0.03em] text-slate-900 tabular-nums break-all">
                         {money(totalEarnings, affiliate.currency)}
                       </p>
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-300">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
                         <Wallet className="size-3" /> {money(affiliate.availableMinor, affiliate.currency)} {t.available}
                       </span>
-                      <span className="text-muted">{affiliate.networkSize} {t.people}</span>
+                      <span className="text-slate-500">{affiliate.networkSize} {t.people}</span>
                     </div>
 
-                    <Separator className="my-4 bg-white/[0.06]" />
+                    <Separator className="my-4 bg-slate-100" />
 
-                    <div className="flex items-center justify-between text-[10px] text-muted">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500">
                       <span>{t.directVsPassive}</span>
                       <span className="tabular-nums">{directShare}% / {100 - directShare}%</span>
                     </div>
-                    <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                    <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-slate-100">
                       <div
                         className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500"
                         style={{ width: `${directShare}%` }}
@@ -1281,7 +1270,7 @@ export function MemberDashboard({
                       type="button"
                       variant="outline"
                       onClick={() => setTab("affiliate")}
-                      className="mt-4 h-10 w-full gap-1.5 rounded-xl border-white/10 bg-white/[0.03] text-xs font-semibold text-silver hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-white"
+                      className="mt-4 h-10 w-full gap-1.5 rounded-xl border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
                     >
                       {t.openKuda} <ArrowRight className="size-3.5" />
                     </Button>
@@ -1322,15 +1311,15 @@ export function MemberDashboard({
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <IconTile icon={Icon} tone={item.tone} size="sm" />
-                          <span className="text-[9px] tracking-[0.14em] text-muted uppercase">
+                          <span className="text-[9px] tracking-[0.14em] text-slate-500 uppercase">
                             {item.label}
                           </span>
                         </div>
                         <p className="mt-3 flex items-baseline gap-1.5">
-                          <span className="truncate text-xl font-semibold text-white">{item.value}</span>
-                          <span className="shrink-0 text-[10px] text-muted">{item.unit}</span>
+                          <span className="truncate text-xl font-semibold text-slate-900">{item.value}</span>
+                          <span className="shrink-0 text-[10px] text-slate-500">{item.unit}</span>
                         </p>
-                        <p className="mt-1 truncate text-[10px] text-muted">{item.foot}</p>
+                        <p className="mt-1 truncate text-[10px] text-slate-500">{item.foot}</p>
                       </CardContent>
                     </Card>
                   );
@@ -1340,10 +1329,10 @@ export function MemberDashboard({
               <Card className={PANEL}>
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
-                    <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+                    <h2 className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
                       <Zap className="size-4 text-brand" /> {t.quickActions}
                     </h2>
-                    <span className="text-[10px] text-muted">{t.topLinks}</span>
+                    <span className="text-[10px] text-slate-500">{t.topLinks}</span>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     {[
@@ -1356,18 +1345,18 @@ export function MemberDashboard({
                         <Link
                           key={action.label}
                           href={action.href}
-                          className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-all hover:border-brand/35 hover:bg-white/[0.05]"
+                          className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 transition-all hover:border-brand/40 hover:bg-slate-50"
                         >
                           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand/10 text-brand transition-colors group-hover:bg-brand/20">
                             <Icon className="size-4" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[12px] font-medium text-white">
+                            <span className="block truncate text-[12px] font-medium text-slate-900">
                               {action.label}
                             </span>
-                            <span className="block truncate text-[10px] text-muted">{action.hint}</span>
+                            <span className="block truncate text-[10px] text-slate-500">{action.hint}</span>
                           </span>
-                          <ChevronRight className="size-3.5 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand" />
+                          <ChevronRight className="size-3.5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand" />
                         </Link>
                       );
                     })}
@@ -1379,7 +1368,7 @@ export function MemberDashboard({
                 <Card className={PANEL}>
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+                      <h2 className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
                         <BarChart3 className="size-4 text-brand" /> {t.tokenUsage}
                       </h2>
                       <Pill tone="slate">{SEARCH_COST_TOKENS.toLocaleString("en-US")}{t.perSearch}</Pill>
@@ -1391,18 +1380,18 @@ export function MemberDashboard({
                         { label: t.searchesLabel, value: `${searchesLeft}` },
                         { label: t.valueLabel, value: `$${tokenValueUsd.toFixed(2)}` },
                       ].map((cell) => (
-                        <div key={cell.label} className="min-w-0 rounded-xl border border-white/[0.05] bg-white/[0.02] p-2.5">
-                          <p className="truncate text-[9px] tracking-[0.12em] text-muted uppercase">{cell.label}</p>
-                          <p className="mt-1 truncate text-sm font-semibold text-white tabular-nums">{cell.value}</p>
+                        <div key={cell.label} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                          <p className="truncate text-[9px] tracking-[0.12em] text-slate-500 uppercase">{cell.label}</p>
+                          <p className="mt-1 truncate text-sm font-semibold text-slate-900 tabular-nums">{cell.value}</p>
                         </div>
                       ))}
                     </div>
 
                     <div className="mt-4 space-y-0.5">
                       <MetricRow label={t.costPerSearch} value={`${SEARCH_COST_TOKENS.toLocaleString("en-US")} token`} />
-                      <Separator className="bg-white/[0.05]" />
+                      <Separator className="bg-slate-100" />
                       <MetricRow label={t.tokenRate} value={t.tokenRateValue} />
-                      <Separator className="bg-white/[0.05]" />
+                      <Separator className="bg-slate-100" />
                       <MetricRow
                         label={t.balanceStatus}
                         value={tokens > 0 ? t.sufficient : t.needTopUp}
@@ -1415,8 +1404,8 @@ export function MemberDashboard({
                 <Card className={PANEL}>
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
-                        <Clock3 className="size-4 text-emerald-400" /> {t.recentPayouts}
+                      <h2 className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
+                        <Clock3 className="size-4 text-emerald-600" /> {t.recentPayouts}
                       </h2>
                       <button
                         type="button"
@@ -1428,9 +1417,9 @@ export function MemberDashboard({
                     </div>
 
                     {payouts.length === 0 ? (
-                      <div className="mt-4 rounded-xl border border-dashed border-white/[0.08] bg-white/[0.015] px-4 py-6 text-center">
-                        <p className="text-xs font-medium text-silver">{t.noPayouts}</p>
-                        <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
+                        <p className="text-xs font-medium text-slate-700">{t.noPayouts}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                           {t.commissionAfterRequest}
                         </p>
                       </div>
@@ -1439,13 +1428,13 @@ export function MemberDashboard({
                         {payouts.slice(0, 4).map((payout) => (
                           <li
                             key={payout.id}
-                            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2.5"
+                            className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5"
                           >
                             <div className="min-w-0">
-                              <p className="text-xs font-medium text-silver tabular-nums">
+                              <p className="text-xs font-medium text-slate-700 tabular-nums">
                                 {money(payout.amountMinor, payout.currency)}
                               </p>
-                              <p className="text-[10px] text-muted">
+                              <p className="text-[10px] text-slate-500">
                                 {new Date(payout.requestedAt).toLocaleDateString("en-GB")}
                               </p>
                             </div>
@@ -1465,26 +1454,25 @@ export function MemberDashboard({
           {tab === "store" && (
             <section id="panel-store" role="tabpanel" aria-labelledby="tab-store" className="space-y-4">
               <header>
-                <p className="text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-500 uppercase">
                   {t.storeEyebrow}
                 </p>
-                <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-white break-words sm:text-[26px]">
+                <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-slate-900 break-words sm:text-[26px]">
                   {t.storeTitle}
                 </h1>
-                <p className="mt-1 text-[13px] text-muted">
+                <p className="mt-1 text-[13px] text-slate-500">
                   {t.storeSub}
                 </p>
               </header>
 
               <Card className={cn(PANEL, "overflow-hidden")}>
-                <div className="grid-veil pointer-events-none absolute inset-0 opacity-60" />
                 <CardContent className="relative p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <IconTile icon={Store} tone="brand" size="sm" />
                       <div className="min-w-0">
-                        <p className="text-[10px] tracking-[0.14em] text-muted uppercase">{t.shopLinkLabel}</p>
-                        <p className="text-[13px] font-medium break-all text-white">
+                        <p className="text-[10px] tracking-[0.14em] text-slate-500 uppercase">{t.shopLinkLabel}</p>
+                        <p className="text-[13px] font-medium break-all text-slate-900">
                           {store.slug ? `jutaone.biz/shop/${store.slug}` : t.shopNotOpened}
                         </p>
                       </div>
@@ -1518,9 +1506,9 @@ export function MemberDashboard({
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 rounded-xl border border-dashed border-white/[0.08] bg-white/[0.015] p-4">
-                      <p className="text-xs font-medium text-silver">{t.shopNotOpenedTitle}</p>
-                      <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                    <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-medium text-slate-700">{t.shopNotOpenedTitle}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                         {t.shopNotOpenedDesc}
                       </p>
                       <Button
@@ -1543,19 +1531,19 @@ export function MemberDashboard({
                       <IconTile icon={Package} tone="slate" />
                       <Pill tone="slate">{store.productCount} {t.shop.toLowerCase() === "toko" ? "produk" : "produk"}</Pill>
                     </div>
-                    <h2 className="mt-4 text-[13px] font-semibold text-white">{t.catalogTitle}</h2>
-                    <p className="mt-1 flex-1 text-[11px] leading-relaxed text-muted">
+                    <h2 className="mt-4 text-[13px] font-semibold text-slate-900">{t.catalogTitle}</h2>
+                    <p className="mt-1 flex-1 text-[11px] leading-relaxed text-slate-500">
                       {t.catalogDesc}
                     </p>
                     <div className="mt-3 space-y-0.5">
                       <MetricRow label={t.shopStatus} value={store.isOpen ? t.opened : t.closed} tone={store.isOpen ? "emerald" : "amber"} />
-                      <Separator className="bg-white/[0.05]" />
+                      <Separator className="bg-slate-100" />
                       <MetricRow label={t.publicLink} value={store.slug ? t.activeValue : t.noneValue} />
                     </div>
                     <Button
                       asChild
                       variant="outline"
-                      className="mt-4 h-10 w-full gap-1.5 rounded-xl border-white/10 bg-white/[0.03] text-xs font-semibold text-silver hover:border-brand/40 hover:text-white"
+                      className="mt-4 h-10 w-full gap-1.5 rounded-xl border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:border-brand/40 hover:text-slate-900"
                     >
                       <Link href="/store">
                         {t.manageProducts} <ArrowUpRight className="size-3.5" />
@@ -1564,34 +1552,32 @@ export function MemberDashboard({
                   </CardContent>
                 </Card>
 
-                <Card className="panel relative gap-0 overflow-hidden rounded-2xl border border-brand/30 bg-gradient-to-b from-[#0e2145] via-[#0a1526] to-card py-0 ring-0">
-                  <div className="aurora -top-20 -right-16 h-52 w-52 bg-brand/25" />
-                  <div className="aurora -bottom-24 -left-12 h-44 w-44 bg-sky-500/10" />
+                <Card className="relative gap-0 overflow-hidden rounded-2xl border border-brand/30 bg-white py-0 shadow-sm ring-0">
                   <CardContent className="relative flex h-full flex-col p-5">
                     <div className="flex items-start justify-between">
                       <IconTile icon={Sparkles} tone="brand" />
                       <Badge
                         variant="outline"
-                        className="h-auto gap-1 rounded-full border-brand/40 bg-brand/15 px-2.5 py-1 text-[10px] font-semibold tracking-[0.1em] text-brand-soft uppercase"
+                        className="h-auto gap-1 rounded-full border-brand/40 bg-brand/15 px-2.5 py-1 text-[10px] font-semibold tracking-[0.1em] text-brand-deep uppercase"
                       >
                         <BadgeCheck className="size-3" /> {t.pro}
                       </Badge>
                     </div>
 
                     <div className="mt-4">
-                      <p className="text-[13px] font-semibold text-white">{t.shopRental}</p>
-                      <p className="text-[10px] text-muted">{t.monthlyCancel}</p>
+                      <p className="text-[13px] font-semibold text-slate-900">{t.shopRental}</p>
+                      <p className="text-[10px] text-slate-500">{t.monthlyCancel}</p>
                     </div>
 
                     <div className="mt-3 flex items-end gap-1.5">
-                      <span className="text-[34px] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums">
+                      <span className="text-[34px] leading-none font-semibold tracking-[-0.03em] text-slate-900 tabular-nums">
                         $5
                       </span>
-                      <span className="pb-1 text-[11px] text-muted">{t.perMonth}</span>
-                      <span className="ml-auto pb-1 text-[10px] text-muted">≈ RM23.50</span>
+                      <span className="pb-1 text-[11px] text-slate-500">{t.perMonth}</span>
+                      <span className="ml-auto pb-1 text-[10px] text-slate-500">≈ RM23.50</span>
                     </div>
 
-                    <p className="mt-2 text-[11px] leading-relaxed text-muted">
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                       {store.subscriptionStatus === null
                         ? t.notSubscribed
                         : store.subscriptionStatus === "trial"
@@ -1601,24 +1587,24 @@ export function MemberDashboard({
                             : t.subExpiredDesc}
                     </p>
 
-                    <ul className="mt-3 space-y-1.5 text-[11px] text-silver">
+                    <ul className="mt-3 space-y-1.5 text-[11px] text-slate-700">
                       {t.rentalFeatures.map((feature) => (
                         <li key={feature} className="flex items-start gap-2">
-                          <Check className="mt-0.5 size-3 shrink-0 text-emerald-400" />
+                          <Check className="mt-0.5 size-3 shrink-0 text-emerald-600" />
                           <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
 
                     {store.subscriptionStatus === "trial" && (
-                      <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5">
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
                         <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-muted">{t.trialRemaining}</span>
-                          <span className="font-medium text-silver tabular-nums">{trialDays}/7 {t.days}</span>
+                          <span className="text-slate-500">{t.trialRemaining}</span>
+                          <span className="font-medium text-slate-700 tabular-nums">{trialDays}/7 {t.days}</span>
                         </div>
                         <Progress
                           value={trialPercent}
-                          className="mt-2 h-1.5 bg-white/[0.08] [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-brand [&>[data-slot=progress-indicator]]:to-sky-400"
+                          className="mt-2 h-1.5 bg-slate-200 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-brand [&>[data-slot=progress-indicator]]:to-sky-400"
                         />
                       </div>
                     )}
@@ -1638,13 +1624,13 @@ export function MemberDashboard({
           {tab === "affiliate" && (
             <section id="panel-affiliate" role="tabpanel" aria-labelledby="tab-affiliate" className="space-y-4">
               <header>
-                <p className="text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-500 uppercase">
                   {t.affiliateEyebrow}
                 </p>
-                <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-white break-words sm:text-[26px]">
+                <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-slate-900 break-words sm:text-[26px]">
                   {t.shareBuild}
                 </h1>
-                <p className="mt-1 text-[13px] text-muted">
+                <p className="mt-1 text-[13px] text-slate-500">
                   {t.oneLink}
                 </p>
               </header>
@@ -1685,32 +1671,31 @@ export function MemberDashboard({
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <IconTile icon={item.icon} tone={item.tone} size="sm" />
-                        <span className="text-[9px] tracking-[0.14em] text-muted uppercase">
+                        <span className="text-[9px] tracking-[0.14em] text-slate-500 uppercase">
                           {item.label}
                         </span>
                       </div>
-                      <p className="mt-3 truncate text-2xl font-semibold text-white tabular-nums">
+                      <p className="mt-3 truncate text-2xl font-semibold text-slate-900 tabular-nums">
                         {item.value}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-muted">{item.hint}</p>
+                      <p className="mt-0.5 text-[10px] text-slate-500">{item.hint}</p>
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
               <Card className={cn(PANEL, "overflow-hidden")}>
-                <div className="aurora -bottom-24 -left-16 h-56 w-56 bg-amber-400/[0.08]" />
                 <CardContent className="relative p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400/25 to-brand/10 text-amber-300 ring-1 ring-amber-400/25 ring-inset">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400/25 to-brand/10 text-amber-600 ring-1 ring-amber-400/25 ring-inset">
                         <currentRank.icon className="size-5" />
                       </span>
                       <div>
-                        <p className="text-[10px] tracking-[0.14em] text-muted uppercase">
+                        <p className="text-[10px] tracking-[0.14em] text-slate-500 uppercase">
                           {t.rankTitle}
                         </p>
-                        <p className="text-lg leading-tight font-semibold text-white">
+                        <p className="text-lg leading-tight font-semibold text-slate-900">
                           {currentRank.name}
                         </p>
                       </div>
@@ -1719,7 +1704,7 @@ export function MemberDashboard({
                       type="button"
                       variant="ghost"
                       onClick={() => setRankOpen(true)}
-                      className="h-8 gap-1 rounded-lg px-2.5 text-[11px] text-muted hover:bg-white/[0.05] hover:text-white"
+                      className="h-8 gap-1 rounded-lg px-2.5 text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                     >
                       {t.howToRank} <ArrowUpRight className="size-3" />
                     </Button>
@@ -1727,16 +1712,16 @@ export function MemberDashboard({
 
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-muted">
+                      <span className="text-slate-500">
                         {nextRank
                           ? `${peopleToNext} ${t.moreForNext} ${nextRank.name}`
                           : t.highestReached}
                       </span>
-                      <span className="font-medium text-silver tabular-nums">{rankPercent}%</span>
+                      <span className="font-medium text-slate-700 tabular-nums">{rankPercent}%</span>
                     </div>
                     <Progress
                       value={rankPercent}
-                      className="mt-2 h-2 bg-white/[0.07] [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-amber-400 [&>[data-slot=progress-indicator]]:via-brand [&>[data-slot=progress-indicator]]:to-sky-400"
+                      className="mt-2 h-2 bg-slate-100 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-amber-400 [&>[data-slot=progress-indicator]]:via-brand [&>[data-slot=progress-indicator]]:to-sky-400"
                     />
                   </div>
 
@@ -1751,26 +1736,26 @@ export function MemberDashboard({
                           className={cn(
                             "relative flex flex-col items-center gap-1 rounded-xl border px-1 py-2.5 text-center transition-colors",
                             isCurrent
-                              ? "border-amber-400/40 bg-amber-400/[0.12] shadow-[0_0_24px_-12px_rgba(251,191,36,0.8)]"
+                              ? "border-amber-400/50 bg-amber-50 shadow-sm"
                               : unlocked
-                                ? "border-white/[0.08] bg-white/[0.03]"
-                                : "border-white/[0.04] bg-white/[0.01] opacity-50",
+                                ? "border-slate-200 bg-white"
+                                : "border-slate-100 bg-slate-50 opacity-50",
                           )}
                         >
                           {unlocked ? (
-                            <Icon className={cn("size-4", isCurrent ? "text-amber-300" : "text-silver")} />
+                            <Icon className={cn("size-4", isCurrent ? "text-amber-600" : "text-slate-600")} />
                           ) : (
-                            <Lock className="size-3.5 text-muted" />
+                            <Lock className="size-3.5 text-slate-400" />
                           )}
                           <span
                             className={cn(
                               "text-[9px] leading-tight font-medium",
-                              isCurrent ? "text-amber-200" : "text-muted",
+                              isCurrent ? "text-amber-800" : "text-slate-500",
                             )}
                           >
                             {rank.name}
                           </span>
-                          <span className="text-[8px] text-muted/80 tabular-nums">{rank.min}+</span>
+                          <span className="text-[8px] text-slate-400 tabular-nums">{rank.min}+</span>
                         </div>
                       );
                     })}
@@ -1781,7 +1766,7 @@ export function MemberDashboard({
               <Card className={PANEL}>
                 <CardContent className="p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+                    <h2 className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
                       <Network className="size-4 text-brand" /> {t.matrix19}
                     </h2>
                     <Pill tone="slate">
@@ -1801,14 +1786,14 @@ export function MemberDashboard({
                               className={cn(
                                 "relative rounded-lg border px-1 py-2 text-center transition-colors",
                                 active
-                                  ? "border-brand/30 bg-brand/[0.12]"
-                                  : "border-white/[0.05] bg-white/[0.015]",
+                                  ? "border-brand/30 bg-brand/[0.08]"
+                                  : "border-slate-100 bg-slate-50",
                               )}
                             >
                               <p
                                 className={cn(
                                   "text-[9px] font-medium tracking-[0.06em] uppercase",
-                                  active ? "text-brand-soft" : "text-muted/60",
+                                  active ? "text-brand" : "text-slate-400",
                                 )}
                               >
                                 L{level.level}
@@ -1816,24 +1801,24 @@ export function MemberDashboard({
                               <p
                                 className={cn(
                                   "text-[13px] leading-tight font-semibold tabular-nums",
-                                  active ? "text-white" : "text-muted/50",
+                                  active ? "text-slate-900" : "text-slate-400",
                                 )}
                               >
                                 {level.people}
                               </p>
-                              <p className="text-[8px] text-muted/70 tabular-nums">{level.percent}%</p>
+                              <p className="text-[8px] text-slate-400 tabular-nums">{level.percent}%</p>
                             </div>
                           );
                         })}
                       </div>
-                      <p className="mt-2.5 text-[10px] leading-relaxed text-muted">
+                      <p className="mt-2.5 text-[10px] leading-relaxed text-slate-500">
                         {t.matrixNote}
                       </p>
                     </>
                   ) : (
-                    <div className="mt-3 rounded-xl border border-dashed border-white/[0.08] bg-white/[0.015] p-4">
-                      <p className="text-xs font-medium text-silver">{t.networkEmpty}</p>
-                      <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                    <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-medium text-slate-700">{t.networkEmpty}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                         {t.networkEmptyDesc}
                       </p>
                     </div>
@@ -1845,15 +1830,15 @@ export function MemberDashboard({
                 <Card className={PANEL}>
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2">
-                      <Wallet className="size-4 text-emerald-400" />
-                      <p className="text-[10px] tracking-[0.14em] text-muted uppercase">
+                      <Wallet className="size-4 text-emerald-600" />
+                      <p className="text-[10px] tracking-[0.14em] text-slate-500 uppercase">
                         {t.withdrawable}
                       </p>
                     </div>
-                    <p className="mt-3 text-3xl font-semibold tracking-tight text-white tabular-nums break-all">
+                    <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 tabular-nums break-all">
                       {money(affiliate.availableMinor, affiliate.currency)}
                     </p>
-                    <p className="mt-1 text-[11px] text-muted">{t.minPayout}</p>
+                    <p className="mt-1 text-[11px] text-slate-500">{t.minPayout}</p>
 
                     <Dialog open={payoutOpen} onOpenChange={setPayoutOpen}>
                       <DialogTrigger asChild>
@@ -1864,22 +1849,22 @@ export function MemberDashboard({
                           {t.requestPayout}
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="rounded-2xl border border-white/10 bg-[#0b1424] sm:max-w-sm">
+                      <DialogContent className="rounded-2xl border border-slate-200 bg-white sm:max-w-sm">
                         <DialogHeader>
-                          <DialogTitle className="text-white">{t.confirmRequest}</DialogTitle>
-                          <DialogDescription className="text-xs leading-relaxed text-muted">
+                          <DialogTitle className="text-slate-900">{t.confirmRequest}</DialogTitle>
+                          <DialogDescription className="text-xs leading-relaxed text-slate-500">
                             {t.confirmDesc}
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-                          <p className="text-[10px] tracking-[0.12em] text-muted uppercase">{t.amount}</p>
-                          <p className="mt-1 text-2xl font-semibold text-white tabular-nums">
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-[10px] tracking-[0.12em] text-slate-500 uppercase">{t.amount}</p>
+                          <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">
                             {money(affiliate.availableMinor, affiliate.currency)}
                           </p>
                         </div>
-                        <DialogFooter className="-mx-4 -mb-4 rounded-b-2xl border-white/10 bg-white/[0.02]">
+                        <DialogFooter className="-mx-4 -mb-4 rounded-b-2xl border-slate-100 bg-slate-50">
                           <DialogClose asChild>
-                            <Button variant="ghost" className="h-9 rounded-xl text-xs text-muted hover:text-white">
+                            <Button variant="ghost" className="h-9 rounded-xl text-xs text-slate-500 hover:text-slate-900">
                               {t.cancel}
                             </Button>
                           </DialogClose>
@@ -1900,7 +1885,7 @@ export function MemberDashboard({
                     {requestNote && (
                       <p
                         role="status"
-                        className="mt-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-[11px] leading-relaxed text-silver"
+                        className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-700"
                       >
                         {requestNote}
                       </p>
@@ -1911,13 +1896,13 @@ export function MemberDashboard({
                 <Card className={PANEL}>
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] tracking-[0.14em] text-muted uppercase">
+                      <p className="text-[10px] tracking-[0.14em] text-slate-500 uppercase">
                         {t.payoutHistory}
                       </p>
                       <Pill tone="slate">{payouts.length}</Pill>
                     </div>
                     {payouts.length === 0 ? (
-                      <p className="mt-3 text-[11px] leading-relaxed text-muted">
+                      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
                         {t.noPayoutYet}
                       </p>
                     ) : (
@@ -1925,13 +1910,13 @@ export function MemberDashboard({
                         {payouts.slice(0, 5).map((payout) => (
                           <li
                             key={payout.id}
-                            className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2"
+                            className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
                           >
-                            <span className="text-[11px] text-muted tabular-nums">
+                            <span className="text-[11px] text-slate-500 tabular-nums">
                               {new Date(payout.requestedAt).toLocaleDateString("en-GB")}
                             </span>
                             <span className="flex items-center gap-2">
-                              <span className="text-[11px] font-medium text-silver tabular-nums">
+                              <span className="text-[11px] font-medium text-slate-700 tabular-nums">
                                 {money(payout.amountMinor, payout.currency)}
                               </span>
                               <Pill tone={payout.status === "paid" ? "emerald" : "amber"}>{payout.status}</Pill>
@@ -1947,13 +1932,13 @@ export function MemberDashboard({
               {affiliate.code && (
                 <Link
                   href={`/dashboard/affiliate?ref=${affiliate.code}`}
-                  className="panel panel-lift group flex items-center justify-between p-4"
+                  className="panel-lift group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                 >
-                  <span className="flex items-center gap-2.5 text-[13px] text-silver">
+                  <span className="flex items-center gap-2.5 text-[13px] text-slate-700">
                     <IconTile icon={Trophy} tone="amber" size="sm" />
                     <span className="min-w-0">
-                      <span className="block font-medium text-white">{t.viewFullNetwork}</span>
-                      <span className="block text-[10px] text-muted">
+                      <span className="block font-medium text-slate-900">{t.viewFullNetwork}</span>
+                      <span className="block text-[10px] text-slate-500">
                         {t.full19Desc}
                       </span>
                     </span>
@@ -1963,10 +1948,10 @@ export function MemberDashboard({
               )}
 
               <Dialog open={rankOpen} onOpenChange={setRankOpen}>
-                <DialogContent className="rounded-2xl border border-white/10 bg-[#0b1424] sm:max-w-md">
+                <DialogContent className="rounded-2xl border border-slate-200 bg-white sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle className="text-white">{t.howToRankTitle}</DialogTitle>
-                    <DialogDescription className="text-xs leading-relaxed text-muted">
+                    <DialogTitle className="text-slate-900">{t.howToRankTitle}</DialogTitle>
+                    <DialogDescription className="text-xs leading-relaxed text-slate-500">
                       {t.howToRankDesc}
                     </DialogDescription>
                   </DialogHeader>
@@ -1980,28 +1965,28 @@ export function MemberDashboard({
                           className={cn(
                             "flex items-center gap-3 rounded-xl border p-3 text-xs",
                             unlocked
-                              ? "border-white/[0.08] bg-white/[0.03] text-silver"
-                              : "border-white/[0.04] bg-white/[0.01] text-muted",
+                              ? "border-slate-200 bg-white text-slate-700"
+                              : "border-slate-100 bg-slate-50 text-slate-500",
                           )}
                         >
                           <span
                             className={cn(
                               "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                              unlocked ? "bg-brand/15 text-brand" : "bg-white/[0.04] text-muted",
+                              unlocked ? "bg-brand/15 text-brand" : "bg-slate-100 text-slate-400",
                             )}
                           >
                             {unlocked ? <Icon className="size-4" /> : <Lock className="size-3.5" />}
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block font-medium text-white">{rank.name}</span>
-                            <span className="block text-[10px] text-muted">{rank.blurb}</span>
+                            <span className="block font-medium text-slate-900">{rank.name}</span>
+                            <span className="block text-[10px] text-slate-500">{rank.blurb}</span>
                           </span>
-                          <span className="shrink-0 text-muted tabular-nums">{rank.min}+</span>
+                          <span className="shrink-0 text-slate-400 tabular-nums">{rank.min}+</span>
                         </li>
                       );
                     })}
                   </ul>
-                  <DialogFooter className="-mx-4 -mb-4 rounded-b-2xl border-white/10 bg-white/[0.02]">
+                  <DialogFooter className="-mx-4 -mb-4 rounded-b-2xl border-slate-100 bg-slate-50">
                     <DialogClose asChild>
                       <Button className="h-9 rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover">
                         {t.gotIt}
@@ -2016,13 +2001,13 @@ export function MemberDashboard({
           {tab === "tools" && (
             <section id="panel-tools" role="tabpanel" aria-labelledby="tab-tools" className="space-y-4">
               <header>
-                <p className="text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-500 uppercase">
                   {t.toolsEyebrow}
                 </p>
-                <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-white break-words sm:text-[26px]">
+                <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-slate-900 break-words sm:text-[26px]">
                   {t.appsForBiz}
                 </h1>
-                <p className="mt-1 text-[13px] text-muted">
+                <p className="mt-1 text-[13px] text-slate-500">
                   {t.toolsSub}
                 </p>
               </header>
@@ -2080,16 +2065,10 @@ export function MemberDashboard({
                       key={tool.name}
                       href={tool.href}
                       className={cn(
-                        "panel panel-lift group relative overflow-hidden p-5",
+                        "panel-lift group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm",
                         tool.glow,
                       )}
                     >
-                      <div
-                        className={cn(
-                          "aurora -top-14 -right-10 h-36 w-36 bg-gradient-to-br to-transparent opacity-70 transition-opacity group-hover:opacity-100",
-                          tool.wash,
-                        )}
-                      />
                       <div className="relative flex items-start justify-between">
                         {tool.art ? (
                           <PremiumArt
@@ -2104,9 +2083,9 @@ export function MemberDashboard({
                           className={cn(
                             "flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-inset transition-transform duration-200 group-hover:scale-105",
                             tool.tone === "brand" && "bg-brand/15 text-brand ring-brand/25",
-                            tool.tone === "emerald" && "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25",
-                            tool.tone === "amber" && "bg-amber-400/15 text-amber-300 ring-amber-400/25",
-                            tool.tone === "violet" && "bg-violet-500/15 text-violet-300 ring-violet-500/25",
+                            tool.tone === "emerald" && "bg-emerald-500/15 text-emerald-700 ring-emerald-500/25",
+                            tool.tone === "amber" && "bg-amber-400/15 text-amber-700 ring-amber-400/25",
+                            tool.tone === "violet" && "bg-violet-500/15 text-violet-700 ring-violet-500/25",
                           )}
                         >
                           <Icon className="size-6" />
@@ -2114,11 +2093,11 @@ export function MemberDashboard({
                         )}
                         <span className="flex items-center gap-2">
                           <Pill tone="slate">{tool.tag}</Pill>
-                          <ArrowUpRight className="size-4 text-muted transition-colors group-hover:text-white" />
+                          <ArrowUpRight className="size-4 text-slate-400 transition-colors group-hover:text-brand" />
                         </span>
                       </div>
-                      <p className="relative mt-4 text-[13px] font-semibold text-white">{tool.name}</p>
-                      <p className="relative mt-1 text-[11px] leading-relaxed break-words text-muted">{tool.desc}</p>
+                      <p className="relative mt-4 text-[13px] font-semibold text-slate-900">{tool.name}</p>
+                      <p className="relative mt-1 text-[11px] leading-relaxed break-words text-slate-500">{tool.desc}</p>
                       <p className="relative mt-3 flex items-center gap-1 text-[10px] font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100">
                         {t.openAction} <ArrowRight className="size-3" />
                       </p>
@@ -2127,19 +2106,19 @@ export function MemberDashboard({
                 })}
               </div>
 
-              <Card className={cn(PANEL, "border-dashed border-white/[0.08] bg-white/[0.015]")}>
+              <Card className={cn(PANEL, "border-dashed")}>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
                   <div className="flex min-w-0 items-center gap-3">
                     <IconTile icon={Gift} tone="slate" size="sm" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-white">{t.needHelp}</p>
-                      <p className="text-[11px] text-muted">{t.teamHelp}</p>
+                      <p className="text-[13px] font-medium text-slate-900">{t.needHelp}</p>
+                      <p className="text-[11px] text-slate-500">{t.teamHelp}</p>
                     </div>
                   </div>
                   <Button
                     asChild
                     variant="outline"
-                    className="h-9 gap-1.5 rounded-xl border-white/10 bg-white/[0.03] text-xs font-semibold text-silver hover:border-brand/40 hover:text-white"
+                    className="h-9 gap-1.5 rounded-xl border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:border-brand/40 hover:text-slate-900"
                   >
                     <a href="https://wa.me/60123456789" target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="size-3.5" /> {t.contactUs}
@@ -2209,22 +2188,19 @@ function ReferralHero({
   const { state, copy } = useClipboard(referralHref ?? "");
 
   return (
-    <Card className="panel relative gap-0 overflow-hidden rounded-2xl border border-brand/25 bg-[#071022] py-0 ring-0">
-      <div className="grid-veil pointer-events-none absolute inset-0 opacity-70" />
-      <div className="aurora -top-28 left-1/3 h-64 w-64 bg-brand/25" />
-      <div className="aurora -right-10 -bottom-24 h-52 w-52 bg-sky-500/10" />
+    <Card className="relative gap-0 overflow-hidden rounded-2xl border border-brand/25 bg-white py-0 shadow-sm ring-0">
       <CardContent className="relative p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand/15 text-brand ring-1 ring-brand/25 ring-inset">
               <Rocket className="size-3.5" />
             </span>
-            <p className="text-[10px] font-semibold tracking-[0.18em] text-brand-soft uppercase">
+            <p className="text-[10px] font-semibold tracking-[0.18em] text-brand uppercase">
               {t.referralTitle}
             </p>
           </div>
           {code && (
-            <span className="max-w-full rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 font-mono text-[10px] tracking-[0.14em] break-all text-silver uppercase">
+            <span className="max-w-full rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-mono text-[10px] tracking-[0.14em] break-all text-slate-600 uppercase">
               {code}
             </span>
           )}
@@ -2232,10 +2208,10 @@ function ReferralHero({
 
         {referralUrl ? (
           <>
-            <p className="mt-3.5 font-mono text-xl leading-snug font-medium break-all text-white sm:text-[28px]">
+            <p className="mt-3.5 font-mono text-xl leading-snug font-medium break-all text-slate-900 sm:text-[28px]">
               {referralUrl}
             </p>
-            <p className="mt-1.5 text-[11px] text-muted">
+            <p className="mt-1.5 text-[11px] text-slate-500">
               {t.referralSub}
             </p>
 
@@ -2261,14 +2237,14 @@ function ReferralHero({
             </div>
 
             {state === "failed" && (
-              <p role="alert" className="mt-2 text-[11px] text-amber-300">
+              <p role="alert" className="mt-2 text-[11px] text-amber-700">
                 {t.clipboardBlocked}
               </p>
             )}
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] text-muted">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] text-slate-500">
               <span className="flex items-center gap-1.5">
-                <Percent className="size-3 text-emerald-400" /> {t.level1}
+                <Percent className="size-3 text-emerald-600" /> {t.level1}
               </span>
               <span className="flex items-center gap-1.5">
                 <LayersIcon /> {t.level2}
@@ -2279,7 +2255,7 @@ function ReferralHero({
             </div>
           </>
         ) : (
-          <p className="mt-3 text-sm text-muted">{t.noAffiliateCode}</p>
+          <p className="mt-3 text-sm text-slate-500">{t.noAffiliateCode}</p>
         )}
       </CardContent>
     </Card>
@@ -2287,5 +2263,5 @@ function ReferralHero({
 }
 
 function LayersIcon() {
-  return <Network className="size-3 text-brand-soft" />;
+  return <Network className="size-3 text-brand-deep" />;
 }

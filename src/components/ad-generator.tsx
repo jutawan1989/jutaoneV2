@@ -165,15 +165,15 @@ export function AdGenerator({
     <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-20 sm:px-6">
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-3xl">
             {dict.generator.title}
           </h2>
-          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600">
             {dict.generator.subtitle}
           </p>
 
           <form onSubmit={submit} className="mt-7">
-            <label htmlFor="product" className="block text-sm font-medium text-white">
+            <label htmlFor="product" className="block text-sm font-medium text-slate-900">
               {dict.generator.label}
             </label>
             <textarea
@@ -185,9 +185,9 @@ export function AdGenerator({
               rows={4}
               disabled={demoDisabled}
               aria-describedby="product-hint"
-              className="mt-2 w-full resize-none rounded-lg border border-line bg-ink-2/70 px-3.5 py-3 text-sm text-white transition-colors placeholder:text-muted/70 focus:border-brand focus:outline-none disabled:opacity-60"
+              className="mt-2 w-full resize-none rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-brand focus:outline-none disabled:opacity-60"
             />
-            <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
+            <div className="mt-1.5 flex items-center justify-between text-xs text-slate-500">
               <span id="product-hint">{dict.generator.hint}</span>
               <span aria-live="polite" className="tabular-nums">
                 {text.length}/{MAX_CHARS}
@@ -200,11 +200,11 @@ export function AdGenerator({
               </button>
 
               {demoDisabled ? (
-                <span className="rounded-md border border-red-500/30 px-2.5 py-1 text-xs font-medium text-red-300">
+                <span className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600">
                   {dict.generator.errorBlocked}
                 </span>
               ) : (
-                <span className="rounded-md border border-line px-2.5 py-1 text-xs text-muted tabular-nums">
+                <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-500 tabular-nums">
                   {format(remaining === 1 ? dict.generator.remaining : dict.generator.remainingPlural, {
                     // The copy now reads "Kuota Harian: X/5", so it needs both
                     // values; passing only `count` left the placeholders raw.
@@ -217,16 +217,16 @@ export function AdGenerator({
             </div>
 
             {error && (
-              <p role="alert" className="mt-3 text-sm text-red-300">
+              <p role="alert" className="mt-3 text-sm text-red-600">
                 {error}
               </p>
             )}
           </form>
         </div>
 
-        <div className="card flex min-h-[18rem] flex-col p-5">
-          <div className="flex items-center justify-between border-b border-line pb-3">
-            <p className="text-[11px] font-medium tracking-[0.1em] text-muted uppercase">
+        <div className="flex min-h-[18rem] flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <p className="text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase">
               {dict.generator.outputLabel}
             </p>
             {caption && (
@@ -237,8 +237,8 @@ export function AdGenerator({
                 title={copyAllowed ? undefined : dict.generator.copyLocked}
                 className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
                   copyAllowed
-                    ? "border-line text-silver hover:border-[#334155] hover:text-white"
-                    : "border-amber-500/40 text-amber-300"
+                    ? "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                    : "border-amber-300 bg-amber-50 text-amber-700"
                 }`}
               >
                 {copied
@@ -253,30 +253,30 @@ export function AdGenerator({
           {caption ? (
             <p
               aria-live="polite"
-              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-silver"
+              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-700"
             >
               {caption}
             </p>
           ) : (
             <div className="flex flex-1 items-center justify-center">
-              <p className="max-w-xs text-center text-sm text-muted/70">{dict.generator.placeholder}</p>
+              <p className="max-w-xs text-center text-sm text-slate-400">{dict.generator.placeholder}</p>
             </div>
           )}
 
           {lockNotice && (
-            <p role="alert" className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
+            <p role="alert" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
               {lockNotice}
             </p>
           )}
 
-          <div className="mt-auto flex items-center justify-between border-t border-line pt-3 text-[11px] text-muted">
+          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
             <span className="tabular-nums">
               {format(dict.generator.limitBadge, {
                 count: Math.min(used, maxAttempts),
                 max: maxAttempts,
               })}
             </span>
-            <span className="rounded border border-line px-1.5 py-0.5 font-medium text-silver">
+            <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-medium text-slate-600">
               {dict.pricing.tokenName}
             </span>
           </div>

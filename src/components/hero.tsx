@@ -19,7 +19,7 @@ export function Hero({
   locale: Locale;
 }) {
   return (
-    <section className="relative">
+    <section className="relative bg-gradient-to-b from-[#0a1f4d] via-[#0b2557] to-[#0a1730] text-white">
       <div className="mx-auto grid w-full max-w-6xl gap-14 px-4 pt-16 pb-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24">
         <div>
           <p className="inline-flex items-center gap-2 rounded-md border border-line bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium tracking-[0.12em] text-muted uppercase">

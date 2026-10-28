@@ -12,11 +12,11 @@ export function Billboard({ dict }: { dict: Dictionary }) {
   return (
     <section
       aria-label={dict.billboard.label}
-      className="relative border-y border-line bg-white/[0.015] py-3.5"
+      className="relative border-y border-slate-200 bg-white py-3.5"
     >
-      <p className="mx-auto mb-2.5 w-full max-w-6xl px-4 text-center text-[11px] font-medium tracking-[0.12em] text-muted uppercase sm:px-6">
+      <p className="mx-auto mb-2.5 w-full max-w-6xl px-4 text-center text-[11px] font-medium tracking-[0.12em] text-slate-500 uppercase sm:px-6">
         {dict.industries.label}:{" "}
-        <span className="text-silver normal-case tracking-normal">
+        <span className="text-slate-700 normal-case tracking-normal">
           {dict.industries.items.join("  |  ")}
         </span>
       </p>
@@ -26,7 +26,7 @@ export function Billboard({ dict }: { dict: Dictionary }) {
             <span
               key={`${text}-${index}`}
               aria-hidden={index >= cards.length ? true : undefined}
-              className="flex shrink-0 items-center gap-2.5 border-r border-line/70 pr-4 text-[13px] text-muted last:border-r-0"
+              className="flex shrink-0 items-center gap-2.5 border-r border-slate-200 pr-4 text-[13px] text-slate-500 last:border-r-0"
             >
               <span aria-hidden className="h-1 w-1 shrink-0 rounded-full bg-brand/70" />
               {text}

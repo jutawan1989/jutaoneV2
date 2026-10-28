@@ -69,8 +69,8 @@ export function Navbar({
             {dict.nav.gold}
           </Link>
           <Link
-            href={localePath(locale, "/directory")}
-            className="transition-colors hover:text-white"
+            href="/directory"
+            className="rounded-full border border-brand/40 bg-brand/10 px-3 py-1 font-semibold text-brand-soft transition-colors hover:border-brand hover:text-white"
           >
             {dict.nav.suppliers}
           </Link>
@@ -98,6 +98,42 @@ export function Navbar({
               </Link>
             </>
           )}
+          <details className="group relative md:hidden">
+            <summary
+              aria-label="Menu"
+              className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-line text-silver transition-colors hover:text-white [&::-webkit-details-marker]:hidden"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+                <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </summary>
+            <nav className="absolute top-12 right-0 z-50 flex w-56 flex-col gap-1 rounded-xl border border-line bg-ink-2 p-2 shadow-xl">
+              <Link
+                href="#demo"
+                className="rounded-lg px-3 py-2.5 text-sm text-silver transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                {dict.nav.demo}
+              </Link>
+              <Link
+                href="#gold"
+                className="rounded-lg px-3 py-2.5 text-sm text-silver transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                {dict.nav.gold}
+              </Link>
+              <Link
+                href="/directory"
+                className="rounded-lg border border-brand/40 bg-brand/10 px-3 py-2.5 text-sm font-semibold text-brand-soft transition-colors hover:text-white"
+              >
+                {dict.nav.suppliers}
+              </Link>
+              <Link
+                href="#pricing"
+                className="rounded-lg px-3 py-2.5 text-sm text-silver transition-colors hover:bg-white/[0.06] hover:text-white"
+              >
+                {dict.nav.pricing}
+              </Link>
+            </nav>
+          </details>
         </div>
       </div>
     </header>

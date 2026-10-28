@@ -5,7 +5,7 @@ import { AdGenerator } from "@/components/ad-generator";
 import { Billboard } from "@/components/billboard";
 import { Footer } from "@/components/footer";
 import { GoldWidget } from "@/components/gold-widget";
-import { EarnSections } from "@/components/earn-sections";
+import { BizMatchSection } from "@/components/earn-sections";
 import { Hero } from "@/components/hero";
 import { Navbar } from "@/components/navbar";
 import { Pricing } from "@/components/pricing";
@@ -49,28 +49,33 @@ export default async function HomePage({ params, searchParams }: PageProps) {
 
   const tokenName = price.tokensLabel[locale];
 
+  // Dual-Tone (Boss spec, gaya Dynadot): Hero biru gelap di atas,
+  // body putih/cerah di bawah. Kuda Merah / affiliate DIHARAMKAN di
+  // homepage awam (pematuhan Chip.Asia) — hanya BizMatchSection.
   return (
     <>
       <Navbar locale={locale} dict={dict} price={price} signedIn={signedIn} />
       <main id="main">
         <Hero dict={dict} price={price} locale={locale} />
-        <Billboard dict={dict} />
-        <AdGenerator
-          locale={locale}
-          dict={dict}
-          variant={variant}
-          priceDisplay={price.display}
-          currency={price.currency}
-          tokenName={tokenName}
-          initialRemaining={access.remaining}
-          initialCopyAllowed={access.copyAllowed}
-          initialUsed={access.used}
-          maxAttempts={DAILY_GENERATION_QUOTA}
-          demoDisabled={killSwitch.disabled}
-        />
-        <GoldWidget dict={dict} />
-        <EarnSections dict={dict} />
-        <Pricing locale={locale} dict={dict} price={price} variant={variant} />
+        <div className="bg-slate-50 text-slate-900">
+          <Billboard dict={dict} />
+          <AdGenerator
+            locale={locale}
+            dict={dict}
+            variant={variant}
+            priceDisplay={price.display}
+            currency={price.currency}
+            tokenName={tokenName}
+            initialRemaining={access.remaining}
+            initialCopyAllowed={access.copyAllowed}
+            initialUsed={access.used}
+            maxAttempts={DAILY_GENERATION_QUOTA}
+            demoDisabled={killSwitch.disabled}
+          />
+          <GoldWidget dict={dict} />
+          <BizMatchSection dict={dict} />
+          <Pricing locale={locale} dict={dict} price={price} variant={variant} />
+        </div>
       </main>
       <Footer locale={locale} dict={dict} />
     </>

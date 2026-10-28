@@ -47,7 +47,11 @@ export default async function DashboardPage() {
   // than "Selamat kembali, undefined" and needs no extra signup field.
   const name = profile?.displayName?.trim() || profile?.email?.split("@")[0] || "rakan";
 
+  // Dual-Tone (Boss spec): kandungan dashboard cerah — latar slate-100,
+  // kad putih bersih dengan border nipis. Sidebar kekal navy gelap.
   return (
-    <MemberDashboard overview={overview} payouts={payouts} name={name} levels={levels} />
+    <div className="min-h-dvh bg-slate-100 text-slate-900">
+      <MemberDashboard overview={overview} payouts={payouts} name={name} levels={levels} />
+    </div>
   );
 }
