@@ -226,6 +226,7 @@ through the build:
 ```bash
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler secret put ADMIN_TEST_PASSWORD
 npx wrangler secret put META_AI_API_KEY
 npx wrangler secret put META_AI_BASE_URL
 npx wrangler secret put META_AI_MODEL
