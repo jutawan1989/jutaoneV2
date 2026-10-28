@@ -3,7 +3,11 @@ import {
   getPublicMetalPrices,
   type PublicMetalCurrency,
 } from "@/lib/goldprice";
-import { sendTelegramMessage, escapeHtml, telegramMisconfiguredReason } from "@/lib/telegram";
+import {
+  buildNewsMessage,
+  sendTelegramMessage,
+  telegramMisconfiguredReason,
+} from "@/lib/telegram";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,39 +35,6 @@ function authorised(request: NextRequest): boolean {
     url.searchParams.get("secret")?.trim() ??
     "";
   return supplied.length > 0 && supplied === expected;
-}
-
-function formatMoney(value: number | null, currency: PublicMetalCurrency): string {
-  if (value === null) return "—";
-  if (currency === "IDR") return `Rp${value.toLocaleString("id-ID")}`;
-  if (currency === "USD")
-    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return `RM ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-const DIVIDER = "━━━━━━━━━━━━━━━━━━";
-
-/**
- * Boss-approved premium layout. Markup (<b>, <i>, <a>) stays literal —
- * only dynamic values (prices, timestamp) go through escapeHtml, so tags
- * render as formatting and never as visible text.
- */
-export function buildNewsMessage(
-  currency: PublicMetalCurrency,
-  gold: number | null,
-  silver: number | null,
-  when: string,
-  dashboardUrl: string,
-): string {
-  return (
-    `🏆 <b>JUTAONE.BIZ — PASARAN LOGAM</b>\n` +
-    `${DIVIDER}\n` +
-    `🟡 <b>Emas (999):</b> ${escapeHtml(formatMoney(gold, currency))} / oz\n` +
-    `⚪ <b>Perak (925):</b> ${escapeHtml(formatMoney(silver, currency))} / oz\n` +
-    `${DIVIDER}\n` +
-    `📅 <i>Dikemaskini: ${escapeHtml(when)}</i>\n` +
-    `🔗 <a href="${escapeHtml(dashboardUrl)}">Semak Analisis Lanjutan di Dashboard</a>`
-  );
 }
 
 export async function GET(request: NextRequest) {

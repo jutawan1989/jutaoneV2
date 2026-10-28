@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeHtml, telegramConfigured, telegramMisconfiguredReason } from "@/lib/telegram";
-import { buildNewsMessage } from "@/app/api/cron/news/route";
+import { buildNewsMessage, escapeHtml, telegramConfigured, telegramMisconfiguredReason } from "@/lib/telegram";
 
 describe("telegram sender config", () => {
   it("reports not configured when env is missing", () => {

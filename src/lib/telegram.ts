@@ -83,3 +83,38 @@ export async function sendTelegramMessage(
 
   return { ok: true };
 }
+export type NewsCurrency = "MYR" | "IDR" | "USD";
+
+function formatNewsMoney(value: number | null, currency: NewsCurrency): string {
+  if (value === null) return "—";
+  if (currency === "IDR") return `Rp${value.toLocaleString("id-ID")}`;
+  if (currency === "USD")
+    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `RM ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+const NEWS_DIVIDER = "━━━━━━━━━━━━━━━━━━";
+
+/**
+ * Boss-approved premium layout. Markup (<b>, <i>, <a>) stays literal —
+ * only dynamic values (prices, timestamp) go through escapeHtml, so tags
+ * render as formatting and never as visible text.
+ */
+export function buildNewsMessage(
+  currency: NewsCurrency,
+  gold: number | null,
+  silver: number | null,
+  when: string,
+  dashboardUrl: string,
+): string {
+  const lines = [
+    "🏆 <b>JUTAONE.BIZ — PASARAN LOGAM</b>",
+    NEWS_DIVIDER,
+    `🟡 <b>Emas (999):</b> ${escapeHtml(formatNewsMoney(gold, currency))} / oz`,
+    `⚪ <b>Perak (925):</b> ${escapeHtml(formatNewsMoney(silver, currency))} / oz`,
+    NEWS_DIVIDER,
+    `📅 <i>Dikemaskini: ${escapeHtml(when)}</i>`,
+    `🔗 <a href="${escapeHtml(dashboardUrl)}">Semak Analisis Lanjutan di Dashboard</a>`,
+  ];
+  return lines.join("\n");
+}

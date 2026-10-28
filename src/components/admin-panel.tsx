@@ -41,7 +41,7 @@ function money(minor: number, currency = "MYR"): string {
   return `RM${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-type Tab = "overview" | "members" | "payouts" | "tokens";
+type Tab = "overview" | "members" | "payouts" | "tokens" | "reset";
 
 function StatusBadge({
   children,
@@ -98,6 +98,53 @@ export function AdminPanel({
   const [topupBusy, setTopupBusy] = useState(false);
   const [topupNote, setTopupNote] = useState<string | null>(null);
   const [topupError, setTopupError] = useState<string | null>(null);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetNote, setResetNote] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const resetErrorMessage: Record<string, string> = {
+    member_not_found: "E-mel tidak dijumpai. Pastikan pengguna sudah daftar.",
+    invalid_email: "Format e-mel tidak sah.",
+    password_too_short: "Kata laluan terlalu pendek. Minimum 8 aksara.",
+    password_too_long: "Kata laluan terlalu panjang. Maksimum 200 aksara.",
+    unauthorised: "Sesi admin tamat. Sila log masuk semula di /admin/login.",
+    store_unavailable: "Pangkalan data tidak disambung. Semak Worker secrets.",
+    reset_failed: "Gagal menyimpan kata laluan baharu. Cuba lagi.",
+  };
+
+  async function submitReset(event: FormEvent) {
+    event.preventDefault();
+    if (resetBusy) return;
+    if (!resetEmail.trim() || resetPassword.length < 8) {
+      setResetNote(null);
+      setResetError("Isi e-mel pengguna dan kata laluan baharu (minimum 8 aksara).");
+      return;
+    }
+    setResetBusy(true);
+    setResetNote(null);
+    setResetError(null);
+    try {
+      const response = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ user_email: resetEmail, new_password: resetPassword }),
+      });
+      const data = await response.json().catch(() => null);
+      if (response.ok && data?.ok) {
+        setResetNote(`Berjaya! Kata laluan ${data.email ?? resetEmail.trim()} telah ditetapkan semula.`);
+        setResetEmail("");
+        setResetPassword("");
+      } else {
+        setResetError(resetErrorMessage[data?.code] ?? "Gagal menetapkan semula. Sila cuba lagi.");
+      }
+    } catch {
+      setResetError("Rangkaian bermasalah.");
+    } finally {
+      setResetBusy(false);
+    }
+  }
 
   async function markPaid(id: number) {
     setBusy(id);
@@ -131,6 +178,7 @@ export function AdminPanel({
     { id: "members", label: "Pengguna", count: members.length },
     { id: "payouts", label: "Pembayaran", count: rows.length },
     { id: "tokens", label: "Tambah Token Manual" },
+    { id: "reset", label: "Reset Password" },
   ];
 
   const filteredMembers = useMemo(() => {
@@ -613,6 +661,87 @@ export function AdminPanel({
                   >
                     <X className="size-3.5 shrink-0 text-red-400" />
                     {topupError}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {tab === "reset" && (
+          <section className="mt-4 space-y-3">
+            <Card className={PANEL}>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand-soft ring-1 ring-brand/25 ring-inset">
+                    <ShieldCheck className="size-4" />
+                  </span>
+                  <div>
+                    <h2 className="text-[13px] font-semibold text-white">Reset Password</h2>
+                    <p className="mt-0.5 text-[11px] text-muted">
+                      Tetapkan semula kata laluan ahli yang terkunci. Baki token, kedai dan data
+                      lain tidak berubah.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={submitReset} className="mt-4 grid gap-3 sm:max-w-md">
+                  <div>
+                    <label htmlFor="reset-email" className="mb-1.5 block text-[11px] font-medium text-silver">
+                      E-mel pengguna
+                    </label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      required
+                      value={resetEmail}
+                      onChange={(event) => setResetEmail(event.target.value)}
+                      placeholder="ali@contoh.com"
+                      autoComplete="off"
+                      className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 text-xs text-silver placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="reset-password" className="mb-1.5 block text-[11px] font-medium text-silver">
+                      Password baharu (minimum 8 aksara)
+                    </label>
+                    <Input
+                      id="reset-password"
+                      type="password"
+                      required
+                      minLength={8}
+                      value={resetPassword}
+                      onChange={(event) => setResetPassword(event.target.value)}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                      className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 text-xs text-silver placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={resetBusy}
+                    className="h-10 gap-1.5 rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+                  >
+                    {resetBusy ? "Menetapkan…" : "Reset Password"}
+                  </Button>
+                </form>
+
+                {resetNote && (
+                  <p
+                    role="status"
+                    className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-2.5 text-[11px] text-emerald-200"
+                  >
+                    <CheckCircle2 className="size-3.5 shrink-0 text-emerald-400" />
+                    {resetNote}
+                  </p>
+                )}
+                {resetError && (
+                  <p
+                    role="alert"
+                    className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/[0.08] px-3 py-2.5 text-[11px] text-red-200"
+                  >
+                    <X className="size-3.5 shrink-0 text-red-400" />
+                    {resetError}
                   </p>
                 )}
               </CardContent>
