@@ -154,7 +154,8 @@ describe("provider chain", () => {
 
     const result = await generateCaption({ ...REQUEST });
     expect(result.source).toBe("openrouter");
-    expect(result.caption).toBe("Kapsyen sebenar");
+    expect(result.caption).toContain("Kapsyen sebenar");
+    expect(result.caption).toContain("https://jutaone.biz/?utm_source=ai_caption&utm_medium=social");
   });
 
   it("falls back to the local template when every provider fails", async () => {

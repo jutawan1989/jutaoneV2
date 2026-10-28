@@ -4,6 +4,7 @@ import { generateWithOpenAI, openAIConfigured } from "./openai";
 import { generateWithOpenRouter, openRouterConfigured } from "./openrouter";
 import { generateWithMeta, metaConfigured } from "./meta";
 import { generateMockCaption } from "./mock";
+import { appendWatermark } from "./watermark";
 import type { CaptionRequest, CaptionResult } from "./prompt";
 
 export type { CaptionRequest, CaptionResult };
@@ -53,15 +54,22 @@ export async function generateCaption(req: CaptionRequest): Promise<CaptionResul
   const startedAt = Date.now();
   const active = PROVIDERS.filter((provider) => provider.configured());
 
+  // Viral-loop watermark (Boss + Linda spec): every AI caption carries a
+  // subtle JutaOne.Biz link at the very bottom for organic spread.
+  const withMark = (result: CaptionResult): CaptionResult => ({
+    ...result,
+    caption: appendWatermark(result.caption, req.locale),
+  });
+
   if (active.length === 0) {
-    return generateMockCaption(req);
+    return withMark(generateMockCaption(req));
   }
 
   const failures: string[] = [];
   for (const provider of active) {
     try {
       const result = await provider.generate(req);
-      return { ...result, latencyMs: Date.now() - startedAt };
+      return { ...result, caption: appendWatermark(result.caption, req.locale), latencyMs: Date.now() - startedAt };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(`${provider.name}: ${message}`);
@@ -73,7 +81,7 @@ export async function generateCaption(req: CaptionRequest): Promise<CaptionResul
 
   console.error("[jutaone] every AI provider failed, using local template", failures.join(" | "));
   const fallback = generateMockCaption(req);
-  return { ...fallback, source: "mock-fallback", latencyMs: Date.now() - startedAt };
+  return { ...fallback, caption: appendWatermark(fallback.caption, req.locale), source: "mock-fallback", latencyMs: Date.now() - startedAt };
 }
 
 /** Which providers are configured and in what order, for diagnostics. */

@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { AtSign, Camera, Music2, Send, ThumbsUp } from "lucide-react";
 import { captureUtm } from "@/lib/analytics/client";
 import type { Dictionary } from "@/lib/i18n";
 import { format, type Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
+import { withWatermarkChoice } from "@/lib/ai/watermark";
 import { HookModal } from "@/components/hook-modal";
 
 const MAX_CHARS = 200;
@@ -58,6 +60,9 @@ export function AdGenerator({
   const [error, setError] = useState<string | null>(null);
   const [hookOpen, setHookOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Viral-loop toggle (Boss + Linda spec): checked by default. Unchecking
+  // strips the JutaOne.Biz watermark before copy.
+  const [includeWatermark, setIncludeWatermark] = useState(true);
   // Whether the current caption may be copied. Server-decided: the lock is a
   // paid feature, so the client must not be able to unlock it by editing state.
   const [copyAllowed, setCopyAllowed] = useState(initialCopyAllowed);
@@ -140,6 +145,35 @@ export function AdGenerator({
     [demoDisabled, dict, loading, locale, openHook, text],
   );
 
+  async function copyText(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      // Clipboard API can fail (non-secure context / denied permission).
+      // Fallback to a hidden textarea + execCommand so the flow still works.
+      try {
+        const area = document.createElement("textarea");
+        area.value = value;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(area);
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  function shareText(): string {
+    if (!caption) return "";
+    return withWatermarkChoice(caption, locale, includeWatermark);
+  }
+
   async function copyCaption() {
     if (!caption) return;
 
@@ -151,18 +185,24 @@ export function AdGenerator({
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(caption);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
+    const ok = await copyText(shareText());
+    setCopied(ok);
+    if (ok) setTimeout(() => setCopied(false), 2000);
   }
 
   // Safe "Auto-Post" (Boss spec): no API integration. Copy the caption via
-  // navigator.clipboard.writeText, then open the upload page in a new tab.
-  async function shareTo(target: "tiktok" | "facebook") {
+  // clipboard, then open the platform upload page in a new tab.
+  type ShareTarget = "tiktok" | "facebook" | "instagram" | "threads" | "twitter";
+
+  const SHARE_URLS: Record<ShareTarget, string> = {
+    tiktok: "https://www.tiktok.com/upload",
+    facebook: "https://www.facebook.com/",
+    instagram: "https://www.instagram.com/",
+    threads: "https://www.threads.net/",
+    twitter: "https://x.com/intent/post",
+  };
+
+  async function shareTo(target: ShareTarget) {
     if (!caption) return;
 
     // Same paid lock as copy: locked visitors get the top-up hook instead.
@@ -172,30 +212,14 @@ export function AdGenerator({
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(caption);
-    } catch {
-      // Clipboard API can fail (non-secure context / denied permission).
-      // Fallback to a hidden textarea + execCommand so the flow still works.
-      try {
-        const area = document.createElement("textarea");
-        area.value = caption;
-        area.setAttribute("readonly", "");
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-        document.body.appendChild(area);
-        area.select();
-        document.execCommand("copy");
-        document.body.removeChild(area);
-      } catch {
-        setShareNotice(dict.generator.shareFailed);
-        return;
-      }
+    const ok = await copyText(shareText());
+    if (!ok) {
+      setShareNotice(dict.generator.shareFailed);
+      return;
     }
 
     setShareNotice(dict.generator.shared);
-    const url = target === "tiktok" ? "https://www.tiktok.com/upload" : "https://www.facebook.com";
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(SHARE_URLS[target], "_blank", "noopener,noreferrer");
   }
 
   const exhausted = remaining <= 0 && !demoDisabled;
@@ -327,7 +351,7 @@ export function AdGenerator({
               aria-live="polite"
               className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-700"
             >
-              {caption}
+              {withWatermarkChoice(caption, locale, includeWatermark)}
             </p>
           ) : (
             <div className="flex flex-1 items-center justify-center">
@@ -342,21 +366,58 @@ export function AdGenerator({
           )}
 
           {caption && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => shareTo("tiktok")}
-                className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
-              >
-                {dict.generator.postTiktok}
-              </button>
-              <button
-                type="button"
-                onClick={() => shareTo("facebook")}
-                className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
-              >
-                {dict.generator.postFacebook}
-              </button>
+            <div className="mt-4 space-y-2.5">
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-600 select-none">
+                <input
+                  type="checkbox"
+                  checked={includeWatermark}
+                  onChange={(event) => setIncludeWatermark(event.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-300 accent-slate-900"
+                />
+                <span className="font-medium">✨ {dict.generator.includeLink}</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => shareTo("tiktok")}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  <Music2 className="size-3.5" aria-hidden />
+                  {dict.generator.postTiktok}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shareTo("facebook")}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  <ThumbsUp className="size-3.5" aria-hidden />
+                  {dict.generator.postFacebook}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shareTo("instagram")}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  <Camera className="size-3.5" aria-hidden />
+                  {dict.generator.postInstagram}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shareTo("threads")}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  <AtSign className="size-3.5" aria-hidden />
+                  {dict.generator.postThreads}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shareTo("twitter")}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  <Send className="size-3.5" aria-hidden />
+                  {dict.generator.postTwitter}
+                </button>
+              </div>
             </div>
           )}
 
