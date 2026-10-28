@@ -33,16 +33,21 @@ export function LogoMark({ size = 32, className, label }: LogoMarkProps) {
 
 /**
  * Mark plus the JUTAONE.BIZ wordmark, used in the navbar and footer.
+ * `tone="dark"` (default) renders white text for dark backgrounds (navbar).
+ * `tone="light"` renders slate-900 text for light backgrounds (footer).
  */
 export function Logo({
   locale,
   size = "md",
+  tone = "dark",
 }: {
   locale: Locale;
   size?: "sm" | "md";
+  tone?: "dark" | "light";
 }) {
   const markHeight = size === "sm" ? 22 : 26;
   const text = size === "sm" ? "text-[13px]" : "text-sm";
+  const wordmarkColor = tone === "light" ? "text-slate-900" : "text-white";
 
   return (
     <Link
@@ -54,7 +59,7 @@ export function Logo({
         size={Math.round(markHeight * 1.6)}
         className="shrink-0 rounded-lg"
       />
-      <span className={`${text} font-semibold tracking-[0.12em] text-white`}>
+      <span className={`${text} font-semibold tracking-[0.12em] ${wordmarkColor}`}>
         JUTAONE<span className="text-brand">.BIZ</span>
       </span>
     </Link>

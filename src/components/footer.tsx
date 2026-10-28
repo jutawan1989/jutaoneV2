@@ -8,10 +8,11 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
 
   return (
     <footer className="border-t border-slate-200 bg-white">
+      {/* Container matches Navbar: max-w-6xl px-4 sm:px-6 so left logo aligns. */}
       <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <Logo locale={locale} size="sm" />
+            <Logo locale={locale} size="sm" tone="light" />
             <p className="mt-3 max-w-sm text-sm text-slate-600">{dict.footer.tagline}</p>
           </div>
           <LanguageSwitcher locale={locale} label={dict.nav.languageLabel} />
