@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { AtSign, Camera, Music2, Send, ThumbsUp } from "lucide-react";
+import { AtSign, Briefcase, Camera, Music2, Send, ThumbsUp } from "lucide-react";
 import { captureUtm } from "@/lib/analytics/client";
 import type { Dictionary } from "@/lib/i18n";
 import { format, type Locale } from "@/lib/i18n/config";
@@ -192,14 +192,24 @@ export function AdGenerator({
 
   // Safe "Auto-Post" (Boss spec): no API integration. Copy the caption via
   // clipboard, then open the platform upload page in a new tab.
-  type ShareTarget = "tiktok" | "facebook" | "instagram" | "threads" | "twitter";
+  type ShareTarget = "tiktok" | "facebook" | "instagram" | "threads" | "twitter" | "linkedin";
 
   const SHARE_URLS: Record<ShareTarget, string> = {
     tiktok: "https://www.tiktok.com/upload",
     facebook: "https://www.facebook.com/",
     instagram: "https://www.instagram.com/",
     threads: "https://www.threads.net/",
-    twitter: "https://x.com/intent/post",
+    twitter: "https://twitter.com/compose/tweet",
+    linkedin: "https://www.linkedin.com/feed/?shareActive=true",
+  };
+
+  const SHARE_NAMES: Record<ShareTarget, string> = {
+    tiktok: "TikTok",
+    facebook: "Facebook",
+    instagram: "Instagram",
+    threads: "Threads",
+    twitter: "X (Twitter)",
+    linkedin: "LinkedIn",
   };
 
   async function shareTo(target: ShareTarget) {
@@ -218,7 +228,7 @@ export function AdGenerator({
       return;
     }
 
-    setShareNotice(dict.generator.shared);
+    setShareNotice(format(dict.generator.sharedTo, { platform: SHARE_NAMES[target] }));
     window.open(SHARE_URLS[target], "_blank", "noopener,noreferrer");
   }
 
@@ -376,7 +386,7 @@ export function AdGenerator({
                 />
                 <span className="font-medium">✨ {dict.generator.includeLink}</span>
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 <button
                   type="button"
                   onClick={() => shareTo("tiktok")}
@@ -416,6 +426,14 @@ export function AdGenerator({
                 >
                   <Send className="size-3.5" aria-hidden />
                   {dict.generator.postTwitter}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shareTo("linkedin")}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  <Briefcase className="size-3.5" aria-hidden />
+                  {dict.generator.postLinkedin}
                 </button>
               </div>
             </div>
