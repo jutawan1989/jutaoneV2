@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeAssistantAnswer } from "@/app/api/chat/route";
+import { normalizeAssistantAnswer } from "@/lib/ai/assistant";
 import { CHAT_COST_TOKENS } from "@/lib/tokens";
 
 describe("Smart Assistant (chat, 5,000 tokens per answer)", () => {
