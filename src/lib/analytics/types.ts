@@ -13,6 +13,8 @@ export const ANALYTICS_EVENTS = [
   // rather than being folded into topup_success: revenue reporting has to be
   // able to tell a subscription from a token sale.
   "rent_success",
+  // Smart Assistant (paid chat, 5,000 tokens per answer).
+  "chat_success",
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];

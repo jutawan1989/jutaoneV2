@@ -12,6 +12,9 @@ import { getSupabase } from "@/lib/db";
 /** Cost of one metered action, in tokens. */
 export const SEARCH_COST_TOKENS = 10_000;
 
+/** Cost of one Smart Assistant answer, in tokens. */
+export const CHAT_COST_TOKENS = 5_000;
+
 export const ledgerConfigured = (): boolean => Boolean(getSupabase());
 
 /** Current balance, or 0 when the visitor has no ledger rows yet. */

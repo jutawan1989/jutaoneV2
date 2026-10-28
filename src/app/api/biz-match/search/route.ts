@@ -14,13 +14,14 @@ const MAX_QUERY = 200;
 /**
  * Supplier search for Biz-Match, metered.
  *
- * Money rule (Linda): charge 10,000 tokens only when the search actually
- * succeeds. The order is therefore:
+ * Money rule: charge 10,000 tokens only when the search actually succeeds.
+ * The order is therefore:
  *
- *   1. check the balance and refuse early with 402 — cheaper than calling Exa
- *      and then discovering the visitor cannot pay;
- *   2. call Exa;
- *   3. charge only if Exa returned results;
+ *   1. check the balance and refuse early with 402 — cheaper than calling the
+ *      live layers and then discovering the visitor cannot pay;
+ *   2. call the live layers in order: Exa -> Tavily -> Serper (the primary
+ *      leads; SEARCH_PROVIDER picks which one goes first);
+ *   3. charge only if a live layer returned results;
  *   4. a failure, a zero-result search, or the directory fallback is free.
  *
  * The charge is keyed by a request reference, so a retried request does not
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
 
   const balance = await getTokenBalance(visitor.visitorKey);
 
-  // Step 1: refuse before spending an Exa request.
+  // Step 1: refuse before spending a live-layer request.
   if (!freeMode && balance < SEARCH_COST_TOKENS) {
     return NextResponse.json(
       {
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Primary provider with automatic fallback to the other. Which provider leads
+  // Live layers in order (Exa -> Tavily -> Serper). Which provider leads
   // is configuration (SEARCH_PROVIDER), not code.
   const { outcome, attempts } = await searchSuppliers(query, country);
   const providerErrors = attempts

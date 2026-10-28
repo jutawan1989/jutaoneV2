@@ -8,19 +8,22 @@ import {
 /**
  * Provider-agnostic supplier search for Biz-Match.
  *
- * Linda's decision: Tavily's free tier (1,000 credits/month) is the development
- * default, Exa is the alternative, and switching must not touch the API route or
- * the UI. The route calls `searchSuppliers`; which provider answers is
- * configuration, not code.
+ * Boss spec: 4 layers — Exa -> Tavily -> Serper -> Supabase directory.
+ * The route calls `searchSuppliers`; which provider answers is configuration,
+ * not code.
  *
  * MEASURED: Tavily has no keyless mode. `POST /search` without a key returns
  * `401 Unauthorized: missing or invalid API key`, and so does a bogus bearer.
- * The brief mentioned a keyless path for initial testing — there is none, so
  * Tavily is simply unavailable until `TAVILY_API_KEY` is set, and the adapter
  * reports that rather than pretending to work.
+ *
+ * Serper.dev is the third layer. `POST https://google.serper.dev/search` with
+ * the key in the `X-API-KEY` header, country-pinned with `gl`/`hl`
+ * (MY -> gl=my/hl=ms, ID -> gl=id/hl=id). Without a key it is skipped the
+ * same way as the others.
  */
 
-export type SearchProvider = "tavily" | "exa";
+export type SearchProvider = "exa" | "tavily" | "serper";
 
 export type { SupplierResult };
 
@@ -35,6 +38,14 @@ export type ProviderOutcome = {
 };
 
 const TAVILY_URL = "https://api.tavily.com/search";
+const SERPER_URL = "https://google.serper.dev/search";
+
+/**
+ * The provider order. `SEARCH_PROVIDER` (exa | tavily | serper) picks the
+ * primary; the other two follow in the spec order Exa -> Tavily -> Serper,
+ * so removing the primary never duplicates or drops a layer.
+ */
+export const PROVIDER_ORDER: readonly SearchProvider[] = ["exa", "tavily", "serper"];
 
 export function tavilyConfigured(): boolean {
   return Boolean(process.env.TAVILY_API_KEY);
@@ -44,15 +55,16 @@ export function exaConfigured(): boolean {
   return Boolean(process.env.EXA_API_KEY);
 }
 
-/** The configured primary provider, defaulting to Tavily per Linda's decision. */
-export function primaryProvider(): SearchProvider {
-  const raw = (process.env.SEARCH_PROVIDER || "tavily").toLowerCase();
-  return raw === "exa" ? "exa" : "tavily";
+export function serperConfigured(): boolean {
+  return Boolean(process.env.SERPER_API_KEY);
 }
 
-/** The other provider, tried when the primary fails. */
-export function secondaryProvider(primary: SearchProvider): SearchProvider {
-  return primary === "tavily" ? "exa" : "tavily";
+/** The configured primary provider, defaulting to Exa per the Boss spec. */
+export function primaryProvider(): SearchProvider {
+  const raw = (process.env.SEARCH_PROVIDER || "exa").toLowerCase();
+  if (raw === "tavily") return "tavily";
+  if (raw === "serper") return "serper";
+  return "exa";
 }
 
 type TavilyResult = {
@@ -102,13 +114,84 @@ export function normalizeTavilyResults(payload: TavilyResponse): SupplierResult[
       // needs; no extra contents request is required.
       description: result.content?.replace(/\s+/g, " ").trim().slice(0, 300) ?? null,
       url: result.url,
-      origin: "exa", // both are live web results; the UI treats them the same
+      origin: "exa", // all live web results share one card shape; the UI treats them the same
       // A web hit is not a registry record, so it must never carry the badge.
       verified: false,
     });
   }
 
   return out;
+}
+
+type SerperOrganic = {
+  title?: string;
+  link?: string;
+  snippet?: string;
+};
+
+type SerperResponse = {
+  organic?: SerperOrganic[];
+  error?: string;
+};
+
+function serperLocale(country: SearchCountry): { gl: string; hl: string } {
+  return country === "ID" ? { gl: "id", hl: "id" } : { gl: "my", hl: "ms" };
+}
+
+export function normalizeSerperResults(payload: SerperResponse): SupplierResult[] {
+  const out: SupplierResult[] = [];
+  const seen = new Set<string>();
+
+  for (const [index, result] of (payload.organic ?? []).entries()) {
+    const name = result.title ? companyNameFromTitle(result.title) : null;
+    if (!name || !result.link || seen.has(result.link)) continue;
+    seen.add(result.link);
+
+    out.push({
+      id: result.link || `serper-${index}`,
+      companyName: name,
+      category: null,
+      location: null,
+      country: null,
+      description: result.snippet?.replace(/\s+/g, " ").trim().slice(0, 300) ?? null,
+      url: result.link,
+      origin: "exa", // all live web results share one card shape; the UI treats them the same
+      // A web hit is not a registry record, so it must never carry the badge.
+      verified: false,
+    });
+  }
+
+  return out;
+}
+
+async function serperSearch(query: string, country: SearchCountry): Promise<SupplierResult[]> {
+  const key = process.env.SERPER_API_KEY;
+  if (!key) throw new Error("SERPER_API_KEY is not configured");
+
+  const locale = serperLocale(country);
+  const response = await fetch(SERPER_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-api-key": key },
+    body: JSON.stringify({
+      q: query,
+      // Country-pinned Google results; Serper counts num > 10 as two searches.
+      num: 10,
+      gl: locale.gl,
+      hl: locale.hl,
+    }),
+    signal: AbortSignal.timeout(15_000),
+    cache: "no-store",
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error("Serper rejected the API key (401/403)");
+  }
+  if (response.status === 429) throw new Error("Serper rate limit reached (429)");
+  if (!response.ok) throw new Error(`Serper responded ${response.status}`);
+
+  const payload = (await response.json()) as SerperResponse;
+  if (payload.error) throw new Error(`Serper: ${payload.error}`);
+  return normalizeSerperResults(payload);
 }
 
 async function tavilySearch(query: string, country: SearchCountry): Promise<SupplierResult[]> {
@@ -153,7 +236,9 @@ export async function runProvider(
     const raw =
       provider === "tavily"
         ? await tavilySearch(query, country)
-        : await exaSearch(query, country);
+        : provider === "serper"
+          ? await serperSearch(query, country)
+          : await exaSearch(query, country);
 
     // Local allow-list on top of the provider's filter: a provider may treat
     // includeDomains loosely, and one wrong-country card undoes the feature.
@@ -172,18 +257,23 @@ export async function runProvider(
 }
 
 /**
- * Searches suppliers with the primary provider, falling back to the secondary.
+ * Searches suppliers with the configured primary first, then the remaining
+ * live layers in spec order (Exa -> Tavily -> Serper).
  *
  * Returns the first non-empty result set. An empty result set is treated as
  * "no answer" rather than success, so a provider that finds nothing does not
- * stop the other one from being tried.
+ * stop the next one from being tried. The Supabase directory (layer 4) stays
+ * in the API route: it is the free fallback and is never charged.
  */
 export async function searchSuppliers(
   query: string,
   country: SearchCountry,
   provider: SearchProvider = primaryProvider(),
 ): Promise<{ outcome: ProviderOutcome; attempts: ProviderOutcome[] }> {
-  const order: SearchProvider[] = [provider, secondaryProvider(provider)];
+  const order: SearchProvider[] = [
+    provider,
+    ...PROVIDER_ORDER.filter((candidate) => candidate !== provider),
+  ];
   const attempts: ProviderOutcome[] = [];
 
   for (const candidate of order) {
