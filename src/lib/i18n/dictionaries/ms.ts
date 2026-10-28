@@ -96,7 +96,7 @@ export const ms: Dictionary = {
     subtitle:
       "Pantau pasaran Emas & Perak dengan mudah. Harga pasaran semasa dikemas kini setiap 4 jam — label Harga Pasaran Semasa di bawah adalah data sebenar, bukan simulasi.",
     screenTitle: "Harga Pasaran Semasa",
-    priceRow: "Harga spot sebenar · USD ditukar ke mata wang tempatan",
+    priceRow: "Harga spot sebenar · RM per auns troy",
     liveBadge: "LIVE",
     perOunce: "/oz",
     updatedAt: "Dikemaskini pada",

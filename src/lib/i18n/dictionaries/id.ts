@@ -96,7 +96,7 @@ export const id: Dictionary = {
     subtitle:
       "Pantau pasar Emas & Perak dengan gampang. Harga pasar terkini diperbarui tiap 4 jam — label Harga Pasar Terkini di bawah adalah data asli, bukan simulasi.",
     screenTitle: "Harga Pasar Terkini",
-    priceRow: "Spot asli · USD dikonversi ke mata uang lokal",
+    priceRow: "Spot asli · Rp per troy ons",
     liveBadge: "LIVE",
     perOunce: "/oz",
     updatedAt: "Diperbarui pada",

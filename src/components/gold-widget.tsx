@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/config";
+import type { PublicMetalCurrency } from "@/lib/goldprice";
 
 type MetalApiResponse = {
   ok?: boolean;
@@ -13,16 +15,25 @@ type MetalApiResponse = {
   fetchedAt?: string;
 };
 
-type DualPrices = {
+type SinglePrices = {
   status: "loading" | "ready" | "unavailable";
-  myr: { gold: number | null; silver: number | null; fetchedAt: string | null };
-  idr: { gold: number | null; silver: number | null; fetchedAt: string | null };
+  gold: number | null;
+  silver: number | null;
+  fetchedAt: string | null;
 };
 
-function formatPrice(value: number | null, currency: "MYR" | "IDR"): string {
+/** Boss spec (Global Startup): one currency per locale — ms→RM, id→Rp, en→USD. */
+function currencyForLocale(locale: Locale): PublicMetalCurrency {
+  if (locale === "id") return "IDR";
+  if (locale === "en") return "USD";
+  return "MYR";
+}
+
+function formatPrice(value: number | null, currency: PublicMetalCurrency): string {
   if (value === null || value === undefined) return "—";
   try {
-    return new Intl.NumberFormat(currency === "IDR" ? "id-ID" : "ms-MY", {
+    const tag = currency === "IDR" ? "id-ID" : currency === "USD" ? "en-US" : "ms-MY";
+    return new Intl.NumberFormat(tag, {
       style: "currency",
       currency,
       maximumFractionDigits: currency === "IDR" ? 0 : 2,
@@ -32,7 +43,7 @@ function formatPrice(value: number | null, currency: "MYR" | "IDR"): string {
   }
 }
 
-async function fetchOne(currency: "MYR" | "IDR"): Promise<MetalApiResponse | null> {
+async function fetchOne(currency: PublicMetalCurrency): Promise<MetalApiResponse | null> {
   try {
     const res = await fetch(`/api/metals/public?currency=${currency}`, { cache: "no-store" });
     if (!res.ok) return null;
@@ -45,49 +56,49 @@ async function fetchOne(currency: "MYR" | "IDR"): Promise<MetalApiResponse | nul
 /**
  * Homepage metals widget — FREE Goldprice.dev feed (cached 4h server-side).
  *
- * Label "Harga Pasaran Semasa" (dict.gold.screenTitle) with real converted
- * spot prices per troy ounce. No BUY/SELL/HOLD signals here: signals live in
- * the premium dashboard analysis (2,000 tokens), not on the free page — the
- * free page must never look like investment advice. The compliance disclaimer
- * stays. When the feed is down, the widget hides itself rather than showing
- * stale-looking numbers.
+ * Single-currency display: the quote follows the active locale
+ * (ms→MYR, id→IDR, en→USD raw spot). No BUY/SELL/HOLD signals here: signals
+ * live in the premium dashboard analysis (2,000 tokens), not on the free
+ * page — the free page must never look like investment advice. The compliance
+ * disclaimer stays. When the feed is down, the widget hides itself rather
+ * than showing stale-looking numbers.
  */
-export function GoldWidget({ dict }: { dict: Dictionary }) {
-  const [prices, setPrices] = useState<DualPrices>({
+export function GoldWidget({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+  const currency = currencyForLocale(locale);
+  const [prices, setPrices] = useState<SinglePrices>({
     status: "loading",
-    myr: { gold: null, silver: null, fetchedAt: null },
-    idr: { gold: null, silver: null, fetchedAt: null },
+    gold: null,
+    silver: null,
+    fetchedAt: null,
   });
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchOne("MYR"), fetchOne("IDR")]).then(([myr, idr]) => {
+    setPrices({ status: "loading", gold: null, silver: null, fetchedAt: null });
+    fetchOne(currency).then((res) => {
       if (cancelled) return;
-      const hasAny =
-        (myr?.ok && (myr.gold != null || myr.silver != null)) ||
-        (idr?.ok && (idr.gold != null || idr.silver != null));
-      if (!hasAny) {
+      if (!res?.ok || (res.gold == null && res.silver == null)) {
         setPrices((prev) => ({ ...prev, status: "unavailable" }));
         return;
       }
       setPrices({
         status: "ready",
-        myr: { gold: myr?.gold ?? null, silver: myr?.silver ?? null, fetchedAt: myr?.fetchedAt ?? null },
-        idr: { gold: idr?.gold ?? null, silver: idr?.silver ?? null, fetchedAt: idr?.fetchedAt ?? null },
+        gold: res.gold ?? null,
+        silver: res.silver ?? null,
+        fetchedAt: res.fetchedAt ?? null,
       });
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currency]);
 
   if (prices.status === "unavailable") return null;
 
-  const updatedRaw = prices.myr.fetchedAt ?? prices.idr.fetchedAt;
   let updatedLabel: string | null = null;
-  if (updatedRaw) {
+  if (prices.fetchedAt) {
     try {
-      updatedLabel = new Date(updatedRaw).toLocaleString(undefined, {
+      updatedLabel = new Date(prices.fetchedAt).toLocaleString(undefined, {
         day: "numeric",
         month: "short",
         hour: "2-digit",
@@ -101,15 +112,13 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
   const rows = [
     {
       name: dict.gold.instruments.gold,
-      myr: prices.status === "ready" ? `${formatPrice(prices.myr.gold, "MYR")}${dict.gold.perOunce}` : "…",
-      idr: prices.status === "ready" ? `${formatPrice(prices.idr.gold, "IDR")}${dict.gold.perOunce}` : "…",
+      price: prices.status === "ready" ? `${formatPrice(prices.gold, currency)}${dict.gold.perOunce}` : "…",
       art: "/assets/gold.jpg",
       glow: "gold" as const,
     },
     {
       name: dict.gold.instruments.silver,
-      myr: prices.status === "ready" ? `${formatPrice(prices.myr.silver, "MYR")}${dict.gold.perOunce}` : "…",
-      idr: prices.status === "ready" ? `${formatPrice(prices.idr.silver, "IDR")}${dict.gold.perOunce}` : "…",
+      price: prices.status === "ready" ? `${formatPrice(prices.silver, currency)}${dict.gold.perOunce}` : "…",
       art: "/assets/silver.jpg",
       glow: "silver" as const,
     },
@@ -155,10 +164,7 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
                       <PremiumArt src={row.art} alt={row.name} size={44} glow={row.glow} rounded="rounded-xl" />
                       <span className="truncate text-sm font-medium text-slate-700">{row.name}</span>
                     </span>
-                    <span className="text-right">
-                      <span className="block text-sm font-semibold text-slate-900 tabular-nums">{row.myr}</span>
-                      <span className="mt-0.5 block text-[11px] font-medium text-slate-500 tabular-nums">{row.idr}</span>
-                    </span>
+                    <span className="text-base font-semibold text-slate-900 tabular-nums">{row.price}</span>
                   </li>
                 ))}
               </ul>

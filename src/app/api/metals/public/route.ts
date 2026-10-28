@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
   const requested = request.nextUrl.searchParams.get("currency")?.toUpperCase() ?? null;
   const region = detectRegion(headers);
   const currency: PublicMetalCurrency =
-    requested === "MYR" || requested === "IDR" ? requested : publicCurrencyForRegion(region);
+    requested === "MYR" || requested === "IDR" || requested === "USD"
+      ? requested
+      : publicCurrencyForRegion(region);
 
   const prices = await getPublicMetalPrices(currency);
   if (!prices) {

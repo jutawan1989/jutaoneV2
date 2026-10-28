@@ -73,7 +73,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
             maxAttempts={DAILY_GENERATION_QUOTA}
             demoDisabled={killSwitch.disabled}
           />
-          <GoldWidget dict={dict} />
+          <GoldWidget dict={dict} locale={locale} />
           <BizMatchSection dict={dict} />
           <WhySection dict={dict} />
           <Pricing locale={locale} dict={dict} price={price} variant={variant} />

@@ -93,14 +93,14 @@ export const en = {
   gold: {
     title: "Asset Market Analysis",
     subtitle:
-      "Track Gold & Silver markets the easy way. Live market prices refresh every 4 hours — the Current Market Price label below is real data, not a simulation.",
-    screenTitle: "Current Market Price",
-    priceRow: "Real spot · USD converted to local currency",
+      "Track Gold & Silver markets the easy way. Live market prices refresh every 4 hours — the International Spot Price below is real data, not a simulation.",
+    screenTitle: "International Spot Price",
+    priceRow: "Live spot · USD per troy ounce",
     liveBadge: "LIVE",
     perOunce: "/oz",
     updatedAt: "Updated at",
     disclaimer: COMPLIANCE_DISCLAIMER_EN,
-    note: "Prices below are live market spot (converted to local currency). Not investment advice. Deep analysis with BUY/SELL/HOLD signals is available in the member dashboard (2,000 tokens).",
+    note: "Prices below are live international spot in USD. Not investment advice. Deep analysis with BUY/SELL/HOLD signals is available in the member dashboard (2,000 tokens).",
     signals: {
       buy: "BUY",
       sell: "SELL",

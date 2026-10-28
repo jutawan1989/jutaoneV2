@@ -20,7 +20,8 @@
  * GOLDPRICE_API_KEY is actually set — an empty `Bearer` header is what
  * triggered the gated combined response.
  *
- * Conversion: USD -> MYR x4.70, USD -> IDR x16000 (Boss fixed rates for now).
+ * Conversion: USD -> MYR x4.70, USD -> IDR x16000 (Boss fixed rates for now),
+ * USD stays raw (international spot, 2dp).
  * A `?currency=` override is NOT accepted on the free path: the homepage shows
  * the visitor's own region currency, never a picked one.
  *
@@ -29,13 +30,23 @@
  * the free quota either. Stale cache is served rather than failing the page.
  */
 
-export type PublicMetalCurrency = "MYR" | "IDR";
+export type PublicMetalCurrency = "USD" | "MYR" | "IDR";
 
+/**
+ * Spot per troy ounce. `usd` is the vendor truth — always present when the
+ * feed is up. `myr`/`idr` are converted views of the same numbers (Boss fixed
+ * rates), so the frontend formats ONE field with Intl.NumberFormat and never
+ * re-derives FX itself. Null only when the vendor row is missing.
+ */
 export type PublicMetalPrices = {
   currency: PublicMetalCurrency;
+  usd: { gold: number | null; silver: number | null };
   /** Converted spot per troy ounce, in the display currency. */
   gold: number | null;
   silver: number | null;
+  /** Same numbers converted to the other two currencies (clean floats). */
+  myr: { gold: number | null; silver: number | null };
+  idr: { gold: number | null; silver: number | null };
   /** Where the numbers came from: live vendor call or cache. */
   source: "live" | "cache";
   fetchedAt: string;
@@ -79,6 +90,7 @@ function toUsd(value: VendorSymbol["price"]): number | null {
 
 function convert(usd: number | null, currency: PublicMetalCurrency): number | null {
   if (usd === null) return null;
+  if (currency === "USD") return Math.round(usd * 100) / 100;
   const rate = currency === "IDR" ? IDR_PER_USD : MYR_PER_USD;
   return Math.round(usd * rate * 100) / 100;
 }
@@ -161,7 +173,14 @@ async function fetchLive(currency: PublicMetalCurrency): Promise<PublicMetalPric
   const gold = convert(goldUsd, currency);
   const silver = convert(silverUsd, currency);
 
-  return { currency, gold, silver, source: "live", fetchedAt: new Date().toISOString() };
+  // Ali: every response carries all three quotes as clean floats so the
+  // frontend formats ONE field with Intl.NumberFormat (no FX re-derivation).
+  // `usd` is vendor truth; myr/idr are views at Boss fixed rates.
+  const usd = { gold: convert(goldUsd, "USD"), silver: convert(silverUsd, "USD") };
+  const myr = { gold: convert(goldUsd, "MYR"), silver: convert(silverUsd, "MYR") };
+  const idr = { gold: convert(goldUsd, "IDR"), silver: convert(silverUsd, "IDR") };
+
+  return { currency, usd, gold, silver, myr, idr, source: "live", fetchedAt: new Date().toISOString() };
 }
 
 /**
@@ -202,7 +221,11 @@ export async function getPublicMetalPrices(
   }
 }
 
-type DbRow = { currency: string; gold: number | null; silver: number | null; fetched_at: string; expires_at: string };
+type DbRow = { currency: string; gold: number | null; silver: number | null; usd_gold: number | null; usd_silver: number | null; myr_gold: number | null; myr_silver: number | null; idr_gold: number | null; idr_silver: number | null; fetched_at: string; expires_at: string };
+
+function asFloat(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
 
 async function readDbCache(currency: PublicMetalCurrency): Promise<{ prices: PublicMetalPrices; expiresAt: number } | null> {
   try {
@@ -211,16 +234,27 @@ async function readDbCache(currency: PublicMetalCurrency): Promise<{ prices: Pub
     if (!db) return null;
     const { data } = await db
       .from("metal_price_cache")
-      .select("currency, gold, silver, fetched_at, expires_at")
+      .select("currency, gold, silver, usd_gold, usd_silver, myr_gold, myr_silver, idr_gold, idr_silver, fetched_at, expires_at")
       .eq("currency", currency)
       .maybeSingle();
     const row = data as DbRow | null;
     if (!row) return null;
+    // Old rows predate the tri-quote columns: rebuild myr/idr/usd from the
+    // stored display gold/silver so the widget still gets clean floats.
+    const gold = asFloat(row.gold);
+    const silver = asFloat(row.silver);
+    const usd = {
+      gold: asFloat(row.usd_gold) ?? (currency === "USD" ? gold : gold !== null ? convert(gold / (currency === "IDR" ? IDR_PER_USD : MYR_PER_USD), "USD") : null),
+      silver: asFloat(row.usd_silver) ?? (currency === "USD" ? silver : silver !== null ? convert(silver / (currency === "IDR" ? IDR_PER_USD : MYR_PER_USD), "USD") : null),
+    };
     return {
       prices: {
         currency,
-        gold: typeof row.gold === "number" ? row.gold : null,
-        silver: typeof row.silver === "number" ? row.silver : null,
+        usd,
+        gold,
+        silver,
+        myr: { gold: asFloat(row.myr_gold) ?? convert(usd.gold, "MYR"), silver: asFloat(row.myr_silver) ?? convert(usd.silver, "MYR") },
+        idr: { gold: asFloat(row.idr_gold) ?? convert(usd.gold, "IDR"), silver: asFloat(row.idr_silver) ?? convert(usd.silver, "IDR") },
         source: "cache",
         fetchedAt: row.fetched_at,
       },
@@ -240,6 +274,12 @@ async function writeDbCache(prices: PublicMetalPrices, expiresAt: number): Promi
       currency: prices.currency,
       gold: prices.gold,
       silver: prices.silver,
+      usd_gold: prices.usd.gold,
+      usd_silver: prices.usd.silver,
+      myr_gold: prices.myr.gold,
+      myr_silver: prices.myr.silver,
+      idr_gold: prices.idr.gold,
+      idr_silver: prices.idr.silver,
       fetched_at: prices.fetchedAt,
       expires_at: new Date(expiresAt).toISOString(),
     },
@@ -250,6 +290,13 @@ async function writeDbCache(prices: PublicMetalPrices, expiresAt: number): Promi
 /** Region -> display currency. OTHER has no local quote, defaults to MYR. */
 export function publicCurrencyForRegion(region: string): PublicMetalCurrency {
   return region === "ID" ? "IDR" : "MYR";
+}
+
+/** Active locale -> widget currency (ms=MYR, id=IDR, en=USD raw spot). */
+export function publicCurrencyForLocale(locale: string): PublicMetalCurrency {
+  if (locale === "id") return "IDR";
+  if (locale === "en") return "USD";
+  return "MYR";
 }
 
 /** Test helper: clears the in-memory entry so tests do not leak state. */
