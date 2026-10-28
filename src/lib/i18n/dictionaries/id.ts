@@ -8,8 +8,8 @@ export const id: Dictionary = {
       "Ubah satu kalimat tentang produk Anda menjadi caption TikTok atau Facebook dalam Bahasa Indonesia, Melayu, atau Inggris — dalam hitungan detik. Bayar dengan token, tanpa langganan.",
   },
   nav: {
-    demo: "Demo langsung",
-    gold: "Widget emas",
+    demo: "Uji Mesin AI",
+    gold: "Analisis Aset",
     suppliers: "Cari Supplier",
     pricing: "Harga token",
     cta: "Mulai dengan {price}",
@@ -24,7 +24,7 @@ export const id: Dictionary = {
     titleAccent: "JutaOne.Biz — Otak Bisnis Anda.",
     subtitle:
       "Platform AI bisnis pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Toko + Cari Supplier + Simpan Emas' dalam satu tempat, mulai dari Rp16rb. Ini bukan sekadar AI.",
-    ctaPrimary: "Coba demo gratis",
+    ctaPrimary: "Uji AI Sekarang",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercaya pedagang Indonesia & Malaysia",
     trustSocial: "⭐ 10.000+ Iklan Dibuat | ⚡ 1,5 Detik | 🇲🇾🇮🇩 Bahasa Lokal",
@@ -38,7 +38,7 @@ export const id: Dictionary = {
     stats: [
       { value: "Hitungan detik", label: "Rata-rata waktu pembuatan" },
       { value: "3 bahasa", label: "Indonesia, Melayu, Inggris" },
-      { value: "Tanpa daftar", label: "Demo bisa dipakai tanpa akun" },
+      { value: "Tanpa daftar", label: "Bisa dipakai tanpa akun" },
     ],
   },
   industries: {
@@ -88,11 +88,11 @@ export const id: Dictionary = {
     regenerateHint: "Belum cocok? Ubah teks Anda dan coba lagi selama percobaan masih ada.",
     errorGeneric: "Waduh, ada masalah teknis. Coba lagi sebentar ya.",
     errorLimit: "Kuota percobaan Anda habis. Yuk top up sekarang biar lanjut.",
-    errorBlocked: "Demo dijeda untuk hari ini. Anda masih bisa top up.",
+    errorBlocked: "Ujian dijeda untuk hari ini. Anda masih bisa top up.",
     errorTooShort: "Tulis minimal 5 huruf ya.",
   },
   gold: {
-    title: "Jangan biarkan untung menganggur",
+    title: "Analisis Pasar Aset",
     subtitle:
       "Pantau pasar Emas & Perak dengan gampang. Harga pasar terkini diperbarui tiap 4 jam — label Harga Pasar Terkini di bawah adalah data asli, bukan simulasi.",
     screenTitle: "Harga Pasar Terkini",
@@ -214,13 +214,13 @@ export const id: Dictionary = {
     status: "Status",
     statusPending: "Menunggu konfirmasi penyedia",
     statusMock: "Penyedia pembayaran belum dikonfigurasi",
-    back: "Kembali ke demo",
+    back: "Kembali ke uji",
     finish: "Simulasikan pembayaran berhasil",
     finished: "Pembayaran sandbox dicatat. Terima kasih — saldo Anda kini {tokenName}.",
   },
   compliance: {
     disclaimer:
-      "JutaOne.Biz membantu pedagang kecil menulis iklan yang lebih baik. Kami bukan penasihat keuangan atau investasi. Widget emas dan perak adalah simulasi untuk tujuan demonstrasi.",
+      "JutaOne.Biz membantu pedagang kecil menulis iklan yang lebih baik. Kami bukan penasihat keuangan atau investasi. Tampilan Analisis Aset adalah simulasi untuk tujuan demonstrasi.",
     noGuarantee: "Kami tidak menjanjikan keuntungan, pendapatan, atau imbal hasil keuangan.",
   },
   footer: {

@@ -7,8 +7,8 @@ export const en = {
       "Turn one sentence about your product into a TikTok or Facebook caption in Malay, Indonesian or English — in seconds. Pay per token, no subscription.",
   },
   nav: {
-    demo: "Live demo",
-    gold: "Gold widget",
+    demo: "Test AI Engine",
+    gold: "Asset Analysis",
     suppliers: "Find Suppliers",
     pricing: "Token pricing",
     cta: "Start with {price}",
@@ -23,7 +23,7 @@ export const en = {
     titleAccent: "JutaOne.Biz — Your Business Brain.",
     subtitle:
       "The first AI business platform in Asia. JutaOne.Biz unites 'Write Ads + Open Shop + Find Suppliers + Save Gold' in one place, from just $1. This isn't just AI.",
-    ctaPrimary: "Try the free demo",
+    ctaPrimary: "Test AI Now",
     ctaSecondary: "See token pricing",
     trustBadge: "Trusted by merchants in Malaysia & Indonesia",
     trustSocial: "⭐ 10,000+ Ads Generated | ⚡ 1.5 Seconds | 🇲🇾🇮🇩 Local Languages",
@@ -37,7 +37,7 @@ export const en = {
     stats: [
       { value: "Seconds", label: "Average caption time" },
       { value: "3 languages", label: "Malay, Indonesian, English" },
-      { value: "No signup", label: "Demo works without an account" },
+      { value: "No signup", label: "Works without an account" },
     ],
   },
   industries: {
@@ -84,14 +84,14 @@ export const en = {
     postFacebook: "Post to Facebook",
     shared: "Text copied! Please paste it in your TikTok/Facebook.",
     shareFailed: "Copy failed — please copy the text manually.",
-    regenerateHint: "Not quite right? Edit your text and try again while demos last.",
+    regenerateHint: "Not quite right? Edit your text and try again while free tests last.",
     errorGeneric: "Something went wrong. Please try again in a moment.",
-    errorLimit: "Your free demos are used up. Top up to keep going.",
-    errorBlocked: "The demo is paused for today. You can still top up.",
+    errorLimit: "Your free tests are used up. Top up to keep going.",
+    errorBlocked: "Testing is paused for today. You can still top up.",
     errorTooShort: "Please write at least 5 characters.",
   },
   gold: {
-    title: "Don't let your profit sit idle",
+    title: "Asset Market Analysis",
     subtitle:
       "Track Gold & Silver markets the easy way. Live market prices refresh every 4 hours — the Current Market Price label below is real data, not a simulation.",
     screenTitle: "Current Market Price",
@@ -213,13 +213,13 @@ export const en = {
     status: "Status",
     statusPending: "Waiting for provider confirmation",
     statusMock: "Payment provider not configured yet",
-    back: "Back to the demo",
+    back: "Back to the test",
     finish: "Simulate successful payment",
     finished: "Sandbox payment recorded. Thanks — your balance would now be {tokenName}.",
   },
   compliance: {
     disclaimer:
-      "JutaOne.Biz helps small merchants write better ads. We are not financial or investment advisers. The gold and silver widget is a simulation shown for demonstration only.",
+      "JutaOne.Biz helps small merchants write better ads. We are not financial or investment advisers. The Asset Analysis display is a simulation shown for demonstration only.",
     noGuarantee: "We make no promise of profit, earnings or financial return.",
   },
   footer: {

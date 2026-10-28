@@ -8,8 +8,8 @@ export const ms: Dictionary = {
       "Tukar satu ayat tentang produk anda kepada kapsyen TikTok atau Facebook dalam Bahasa Melayu, Indonesia atau Inggeris — dalam beberapa saat. Bayar guna token, tanpa langganan.",
   },
   nav: {
-    demo: "Demo langsung",
-    gold: "Widget emas",
+    demo: "Uji Enjin AI",
+    gold: "Analisis Aset",
     suppliers: "Cari Pembekal",
     pricing: "Harga token",
     cta: "Mula dengan {price}",
@@ -24,7 +24,7 @@ export const ms: Dictionary = {
     titleAccent: "JutaOne.Biz — Otak Perniagaan Anda.",
     subtitle:
       "Platform AI Perniagaan Pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Kedai + Cari Pembekal + Simpan Emas' dalam satu tempat, dengan harga serendah RM4.70. Ini bukan sekadar AI.",
-    ctaPrimary: "Cuba demo percuma",
+    ctaPrimary: "Uji AI Sekarang",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercayai peniaga Malaysia & Indonesia",
     trustSocial: "⭐ 10,000+ Iklan Dijana | ⚡ 1.5 Saat | 🇲🇾🇮🇩 Bahasa Tempatan",
@@ -38,7 +38,7 @@ export const ms: Dictionary = {
     stats: [
       { value: "Beberapa saat", label: "Masa purata jana kapsyen" },
       { value: "3 bahasa", label: "Melayu, Indonesia, Inggeris" },
-      { value: "Tanpa daftar", label: "Demo boleh guna tanpa akaun" },
+      { value: "Tanpa daftar", label: "Boleh guna tanpa akaun" },
     ],
   },
   industries: {
@@ -88,11 +88,11 @@ export const ms: Dictionary = {
     regenerateHint: "Belum sesuai? Ubah teks anda dan cuba lagi selagi percubaan masih ada.",
     errorGeneric: "Alamak, ada masalah teknikal. Cuba lagi sekejap ya.",
     errorLimit: "Kuota percubaan anda dah habis. Jom Top-Up sekarang untuk sambung.",
-    errorBlocked: "Demo dijeda untuk hari ini. Anda masih boleh tambah nilai.",
+    errorBlocked: "Ujian dijeda untuk hari ini. Anda masih boleh tambah nilai.",
     errorTooShort: "Tulis sekurang-kurangnya 5 huruf ya.",
   },
   gold: {
-    title: "Duit untung jangan dibiarkan mati",
+    title: "Analisis Pasaran Aset",
     subtitle:
       "Pantau pasaran Emas & Perak dengan mudah. Harga pasaran semasa dikemas kini setiap 4 jam — label Harga Pasaran Semasa di bawah adalah data sebenar, bukan simulasi.",
     screenTitle: "Harga Pasaran Semasa",
@@ -214,13 +214,13 @@ export const ms: Dictionary = {
     status: "Status",
     statusPending: "Menunggu pengesahan penyedia",
     statusMock: "Penyedia pembayaran belum dikonfigurasi",
-    back: "Kembali ke demo",
+    back: "Kembali ke ujian",
     finish: "Simulasikan pembayaran berjaya",
     finished: "Pembayaran sandbox direkodkan. Terima kasih — baki anda kini {tokenName}.",
   },
   compliance: {
     disclaimer:
-      "JutaOne.Biz membantu peniaga kecil menulis iklan yang lebih baik. Kami bukan penasihat kewangan atau pelaburan. Widget emas dan perak ialah simulasi untuk tujuan demonstrasi sahaja.",
+      "JutaOne.Biz membantu peniaga kecil menulis iklan yang lebih baik. Kami bukan penasihat kewangan atau pelaburan. Paparan Analisis Aset ialah simulasi untuk tujuan demonstrasi sahaja.",
     noGuarantee: "Kami tidak menjanjikan keuntungan, pendapatan atau pulangan kewangan.",
   },
   footer: {
