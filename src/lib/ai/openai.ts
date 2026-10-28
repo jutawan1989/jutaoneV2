@@ -4,10 +4,10 @@ import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionRe
 /**
  * OpenAI adapter (chat completions).
  *
- * Positioned third in the chain: DeepSeek primary, Groq fast fallback,
- * then gpt-4o-mini as the paid reliable tier before the free OpenRouter
- * models. Same prompt builders as every other adapter, so BM/ID/EN rules,
- * the 3-emoji cap and the compliance preamble are identical.
+ * Positioned last among the paid providers in the cost-saving chain: Groq
+ * primary, OpenRouter free, Gemini, then gpt-4o-mini as the reliable tier
+ * before the local template. Same prompt builders as every other adapter, so
+ * BM/ID/EN rules, the 3-emoji cap and the compliance preamble are identical.
  */
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-4o-mini";

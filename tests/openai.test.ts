@@ -30,12 +30,12 @@ function bodyOf(mock: FetchMock, index: number): Record<string, unknown> {
 }
 
 const ENV_KEYS = [
-  "DEEPSEEK_API_KEY",
   "GROQ_API_KEY",
   "OPENAI_API_KEY",
   "OPENAI_ENABLED",
   "OPENAI_MODEL",
   "OPENROUTER_API_KEY",
+  "GEMINI_API_KEY",
   "META_AI_API_KEY",
 ] as const;
 
@@ -79,24 +79,31 @@ describe("OpenAI adapter (gpt-4o-mini)", () => {
     await expect(generateWithOpenAI(REQUEST)).rejects.toThrow(/OpenAI responded 401/);
   });
 
-  it("sits third in the chain: deepseek, groq, openai, openrouter, meta", () => {
-    process.env.DEEPSEEK_API_KEY = "k1";
-    process.env.GROQ_API_KEY = "k2";
-    process.env.OPENROUTER_API_KEY = "k3";
-    process.env.META_AI_API_KEY = "k4";
+  it("sits last among paid providers: groq, openrouter, gemini, openai, meta", () => {
+    process.env.GROQ_API_KEY = "k1";
+    process.env.OPENROUTER_API_KEY = "k2";
+    process.env.GEMINI_API_KEY = "k3";
+    process.env.OPENAI_API_KEY = "k4";
+    process.env.META_AI_API_KEY = "k5";
     expect(providerChain().map((p) => p.name)).toEqual([
-      "deepseek",
       "groq",
-      "openai",
       "openrouter",
+      "gemini",
+      "openai",
       "meta",
     ]);
   });
 
-  it("falls through to the local template when only OpenAI is set and it fails", async () => {
+  it("never includes deepseek, even with a key set", () => {
+    process.env.DEEPSEEK_API_KEY = "legacy-key";
+    expect(providerChain().map((p) => p.name)).not.toContain("deepseek");
     delete process.env.DEEPSEEK_API_KEY;
+  });
+
+  it("falls through to the local template when only OpenAI is set and it fails", async () => {
     delete process.env.GROQ_API_KEY;
     delete process.env.OPENROUTER_API_KEY;
+    delete process.env.GEMINI_API_KEY;
     delete process.env.META_AI_API_KEY;
     stubFetch([() => jsonResponse({ error: { message: "server busy" } }, 500)]);
     const result = await generateCaption(REQUEST);

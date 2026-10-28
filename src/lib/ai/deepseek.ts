@@ -1,18 +1,14 @@
-import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionResult } from "./prompt";
 import { normalizeCaption } from "./caption";
+import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionResult } from "./prompt";
 
 /**
- * DeepSeek's platform API is OpenAI-compatible, so the request shape matches
- * the other adapters. Two things are specific:
+ * DeepSeek adapter — UNWIRED (cost decision).
  *
- * 1. The endpoint is `https://api.deepseek.com` (not `api.deepseek.com/v1`)
- *    for chat completions, and the key format is `sk-...` from
- *    platform.deepseek.com — it is NOT interchangeable with an OpenRouter key.
- * 2. `deepseek-chat` is the non-reasoning model. `deepseek-reasoner` is the
- *    reasoning tier, which would land in the same trap as the free OpenRouter
- *    reasoning models: hundreds of tokens of thinking before any caption, and
- *    a truncated result if the budget is tight. The default here is the
- *    non-reasoning one, and the model stays overridable.
+ * Nothing imports this module: the chain in `index.ts` and the assistant in
+ * `assistant.ts` both run Groq -> OpenRouter -> Gemini -> OpenAI -> Meta.
+ * Kept so the code is not lost; to restore, re-add the import + list entry.
+ * The `source` union in `prompt.ts` no longer includes "deepseek", so this
+ * adapter returns a locally-typed result until it is rewired.
  */
 const DEFAULT_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_MODEL = "deepseek-chat";
@@ -94,7 +90,10 @@ export async function generateWithDeepSeek(req: CaptionRequest): Promise<Caption
 
   return {
     caption,
-    source: "deepseek",
+    // Cast: "deepseek" was removed from the shared `source` union when the
+    // adapter was unwired. If it is rewired, add "deepseek" back to the union
+    // in `prompt.ts` and drop this cast.
+    source: "deepseek" as CaptionResult["source"],
     model,
     costUsd: totalTokens > 0 ? (totalTokens / 1000) * rate : 0,
     latencyMs: Date.now() - startedAt,

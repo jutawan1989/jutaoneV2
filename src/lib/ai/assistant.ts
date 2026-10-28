@@ -7,9 +7,9 @@ import type { Locale, Region } from "@/lib/i18n/config";
  *
  * Boss spec: "You are JutaOne Smart Assistant, a helpful business advisor for
  * SMEs in Malaysia and Indonesia. Answer concisely in the user's language."
- * The generic caption prompt builders are caption-shaped (hooks, CTAs,
- * hashtags), so the assistant carries its own prompts here rather than
- * reusing them.
+ * Cost-saving chain (DeepSeek removed): Groq -> OpenRouter -> Gemini ->
+ * OpenAI -> Meta -> local template. Same order as `lib/ai/index.ts`, so the
+ * demo caption and the chat answer always agree on which provider is primary.
  *
  * Kept out of the route module because Next.js route files may only export
  * HTTP handlers and config — same rule as `purchase-kind.ts`.
@@ -40,14 +40,6 @@ type ChatProvider = { name: string; base: string; model: string; key: string };
 
 function assistantProviders(): ChatProvider[] {
   const list: Array<ChatProvider | null> = [
-    process.env.DEEPSEEK_API_KEY
-      ? {
-          name: "deepseek",
-          base: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
-          model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-          key: process.env.DEEPSEEK_API_KEY,
-        }
-      : null,
     process.env.GROQ_API_KEY
       ? {
           name: "groq",
@@ -56,20 +48,30 @@ function assistantProviders(): ChatProvider[] {
           key: process.env.GROQ_API_KEY,
         }
       : null,
-    process.env.OPENAI_API_KEY
-      ? {
-          name: "openai",
-          base: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
-          model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-          key: process.env.OPENAI_API_KEY,
-        }
-      : null,
     process.env.OPENROUTER_API_KEY
       ? {
           name: "openrouter",
           base: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
           model: process.env.OPENROUTER_MODEL || "dots-studio/dots-3-note-preview:free",
           key: process.env.OPENROUTER_API_KEY,
+        }
+      : null,
+    process.env.GEMINI_API_KEY
+      ? {
+          name: "gemini",
+          base:
+            process.env.GEMINI_BASE_URL ||
+            "https://generativelanguage.googleapis.com/v1beta/openai",
+          model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
+          key: process.env.GEMINI_API_KEY,
+        }
+      : null,
+    process.env.OPENAI_API_KEY
+      ? {
+          name: "openai",
+          base: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+          model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+          key: process.env.OPENAI_API_KEY,
         }
       : null,
     process.env.META_AI_API_KEY
@@ -85,9 +87,10 @@ function assistantProviders(): ChatProvider[] {
 }
 
 /**
- * Calls the AI chain (DeepSeek -> Groq -> OpenAI -> OpenRouter -> Meta) with
+ * Calls the AI chain (Groq -> OpenRouter -> Gemini -> OpenAI -> Meta) with
  * the assistant prompt. Falls back to the local template when no provider key
- * is configured.
+ * is configured. DeepSeek is out of the chain (cost decision) — a
+ * DEEPSEEK_API_KEY in the env is ignored, never read.
  */
 export async function generateAssistantReply(req: AssistantRequest): Promise<CaptionResult> {
   const startedAt = Date.now();

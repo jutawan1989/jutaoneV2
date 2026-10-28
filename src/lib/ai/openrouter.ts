@@ -13,8 +13,7 @@ import { buildSystemPrompt, buildUserPrompt, type CaptionRequest, type CaptionRe
  * Not every model accepts that flag — some reject it with
  * "Reasoning is mandatory for this endpoint" — so the request is retried once
  * without the flag rather than dropping straight to the local template. That
- * keeps a model swap (e.g. to DeepSeek at launch) from silently disabling real
- * generation.
+ * keeps a model swap from silently disabling real generation.
  */
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_MODEL = "dots-studio/dots-3-note-preview:free";

@@ -1,4 +1,4 @@
-import { generateWithDeepSeek, deepSeekConfigured } from "./deepseek";
+import { generateWithGemini, geminiConfigured } from "./gemini";
 import { generateWithGroq, groqConfigured } from "./groq";
 import { generateWithOpenAI, openAIConfigured } from "./openai";
 import { generateWithOpenRouter, openRouterConfigured } from "./openrouter";
@@ -15,23 +15,27 @@ type Provider = {
 };
 
 /**
- * Provider chain, in the order Linda set:
+ * Provider chain, in the Boss cost-saving order (DeepSeek removed):
  *
- *   1. DeepSeek  — primary, funded.
- *   2. Groq      — fallback 1, fastest of the three (~120ms measured).
- *   3. OpenAI    — fallback 2, gpt-4o-mini paid tier for when DeepSeek/Groq fail.
- *   4. OpenRouter — fallback 3, free tier for when the paid providers fail.
- *   5. Meta      — kept last: still blocked by `402 billing_not_configured`, so
- *                  it would only add a failing round trip if it came earlier.
+ *   1. Groq       — primary, fastest of the three (~120ms measured).
+ *   2. OpenRouter — free tier, non-reasoning model.
+ *   3. Gemini     — gemini-2.0-flash via the OpenAI-compatible endpoint.
+ *   4. OpenAI     — gpt-4o-mini paid tier, the reliable paid fallback.
+ *   5. Meta       — kept last: still blocked by `402 billing_not_configured`, so
+ *                   it would only add a failing round trip if it came earlier.
+ *
+ * DeepSeek is out of the chain (cost decision). The adapter file
+ * `deepseek.ts` is kept but unwired and disabled by default — no import here,
+ * so no key is ever read. To restore it, re-add the import and the list entry.
  *
  * The local template is not in this list: it is the guaranteed floor, applied
  * when every configured provider has failed or none is configured at all.
  */
 const PROVIDERS: Provider[] = [
-  { name: "deepseek", configured: deepSeekConfigured, generate: generateWithDeepSeek },
   { name: "groq", configured: groqConfigured, generate: generateWithGroq },
-  { name: "openai", configured: openAIConfigured, generate: generateWithOpenAI },
   { name: "openrouter", configured: openRouterConfigured, generate: generateWithOpenRouter },
+  { name: "gemini", configured: geminiConfigured, generate: generateWithGemini },
+  { name: "openai", configured: openAIConfigured, generate: generateWithOpenAI },
   { name: "meta", configured: metaConfigured, generate: generateWithMeta },
 ];
 
@@ -77,4 +81,4 @@ export function providerChain(): Array<{ name: string; configured: boolean }> {
   return PROVIDERS.map((provider) => ({ name: provider.name, configured: provider.configured() }));
 }
 
-export { deepSeekConfigured, groqConfigured, metaConfigured, openAIConfigured, openRouterConfigured };
+export { geminiConfigured, groqConfigured, metaConfigured, openAIConfigured, openRouterConfigured };
