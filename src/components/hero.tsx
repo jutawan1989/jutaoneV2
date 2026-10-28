@@ -119,6 +119,17 @@ export function Hero({
                   {dict.hero.stats[1]?.value}
                 </span>
               </div>
+
+              <ul className="mt-1 grid w-full gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left">
+                {dict.hero.checklist.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-[13px] leading-snug font-medium text-white/90">
+                    <span aria-hidden className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[11px] ring-1 ring-emerald-400/40 ring-inset">
+                      ✓
+                    </span>
+                    <span className="min-w-0">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>

@@ -20,15 +20,21 @@ export const ms: Dictionary = {
   },
   hero: {
     eyebrow: "Enjin Iklan AI untuk Peniaga & Penyedia Perkhidmatan",
-    title: "Peniaga penat tulis iklan?",
-    titleAccent: "Biar AI tulis dalam 1.5 saat.",
+    title: "Bosan ChatGPT Tak Faham Bisnes Anda?",
+    titleAccent: "Biar AI Kami Uruskan Iklan, Kedai, & Pembekal Anda.",
     subtitle:
-      "Taip apa yang anda jual atau servis yang anda tawarkan. Dapat kapsyen TikTok atau Facebook yang buat orang berhenti scroll — produk atau perkhidmatan, semua boleh — tanpa agensi, tanpa penulis iklan, tanpa daftar.",
+      "JutaOne.Biz bukan sekadar chatbots. Ia adalah ekosistem perniagaan lengkap. Tulis iklan viral, buka kedai online, dan cari pembekal borong — semuanya dalam satu platform.",
     ctaPrimary: "Cuba demo percuma",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercayai peniaga Malaysia & Indonesia",
-    trustSocial: "⭐ Disertai 1,000+ peniaga di Malaysia & Indonesia",
+    trustSocial: "⭐ 10,000+ Iklan Dijana | ⚡ 1.5 Saat | 🇲🇾🇮🇩 Bahasa Tempatan",
     trustSecure: "🔒 Data anda selamat — tanpa spam, tanpa kad",
+    checklist: [
+      "AI Penulis Iklan (TikTok/FB)",
+      "Auto-Buka Kedai & Invois PDF",
+      "Enjin Carian Pembekal (Biz-Match)",
+      "Data Harga Emas & Perak Live",
+    ],
     stats: [
       { value: "Beberapa saat", label: "Masa purata jana kapsyen" },
       { value: "3 bahasa", label: "Melayu, Indonesia, Inggeris" },

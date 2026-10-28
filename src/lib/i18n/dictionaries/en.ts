@@ -19,15 +19,21 @@ export const en = {
   },
   hero: {
     eyebrow: "AI Ad Engine for Merchants & Service Providers",
-    title: "Tired of writing ads?",
-    titleAccent: "Let AI write them in 1.5 seconds.",
+    title: "Tired of ChatGPT Not Getting Your Business?",
+    titleAccent: "Let Our AI Handle Your Ads, Shop & Suppliers.",
     subtitle:
-      "Type what you sell or the service you offer. Get a scroll-stopping TikTok or Facebook caption — products or services, both work — no agency, no copywriter, no signup.",
+      "JutaOne.Biz isn't just another chatbot. It's a complete business ecosystem. Write viral ads, open an online shop, and find wholesale suppliers — all on one platform.",
     ctaPrimary: "Try the free demo",
     ctaSecondary: "See token pricing",
     trustBadge: "Trusted by merchants in Malaysia & Indonesia",
-    trustSocial: "⭐ Joined by 1,000+ merchants in Malaysia & Indonesia",
+    trustSocial: "⭐ 10,000+ Ads Generated | ⚡ 1.5 Seconds | 🇲🇾🇮🇩 Local Languages",
     trustSecure: "🔒 Your data is safe — no spam, no card needed",
+    checklist: [
+      "AI Ad Writer (TikTok/FB)",
+      "Instant Shop & PDF Invoices",
+      "Supplier Search Engine (Biz-Match)",
+      "Live Gold & Silver Prices",
+    ],
     stats: [
       { value: "Seconds", label: "Average caption time" },
       { value: "3 languages", label: "Malay, Indonesian, English" },
