@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabase } from "@/lib/db";
 import { isValidSlug } from "@/lib/store";
 import { identifyVisitor } from "@/lib/trial/visitor";
+import { isSafeImageUrl, normalizeImageUrl } from "@/lib/product-image";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,10 +61,14 @@ export async function POST(request: NextRequest) {
 
   // Only an absolute https URL is accepted: a relative path would be resolved
   // against our origin, and a javascript: URL would be stored XSS.
-  const imageUrl =
+  const rawImage =
     typeof body?.image_url === "string" && body.image_url.trim() !== ""
       ? body.image_url.trim()
       : null;
+  if (rawImage && /^(blob:|data:)/i.test(rawImage)) {
+    return NextResponse.json({ code: "image_url_invalid" }, { status: 400 });
+  }
+  const imageUrl = rawImage ? normalizeImageUrl(rawImage) : null;
   if (imageUrl && !isSafeImageUrl(imageUrl)) {
     return NextResponse.json({ code: "image_url_invalid" }, { status: 400 });
   }
@@ -97,11 +102,3 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true, product: data }, { status: 201 });
 }
 
-function isSafeImageUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
-}

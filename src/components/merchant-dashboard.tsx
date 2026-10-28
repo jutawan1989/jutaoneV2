@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, type DragEvent, type FormEvent } from "react";
-import { Camera, ImagePlus, ShoppingBag, X } from "lucide-react";
+import { ImagePlus, Loader2, ShoppingBag, X } from "lucide-react";
 import { StoreSubscriptionModal } from "@/components/store-subscription-modal";
+import { isDirectImageUrl, normalizeImageUrl } from "@/lib/product-image";
 
 type SubscriptionState = {
   status: string;
@@ -38,15 +39,52 @@ export function MerchantDashboard({
   const [imageUrl, setImageUrl] = useState("");
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewBroken, setPreviewBroken] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<AddedProduct[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  async function uploadFile(file: File) {
+    setError(null);
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/products/image", { method: "POST", body: form });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.url) {
+        const messages: Record<string, string> = {
+          upload_type: "Fail bukan imej. Pilih JPG, PNG, WebP atau GIF.",
+          upload_too_large: "Gambar melebihi 5MB. Kecilkan dahulu.",
+          upload_invalid: "Fail tidak sah. Cuba lagi.",
+        };
+        setError(messages[data?.code] ?? "Muat naik gagal. Cuba lagi atau tampal pautan https.");
+        return;
+      }
+      if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
+      setFilePreview(null);
+      setImageUrl(data.url);
+      setPreviewBroken(false);
+    } catch {
+      setError("Rangkaian bermasalah. Cuba lagi atau tampal pautan https.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   function handleFile(file: File | undefined) {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file || uploading) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Fail bukan imej. Pilih JPG, PNG, WebP atau GIF.");
+      return;
+    }
     if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
     setFilePreview(URL.createObjectURL(file));
+    setPreviewBroken(false);
+    void uploadFile(file);
   }
 
   function handleDrop(event: DragEvent) {
@@ -55,7 +93,12 @@ export function MerchantDashboard({
     handleFile(event.dataTransfer.files?.[0]);
   }
 
-  const previewImage = imageUrl.trim().startsWith("http") ? imageUrl.trim() : filePreview;
+  const storedUrl = imageUrl.trim() ? normalizeImageUrl(imageUrl) : "";
+  const previewImage = storedUrl.startsWith("http") ? storedUrl : filePreview;
+  const urlWarning =
+    storedUrl && !isDirectImageUrl(storedUrl)
+      ? "Pautan ini nampak seperti halaman web (contoh: pautan pendek Shopee / Drive share). Sila masukkan pautan gambar yang berakhir dengan .jpg atau .png — jika tidak, gambar tidak akan dipaparkan."
+      : null;
   const previewPrice = Number(price) > 0 ? `RM ${Number(price).toFixed(2)}` : "RM 0.00";
 
   async function submit(event: FormEvent) {
@@ -73,7 +116,7 @@ export function MerchantDashboard({
           name,
           price: Number(price),
           description: description || null,
-          image_url: imageUrl || null,
+          image_url: storedUrl || null,
         }),
       });
       const data = await response.json();
@@ -85,7 +128,7 @@ export function MerchantDashboard({
           price_invalid: "Harga mesti lebih daripada 0.",
           price_out_of_range: "Harga terlalu tinggi.",
           name_invalid: "Nama produk diperlukan.",
-          image_url_invalid: "URL gambar mesti bermula dengan http:// atau https://",
+          image_url_invalid: "URL gambar tidak sah. Guna https:// yang berakhir .jpg/.png, atau muat naik fail.",
         };
         setError(messages[data.code] ?? "Produk tidak berjaya ditambah.");
         return;
@@ -252,24 +295,34 @@ export function MerchantDashboard({
                     : "border-slate-300 hover:border-blue-400 hover:bg-blue-50/40"
                 }`}
               >
-                {previewImage ? (
+                {previewImage && !previewBroken ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={previewImage}
                     alt="Preview produk"
                     className="h-full w-full object-cover"
+                    onError={() => setPreviewBroken(true)}
                   />
                 ) : (
                   <span className="flex flex-col items-center gap-2 px-4">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
-                      <Camera className="size-5 text-blue-600" aria-hidden />
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg font-bold text-white shadow-sm">
+                      {(name.trim()[0] ?? "J").toUpperCase()}
                     </span>
                     <span className="text-sm font-semibold text-slate-900">
-                      Muat Naik Gambar Produk
+                      {uploading ? "Memuat naik…" : "Muat Naik Gambar Produk"}
                     </span>
                     <span className="text-xs text-slate-500">
-                      Seret & letak atau klik untuk pilih gambar
+                      {uploading ? "Sila tunggu, gambar sedang disimpan." : "Seret & letak atau klik untuk pilih gambar"}
                     </span>
+                    {previewBroken && (
+                      <span className="text-[11px] font-medium text-amber-600">Pautan gambar tidak dapat dibuka.</span>
+                    )}
+                  </span>
+                )}
+                {uploading && (
+                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-white/85 py-1.5 text-[11px] font-medium text-blue-700">
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                    Memuat naik…
                   </span>
                 )}
               </button>
@@ -285,8 +338,11 @@ export function MerchantDashboard({
                 <input
                   id="pimg"
                   value={imageUrl}
-                  onChange={(event) => setImageUrl(event.target.value)}
-                  placeholder="atau tampal pautan gambar https://…"
+                  onChange={(event) => {
+                    setImageUrl(event.target.value);
+                    setPreviewBroken(false);
+                  }}
+                  placeholder="atau tampal pautan gambar https://… .jpg / .png"
                   inputMode="url"
                   className="w-full bg-transparent text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
                 />
@@ -296,6 +352,7 @@ export function MerchantDashboard({
                     aria-label="Buang gambar"
                     onClick={() => {
                       setImageUrl("");
+                      setPreviewBroken(false);
                       if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
                       setFilePreview(null);
                       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -307,8 +364,14 @@ export function MerchantDashboard({
                 )}
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                Preview fail adalah segera; pautan https disimpan bersama produk.
+                Fail dimuat naik automatik ke stor. Sila masukkan pautan gambar yang berakhir
+                dengan .jpg atau .png — pautan pendek Shopee / halaman web tidak akan dipaparkan.
               </p>
+              {urlWarning && (
+                <p role="alert" className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-relaxed text-amber-700">
+                  {urlWarning}
+                </p>
+              )}
             </div>
 
             <div>
@@ -336,19 +399,20 @@ export function MerchantDashboard({
               </p>
               <article className="mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                  {previewImage ? (
+                  {previewImage && !previewBroken ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={previewImage}
                       alt={name || "Preview produk"}
                       className="h-full w-full object-cover"
+                      onError={() => setPreviewBroken(true)}
                     />
                   ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-slate-50 to-slate-100 text-slate-400">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
-                        <Camera className="size-5" aria-hidden />
+                    <div className="relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden bg-gradient-to-br from-[#0a1f4d] via-[#123a8f] to-[#0a1730] text-white">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg font-bold tracking-wide ring-1 ring-white/20">
+                        {(name.trim()[0] ?? "J").toUpperCase()}
                       </span>
-                      <span className="text-[11px] font-medium tracking-wide uppercase">
+                      <span className="text-[11px] font-semibold tracking-[0.14em] uppercase opacity-80">
                         Tiada gambar
                       </span>
                     </div>

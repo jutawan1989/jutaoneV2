@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, ShieldCheck, ShoppingBag, Truck, Star, BadgeCheck } from "lucide-react";
+import { BadgeCheck, ShieldCheck, ShoppingBag, Star, Truck } from "lucide-react";
 import { CheckoutForm } from "@/components/checkout-form";
+import { ProductImage } from "@/components/product-image";
 
 export type StoreProduct = {
   id: number;
@@ -33,22 +34,7 @@ export function Storefront({ shopSlug, products }: { shopSlug: string; products:
           >
             {/* Product image / placeholder */}
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-              {product.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-slate-50 to-slate-100 text-slate-400">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
-                    <Camera className="size-5" aria-hidden />
-                  </span>
-                  <span className="text-[11px] font-medium tracking-wide uppercase">Tiada gambar</span>
-                </div>
-              )}
+              <ProductImage name={product.name} imageUrl={product.imageUrl} />
               <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 shadow-sm">
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Stok Tersedia
