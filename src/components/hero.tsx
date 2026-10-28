@@ -8,6 +8,9 @@ import type { Price } from "@/lib/pricing";
  * Hero. The brand mark is the centrepiece: the globe that forms the O of JOB
  * spins via a single CSS transform (no video, no canvas), and stops under
  * `prefers-reduced-motion`.
+ *
+ * Marketing-driven (CTO spec): pain-led headline, glowing blue demo CTA,
+ * dual trust signals, mobile-first bank-like breathing room.
  */
 export function Hero({
   dict,
@@ -20,46 +23,60 @@ export function Hero({
 }) {
   return (
     <section className="relative bg-gradient-to-b from-[#0a1f4d] via-[#0b2557] to-[#0a1730] text-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-14 px-4 pt-16 pb-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24">
-        <div>
-          <p className="inline-flex items-center gap-2 rounded-md border border-line bg-white/[0.02] px-2.5 py-1 text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
-            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand" />
-            {dict.hero.eyebrow}
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 pt-12 pb-10 sm:gap-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-14">
+        <div className="min-w-0">
+          <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tracking-[0.12em] text-white/90 uppercase">
+            <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+            <span className="truncate">{dict.hero.eyebrow}</span>
           </p>
 
-          <h1 className="mt-7 text-4xl leading-[1.08] font-semibold tracking-[-0.025em] text-white sm:text-5xl">
-            {dict.hero.title} <span className="text-brand">{dict.hero.titleAccent}</span>
+          <h1 className="mt-5 text-[2rem] leading-[1.12] font-semibold tracking-[-0.025em] text-balance text-white sm:text-5xl sm:leading-[1.08]">
+            {dict.hero.title} <span className="text-brand-soft sm:text-brand">{dict.hero.titleAccent}</span>
           </h1>
 
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">
+          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 sm:text-base">
             {dict.hero.subtitle}
           </p>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link href="#demo" className="btn-brand w-full sm:w-auto">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="#demo"
+              className="btn-brand btn-glow cta-glow hero-cta min-h-[52px] w-full px-6 text-base font-bold sm:w-auto"
+            >
               {dict.hero.ctaPrimary}
+              <span aria-hidden className="text-lg leading-none">→</span>
             </Link>
-            <Link href="#pricing" className="btn-ghost w-full sm:w-auto">
+            <Link href="#pricing" className="min-h-[52px] w-full items-center justify-center px-6 py-3 text-center text-[15px] font-medium text-white/80 transition-colors hover:text-white sm:inline-flex sm:w-auto sm:py-0">
               {dict.hero.ctaSecondary}
             </Link>
           </div>
 
-          <p className="mt-5 flex items-center gap-2 text-sm font-medium text-silver"><span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />{dict.hero.trustBadge}</p>
+          {/* Trust signals: social proof + safety — bank-grade reassurance row. */}
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
+            <p className="flex items-center gap-2 text-[13px] font-semibold text-white">
+              <span aria-hidden>⭐</span>
+              <span>{dict.hero.trustSocial}</span>
+            </p>
+            <p className="flex items-center gap-2 text-[13px] font-medium text-white/70">
+              <span aria-hidden>🔒</span>
+              <span>{dict.hero.trustSecure}</span>
+            </p>
+          </div>
 
-          <dl className="mt-11 grid grid-cols-3 gap-6 border-t border-line pt-6">
+          <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:mt-11 sm:gap-6">
             {dict.hero.stats.map((stat) => (
-              <div key={stat.label}>
-                <dt className="text-lg font-semibold text-white tabular-nums sm:text-xl">
+              <div key={stat.label} className="min-w-0 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-white/[0.06] ring-inset sm:bg-transparent sm:p-0 sm:ring-0">
+                <dt className="text-base font-semibold text-white tabular-nums sm:text-xl">
                   {stat.value}
                 </dt>
-                <dd className="mt-1.5 text-xs leading-snug text-muted">{stat.label}</dd>
+                <dd className="mt-1.5 text-[11px] leading-snug text-white/65 sm:text-xs">{stat.label}</dd>
               </div>
             ))}
           </dl>
         </div>
 
-        <div className="relative">
-          <div className="card relative overflow-hidden p-7">
+        <div className="relative min-w-0">
+          <div className="card relative overflow-hidden rounded-2xl p-5 sm:p-7">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(22rem_14rem_at_50%_-10%,rgba(37,99,235,0.22),transparent_72%)]"
@@ -77,28 +94,28 @@ export function Hero({
               <p className="text-center text-[11px] font-semibold tracking-[0.2em] text-white uppercase">
                 JutaOne<span className="text-brand">.Biz</span>
               </p>
-              <p className="max-w-[18rem] text-center text-[11px] leading-relaxed text-muted">
+              <p className="max-w-[18rem] text-center text-[11px] leading-relaxed text-white/60">
                 {dict.footer.tagline}
               </p>
 
-              <div className="mt-2 flex w-full items-center justify-between rounded-lg border border-line bg-ink/50 px-4 py-3">
-                <div>
-                  <p className="text-[11px] tracking-[0.1em] text-muted uppercase">
+              <div className="mt-2 flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-ink/50 px-4 py-3.5">
+                <div className="min-w-0">
+                  <p className="text-[11px] tracking-[0.1em] text-white/60 uppercase">
                     {dict.pricing.tokenName}
                   </p>
-                  <p className="mt-1 flex items-baseline gap-1.5 text-lg font-semibold text-white">
+                  <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-lg font-semibold text-white">
                     <span className="tabular-nums">{price.display}</span>
-                    <span className="text-[10px] font-semibold tracking-[0.16em] text-muted uppercase">
+                    <span className="text-[10px] font-semibold tracking-[0.16em] text-white/60 uppercase">
                       {price.usdCode}
                     </span>
                   </p>
                   {price.localDisplay && (
-                    <p className="mt-0.5 text-[11px] font-medium text-silver tabular-nums">
+                    <p className="mt-0.5 text-[11px] font-medium text-white/60 tabular-nums">
                       {price.localDisplay}
                     </p>
                   )}
                 </div>
-                <span className="rounded-md border border-line px-2.5 py-1 text-[11px] font-medium text-silver" lang={locale}>
+                <span className="shrink-0 rounded-full bg-brand/15 px-2.5 py-1 text-[11px] font-semibold text-brand-soft ring-1 ring-brand/30 ring-inset" lang={locale}>
                   {dict.hero.stats[1]?.value}
                 </span>
               </div>

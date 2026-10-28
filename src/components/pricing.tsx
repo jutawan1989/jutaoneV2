@@ -41,7 +41,7 @@ export function Pricing({
   const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD);
 
   return (
-    <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 px-5 py-12 sm:px-6 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-3xl">
@@ -165,7 +165,7 @@ export function Pricing({
                 emailLabel={dict.pricing.emailLabel}
                 emailPlaceholder={dict.pricing.emailPlaceholder}
                 trustBadge={dict.pricing.trustBadge}
-                className="btn-brand flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-semibold"
+                className="btn-brand btn-glow cta-glow flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-bold"
                 amountUsd={valid ? (usd as number) : undefined}
                 disabled={!valid}
                 collectEmail

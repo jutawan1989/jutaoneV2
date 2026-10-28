@@ -27,6 +27,8 @@ export const id: Dictionary = {
     ctaPrimary: "Coba demo gratis",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercaya pedagang Indonesia & Malaysia",
+    trustSocial: "⭐ Diikuti 1.000+ pedagang di Indonesia & Malaysia",
+    trustSecure: "🔒 Data Anda aman — tanpa spam, tanpa kartu",
     stats: [
       { value: "Hitungan detik", label: "Rata-rata waktu pembuatan" },
       { value: "3 bahasa", label: "Indonesia, Melayu, Inggris" },
@@ -106,14 +108,14 @@ export const id: Dictionary = {
   },
   earn: {
     eyebrow: "Hasilkan penghasilan sampingan",
-    title: "Kuda Merah — bagikan tautan, dapat komisi tunai",
-    body: "Setiap kali teman top up lewat tautan Anda, Anda dapat komisi tunai sampai 19 level — level 1 dibayar 50%. Tanpa stok, tanpa kirim barang. Bagikan saja, duit jalan.",
+    title: "Program Afiliasi — bagikan tautan, dapat komisi tunai",
+    body: "Setiap kali teman yang Anda rujuk membeli software kami, Anda dapat komisi tunai hingga 70% dari nilai pembelian. Tanpa stok, tanpa kirim barang. Bagikan saja, sisanya otomatis.",
     bullets: [
       "Komisi tunai, bukan poin reward",
       "Satu tautan saja — tercatat otomatis",
       "Bisa tarik duit kapan pun saldonya cukup",
     ],
-    cta: "Join Affiliate Sekarang",
+    cta: "Gabung Program Afiliasi",
   },
   suppliers: {
     eyebrow: "Biz-Match — pencarian supplier AI",

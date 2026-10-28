@@ -5,10 +5,10 @@ import type { Dictionary } from "@/lib/i18n";
 /**
  * PUBLIC homepage section: Biz-Match only (Dual-Tone light).
  *
- * Compliance (Chip.Asia): Kuda Merah / affiliate mesti disembunyikan dari
- * homepage awam. Blok ini hanya tunjuk carian pembekal — tiada sebutan
- * affiliate, komisen atau referral. Kuda Merah hanya wujud di dashboard
- * ahli (member-dashboard) dan halaman /dashboard/affiliate.
+ * Compliance (Chip.Asia): the affiliate program must stay off the public
+ * homepage. This block only shows supplier search — no mention of
+ * affiliate, commission or referral. The program lives only in the member
+ * dashboard (member-dashboard) and the /dashboard/affiliate page.
  */
 export function BizMatchSection({ dict }: { dict: Dictionary }) {
   return (
@@ -70,15 +70,15 @@ export function BizMatchSection({ dict }: { dict: Dictionary }) {
 }
 
 /**
- * Kuda Merah (affiliate) + Biz-Match (supplier search) storytelling sections.
- * INTERNAL ONLY — jangan render di homepage awam (lihat BizMatchSection).
+ * Affiliate program + Biz-Match (supplier search) storytelling sections.
+ * INTERNAL ONLY — do not render on the public homepage (see BizMatchSection).
  * Boss/Linda spec: USP blocks that scream "I NEED THIS TOOL" — income angle
  * first, supplier angle second, each with art + bullets + one CTA.
  */
 export function EarnSections({ dict }: { dict: Dictionary }) {
   const sections = [
     {
-      id: "kuda-merah",
+      id: "affiliate",
       eyebrow: dict.earn.eyebrow,
       title: dict.earn.title,
       body: dict.earn.body,

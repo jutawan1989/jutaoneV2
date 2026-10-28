@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 
 /**
- * Registration form: full name + email + password + confirm.
+ * Frictionless registration (CTO spec: max 3 clicks Daftar → Top-Up $1,
+ * no long forms). Only e-mel + kata laluan are required; nama is optional
+ * and derived from the e-mel when left blank. No confirm-password field —
+ * mismatch friction costs more signups than it saves.
  *
- * Posts to /api/auth with mode=register, which joins the new account to the
- * visitor hash of this browser — any tokens, store or affiliate data created
- * here before signing up is already theirs. On success the API sets the
- * session cookie and the browser lands on /dashboard.
+ * Posts to /api/auth with mode=register. On success the browser lands on
+ * /dashboard where the Top-Up $1 CTA is one tap away.
  */
 export function MemberRegisterForm({ next }: { next: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,8 +23,13 @@ export function MemberRegisterForm({ next }: { next: string }) {
     event.preventDefault();
     if (busy) return;
 
-    if (password !== confirm) {
-      setError("Pengesahan kata laluan tidak sepadan.");
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmedEmail)) {
+      setError("Masukkan e-mel yang sah.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Kata laluan perlu sekurang-kurangnya 8 aksara.");
       return;
     }
 
@@ -31,10 +37,11 @@ export function MemberRegisterForm({ next }: { next: string }) {
     setError(null);
 
     try {
+      const displayName = name.trim() || trimmedEmail.split("@")[0] || "";
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password, displayName: name.trim(), mode: "register" }),
+        body: JSON.stringify({ email: trimmedEmail, password, displayName, mode: "register" }),
       });
       const data = await response.json();
 
@@ -53,7 +60,6 @@ export function MemberRegisterForm({ next }: { next: string }) {
       };
       setError(messages[data.code] ?? "Pendaftaran gagal. Sila cuba lagi.");
       setPassword("");
-      setConfirm("");
     } catch {
       setError("Rangkaian bermasalah. Sila cuba lagi.");
     } finally {
@@ -62,37 +68,22 @@ export function MemberRegisterForm({ next }: { next: string }) {
   }
 
   const inputClass =
-    "mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-brand focus:outline-none";
+    "mt-1.5 min-h-[48px] w-full rounded-xl border border-line bg-ink-2/70 px-3.5 py-3 text-[15px] text-white placeholder:text-muted/70 focus:border-brand focus:outline-none";
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6">
-      <div className="card p-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-5 py-10">
+      <div className="card rounded-2xl p-6 sm:p-7">
         <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
           JutaOne.Biz
         </p>
-        <h1 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-white">
-          Daftar akaun
+        <h1 className="mt-2 text-[22px] leading-tight font-semibold tracking-[-0.02em] text-white">
+          Daftar — 30 saat siap
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Satu akaun untuk token, kedai dan pendapatan afiliasi anda.
+          Satu akaun untuk token, kedai dan pendapatan afiliasi. Lepas daftar terus boleh Top-Up $1.
         </p>
 
-        <form onSubmit={submit} className="mt-5 space-y-3">
-          <div>
-            <label htmlFor="r-name" className="block text-sm font-medium text-white">
-              Nama penuh
-            </label>
-            <input
-              id="r-name"
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-              autoComplete="name"
-              className={inputClass}
-              placeholder="Nama anda"
-            />
-          </div>
+        <form onSubmit={submit} className="mt-5 space-y-3.5">
           <div>
             <label htmlFor="r-email" className="block text-sm font-medium text-white">
               E-mel
@@ -104,6 +95,7 @@ export function MemberRegisterForm({ next }: { next: string }) {
               onChange={(event) => setEmail(event.target.value)}
               required
               autoComplete="email"
+              inputMode="email"
               className={inputClass}
               placeholder="anda@contoh.com"
             />
@@ -121,43 +113,50 @@ export function MemberRegisterForm({ next }: { next: string }) {
               minLength={8}
               autoComplete="new-password"
               className={inputClass}
-              placeholder="Sekurang-kurangnya 8 aksara"
+              placeholder="Min. 8 aksara"
             />
           </div>
-          <div>
-            <label htmlFor="r-confirm" className="block text-sm font-medium text-white">
-              Sahkan kata laluan
+          <details className="rounded-xl border border-line/60 px-3.5 py-2.5">
+            <summary className="cursor-pointer text-[13px] font-medium text-muted transition-colors hover:text-white">
+              Tambah nama? <span className="font-normal">(pilihan)</span>
+            </summary>
+            <label htmlFor="r-name" className="mt-2 block text-sm font-medium text-white">
+              Nama penuh
             </label>
             <input
-              id="r-confirm"
-              type="password"
-              value={confirm}
-              onChange={(event) => setConfirm(event.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
+              id="r-name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              autoComplete="name"
               className={inputClass}
-              placeholder="Taip semula kata laluan"
+              placeholder="Nama anda"
             />
-          </div>
+          </details>
 
-          <button type="submit" disabled={busy} className="btn-brand w-full">
-            {busy ? "Memproses…" : "Daftar"}
+          <button type="submit" disabled={busy} className="btn-brand btn-glow cta-glow min-h-[52px] w-full text-base font-bold">
+            {busy ? "Memproses…" : "Daftar & Teruskan →"}
           </button>
         </form>
 
         {error && (
-          <p role="alert" className="mt-3 text-sm text-red-300">
+          <p role="alert" className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
             {error}
           </p>
         )}
 
-        <a
+        <div className="mt-4 flex items-center justify-center gap-4 text-center text-[12px] text-muted">
+          <span>⭐ 1,000+ peniaga</span>
+          <span aria-hidden>•</span>
+          <span>🔒 Data selamat</span>
+        </div>
+
+        <Link
           href={next === "/dashboard" ? "/login" : `/login?next=${encodeURIComponent(next)}`}
-          className="mt-4 block w-full text-center text-sm text-muted transition-colors hover:text-white"
+          className="mt-4 flex min-h-[44px] items-center justify-center rounded-xl text-sm font-medium text-muted transition-colors hover:text-white"
         >
           Sudah ada akaun? Log masuk
-        </a>
+        </Link>
 
         <p className="mt-4 border-t border-line pt-3 text-[11px] leading-relaxed text-muted/80">
           Kata laluan disimpan sebagai hash scrypt, bukan teks biasa.

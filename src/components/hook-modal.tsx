@@ -139,7 +139,7 @@ export function HookModal({
             emailErrorText={dict.pricing.invalidEmail}
             emailLabel={dict.pricing.emailLabel}
             emailPlaceholder={dict.pricing.emailPlaceholder}
-            className="btn-brand w-full"
+            className="btn-brand btn-glow cta-glow min-h-[52px] w-full text-base font-bold"
             collectEmail
           >
             {format(copy.cta, values)}

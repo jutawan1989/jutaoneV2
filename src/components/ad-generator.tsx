@@ -202,7 +202,7 @@ export function AdGenerator({
   const submitDisabled = loading || demoDisabled || exhausted || text.trim().length < MIN_CHARS;
 
   return (
-    <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-24 px-5 py-12 sm:px-6 sm:py-20">
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-3xl">
@@ -239,7 +239,7 @@ export function AdGenerator({
                 type="submit"
                 disabled={submitDisabled}
                 aria-busy={loading}
-                className="btn-brand btn-glow"
+                className="btn-brand btn-glow cta-glow min-h-[52px] px-6 text-[15px] font-bold"
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-2">

@@ -31,7 +31,7 @@ export default async function DashboardPage() {
     getAffiliateSummary(ownerRef),
   ]);
 
-  // The 19-level matrix is already modelled by `getAffiliateSummary`. It is
+  // The referral commission summary is already modelled by `getAffiliateSummary`. It is
   // passed through untouched so the dashboard can draw the same table the
   // dedicated network page shows — no second source of truth for the rates.
   const levels =

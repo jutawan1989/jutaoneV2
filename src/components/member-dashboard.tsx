@@ -29,7 +29,6 @@ import {
   Share2,
   Sparkles,
   Store,
-  Target,
   Trophy,
   Users,
   Wallet,
@@ -96,8 +95,8 @@ const DASH_STR = {
       overviewHint: "Bisnes anda hari ini",
       store: "Kedai Saya",
       storeHint: "Pautan & langganan",
-      affiliate: "Kuda Merah",
-      affiliateHint: "Rangkaian 19 level",
+      affiliate: "Program Affiliate",
+      affiliateHint: "Rakan rujukan",
       tools: "Alat AI",
       toolsHint: "Aplikasi bisnes",
     },
@@ -130,10 +129,10 @@ const DASH_STR = {
     totalEarnings: "Jumlah pendapatan",
     available: "sedia",
     people: "orang",
-    directVsPassive: "Langsung L1 vs pasif L2–L19",
-    openKuda: "Jom Buka Kuda Merah",
+    directVsPassive: "Komisen langsung vs rangkaian",
+    openKuda: "Jom Buka Program Affiliate",
     network: "Rangkaian",
-    deepest: "Level terdalam",
+    deepest: "Kedalaman rangkaian",
     notStarted: "Belum bermula",
     shop: "Kedai",
     openedActive: "Aktif",
@@ -205,25 +204,25 @@ const DASH_STR = {
       "7 hari percubaan percuma",
       "Urus produk dari dashboard",
     ],
-    affiliateEyebrow: "Kuda Merah",
-    shareBuild: "Kongsi & bina rangkaian",
-    oneLink: "Satu pautan je. Komisen sampai 19 level — ajak kawan, duit masuk.",
+    affiliateEyebrow: "Program Affiliate",
+    shareBuild: "Kongsi & bina pendapatan",
+    oneLink: "Satu pautan je. Dapatkan komisen tunai sehingga 70% daripada setiap pembelian software oleh rakan yang anda rujuk.",
     networkSize: "Jaringan",
     inNetwork: "orang dalam rangkaian",
-    directL1: "Langsung L1",
-    directHint: "50% komisen level 1",
-    passiveL2: "Pasif L2–L19",
-    passiveHint: "20% dikongsi semua level",
+    directCom: "Komisen Langsung",
+    directHint: "50% setiap pembelian langsung",
+    passiveNet: "Komisen Rangkaian",
+    passiveHint: "Sehingga 20% daripada rangkaian anda",
     rankTitle: "Pangkat rangkaian",
     howToRank: "Cara naik pangkat",
     moreForNext: "orang lagi untuk",
     highestReached: "Pangkat tertinggi dicapai",
-    matrix19: "Matriks 19 level",
-    deepestLevel: "Level terdalam",
+    networkTitle: "Rangkaian Anda",
+    deepestLevel: "Kedalaman rangkaian",
     none: "—",
-    matrixNote: "Level 1 dibayar 50%, level 2–19 berkongsi 20% daripada setiap pembelian. Level kosong dipaparkan pudar supaya bentuk matriks kekal jelas.",
+    networkNote: "Dapatkan komisen tunai sehingga 70% daripada setiap pembelian software oleh rakan yang anda rujuk — 50% komisen langsung dan sehingga 20% daripada rangkaian anda. Kongsi pautan, selebihnya automatik.",
     networkEmpty: "Rangkaian belum bermula",
-    networkEmptyDesc: "Kongsi pautan kat atas tu. Setiap kawan yang join, satu petak matriks terisi — makin penuh, makin masyuk.",
+    networkEmptyDesc: "Kongsi pautan kat atas tu. Setiap rakan yang menyertai dikira dalam rangkaian anda — makin ramai, makin masyuk.",
     withdrawable: "Boleh Tarik Duit",
     minPayout: "Cukup RM10 baru boleh tarik duit.",
     requestPayout: "Tarik Duit Sekarang",
@@ -240,8 +239,8 @@ const DASH_STR = {
     payoutNetwork: "Rangkaian bermasalah. Sila cuba lagi.",
     payoutHistory: "Sejarah pembayaran",
     noPayoutYet: "Belum ada pembayaran. Komisen terkumpul akan muncul di sini.",
-    viewFullNetwork: "Lihat rangkaian penuh",
-    full19Desc: "Senarai 19 level dengan komisen setiap peringkat",
+    viewFullNetwork: "Lihat butiran rujukan",
+    full19Desc: "Ringkasan komisen rakan yang anda rujuk",
     howToRankTitle: "Cara naik pangkat",
     howToRankDesc: "Pangkat dikira daripada jumlah orang dalam rangkaian anda. Semakin ramai menyertai, semakin tinggi pangkat dan semakin besar potensi komisen.",
     gotIt: "Faham",
@@ -257,9 +256,9 @@ const DASH_STR = {
     toolShopName: "Kedai Saya",
     toolShopDesc: "Urus produk, pesanan dan pautan kedai anda.",
     toolShopTag: "Termasuk",
-    toolNetName: "Rangkaian Kuda Merah",
-    toolNetDesc: "Pantau 19 level komisen dan tarik keluar baki anda.",
-    toolNetTag: "19 level",
+    toolNetName: "Program Affiliate",
+    toolNetDesc: "Pantau komisen dan tarik keluar baki anda.",
+    toolNetTag: "Tunai",
     openAction: "Buka",
     needHelp: "Perlukan bantuan?",
     teamHelp: "Team kami boleh tolong siapkan kedai anda. Tanya je!",
@@ -270,8 +269,8 @@ const DASH_STR = {
     copiedBtn: "Disalin!",
     manualCopyBtn: "Salin manual",
     shareWhatsapp: "Kongsi kat WhatsApp",
-    level1: "50% level 1",
-    level2: "20% level 2–19",
+    rateNoteA: "Sehingga 70% komisen tunai",
+    rateNoteB: "Rakan dirujuk: pembelian software",
     instantCredit: "Komisen masuk terus — tak payah tunggu",
     noAffiliateCode: "Belum ada kod afiliasi.",
     clipboardBlocked: "Pelayar menyekat papan keratan. Salin pautan di atas secara manual.",
@@ -290,8 +289,8 @@ const DASH_STR = {
       overviewHint: "Business today",
       store: "My Shop",
       storeHint: "Links & subscription",
-      affiliate: "Kuda Merah",
-      affiliateHint: "19-level network",
+      affiliate: "Affiliate Program",
+      affiliateHint: "Referral partners",
       tools: "AI Tools",
       toolsHint: "Business apps",
     },
@@ -300,7 +299,7 @@ const DASH_STR = {
       { name: "Spark", blurb: "The network starts moving." },
       { name: "Builder", blurb: "Passive commission starts coming in." },
       { name: "Master", blurb: "Network spans multiple levels." },
-      { name: "Legend", blurb: "Highest rank in the matrix." },
+      { name: "Legend", blurb: "Highest rank in the program." },
     ],
     console: "Member console",
     memberAccount: "Member account",
@@ -324,10 +323,10 @@ const DASH_STR = {
     totalEarnings: "Total earnings",
     available: "available",
     people: "people",
-    directVsPassive: "Direct L1 vs passive L2–L19",
-    openKuda: "Open Kuda Merah",
+    directVsPassive: "Direct vs network commission",
+    openKuda: "Open Affiliate Program",
     network: "Network",
-    deepest: "Deepest level",
+    deepest: "Network depth",
     notStarted: "Not started",
     shop: "Shop",
     openedActive: "Active",
@@ -399,25 +398,25 @@ const DASH_STR = {
       "7-day free trial",
       "Manage products from dashboard",
     ],
-    affiliateEyebrow: "Kuda Merah",
-    shareBuild: "Share & build the network",
-    oneLink: "One link. Commission up to 19 levels.",
+    affiliateEyebrow: "Affiliate Program",
+    shareBuild: "Share & grow earnings",
+    oneLink: "One link. Earn up to 70% cash commission on every software purchase by members you refer.",
     networkSize: "Network",
-    inNetwork: "people in network",
-    directL1: "Direct L1",
-    directHint: "50% level-1 commission",
-    passiveL2: "Passive L2–L19",
-    passiveHint: "20% shared across levels",
+    inNetwork: "people in your network",
+    directCom: "Direct Commission",
+    directHint: "50% of each direct purchase",
+    passiveNet: "Network Commission",
+    passiveHint: "Up to 20% across your network",
     rankTitle: "Network rank",
     howToRank: "How to rank up",
     moreForNext: "more for",
     highestReached: "Highest rank reached",
-    matrix19: "19-level matrix",
-    deepestLevel: "Deepest level",
+    networkTitle: "Your Network",
+    deepestLevel: "Network depth",
     none: "—",
-    matrixNote: "Level 1 pays 50%, levels 2–19 share 20% of each purchase. Empty levels are dimmed so the matrix shape stays clear.",
+    networkNote: "Earn up to 70% cash commission on every software purchase by members you refer — 50% direct commission plus up to 20% from your network. Share your link and the rest is automatic.",
     networkEmpty: "Network not started",
-    networkEmptyDesc: "Share the referral link above. Every member who joins fills one cell in this 19-level matrix.",
+    networkEmptyDesc: "Share the referral link above. Every member who joins counts toward your network — the more members, the more you earn.",
     withdrawable: "Withdrawable",
     minPayout: "Minimum payout RM10.",
     requestPayout: "Request payout",
@@ -434,8 +433,8 @@ const DASH_STR = {
     payoutNetwork: "Network issue. Please try again.",
     payoutHistory: "Payout history",
     noPayoutYet: "No payouts yet. Earned commission will appear here.",
-    viewFullNetwork: "View full network",
-    full19Desc: "List of 19 levels with commission per tier",
+    viewFullNetwork: "View referral details",
+    full19Desc: "Commission summary for members you referred",
     howToRankTitle: "How to rank up",
     howToRankDesc: "Rank is counted from total people in your network. The more who join, the higher your rank and the bigger the commission potential.",
     gotIt: "Got it",
@@ -451,9 +450,9 @@ const DASH_STR = {
     toolShopName: "My Shop",
     toolShopDesc: "Manage your products, orders and shop link.",
     toolShopTag: "Included",
-    toolNetName: "Kuda Merah Network",
-    toolNetDesc: "Track 19 commission levels and withdraw your balance.",
-    toolNetTag: "19 levels",
+    toolNetName: "Affiliate Program",
+    toolNetDesc: "Track commission and withdraw your balance.",
+    toolNetTag: "Cash",
     openAction: "Open",
     needHelp: "Need help?",
     teamHelp: "Our team can help set up your shop.",
@@ -464,8 +463,8 @@ const DASH_STR = {
     copiedBtn: "Copied!",
     manualCopyBtn: "Copy manually",
     shareWhatsapp: "Share via WhatsApp",
-    level1: "50% level 1",
-    level2: "20% levels 2–19",
+    rateNoteA: "Up to 70% cash commission",
+    rateNoteB: "Referred members: software purchases",
     instantCredit: "Commission credited instantly",
     noAffiliateCode: "No affiliate code yet.",
     clipboardBlocked: "Browser blocked the clipboard. Copy the link above manually.",
@@ -484,8 +483,8 @@ const DASH_STR = {
       overviewHint: "Bisnis Anda hari ini",
       store: "Toko Saya",
       storeHint: "Tautan & langganan",
-      affiliate: "Kuda Merah",
-      affiliateHint: "Jaringan 19 level",
+      affiliate: "Program Afiliasi",
+      affiliateHint: "Mitra rujukan",
       tools: "Alat AI",
       toolsHint: "Aplikasi bisnis",
     },
@@ -518,10 +517,10 @@ const DASH_STR = {
     totalEarnings: "Total penghasilan",
     available: "tersedia",
     people: "orang",
-    directVsPassive: "Langsung L1 vs pasif L2–L19",
-    openKuda: "Buka Kuda Merah",
+    directVsPassive: "Komisi langsung vs jaringan",
+    openKuda: "Buka Program Afiliasi",
     network: "Jaringan",
-    deepest: "Level terdalam",
+    deepest: "Kedalaman rangkaian",
     notStarted: "Belum mulai",
     shop: "Toko",
     openedActive: "Aktif",
@@ -593,25 +592,25 @@ const DASH_STR = {
       "Uji coba gratis 7 hari",
       "Kelola produk dari dasbor",
     ],
-    affiliateEyebrow: "Kuda Merah",
-    shareBuild: "Bagikan & bangun jaringan",
-    oneLink: "Satu tautan. Komisi hingga 19 level.",
+    affiliateEyebrow: "Program Afiliasi",
+    shareBuild: "Bagikan & kembangkan penghasilan",
+    oneLink: "Satu tautan. Dapatkan komisi tunai hingga 70% dari setiap pembelian software oleh anggota yang Anda rujuk.",
     networkSize: "Jaringan",
-    inNetwork: "orang dalam jaringan",
-    directL1: "Langsung L1",
-    directHint: "komisi 50% level 1",
-    passiveL2: "Pasif L2–L19",
-    passiveHint: "20% dibagi semua level",
+    inNetwork: "orang dalam jaringan Anda",
+    directCom: "Komisi Langsung",
+    directHint: "50% setiap pembelian langsung",
+    passiveNet: "Komisi Jaringan",
+    passiveHint: "Hingga 20% dari jaringan Anda",
     rankTitle: "Peringkat jaringan",
     howToRank: "Cara naik peringkat",
     moreForNext: "orang lagi untuk",
     highestReached: "Peringkat tertinggi tercapai",
-    matrix19: "Matriks 19 level",
-    deepestLevel: "Level terdalam",
+    networkTitle: "Jaringan Anda",
+    deepestLevel: "Kedalaman jaringan",
     none: "—",
-    matrixNote: "Level 1 dibayar 50%, level 2–19 berbagi 20% dari setiap pembelian. Level kosong ditampilkan pudar agar bentuk matriks tetap jelas.",
+    networkNote: "Dapatkan komisi tunai hingga 70% dari setiap pembelian software oleh anggota yang Anda rujuk — 50% komisi langsung ditambah hingga 20% dari jaringan Anda. Bagikan tautan, sisanya otomatis.",
     networkEmpty: "Jaringan belum mulai",
-    networkEmptyDesc: "Bagikan tautan rujukan di atas. Setiap anggota yang bergabung akan mengisi satu kotak dalam matriks 19 level ini.",
+    networkEmptyDesc: "Bagikan tautan rujukan di atas. Setiap anggota yang bergabung dihitung dalam jaringan Anda — semakin ramai, semakin besar penghasilan.",
     withdrawable: "Bisa Tarik Duit",
     minPayout: "Cukup RM10 baru bisa tarik duit.",
     requestPayout: "Tarik Duit Sekarang",
@@ -628,8 +627,8 @@ const DASH_STR = {
     payoutNetwork: "Jaringan bermasalah. Silakan coba lagi.",
     payoutHistory: "Riwayat pembayaran",
     noPayoutYet: "Belum ada pembayaran. Komisi yang terkumpul akan muncul di sini.",
-    viewFullNetwork: "Lihat jaringan penuh",
-    full19Desc: "Daftar 19 level dengan komisi tiap tingkat",
+    viewFullNetwork: "Lihat detail rujukan",
+    full19Desc: "Ringkasan komisi anggota yang Anda rujuk",
     howToRankTitle: "Cara naik peringkat",
     howToRankDesc: "Peringkat dihitung dari total orang dalam jaringan Anda. Semakin banyak yang bergabung, semakin tinggi peringkat dan potensi komisinya.",
     gotIt: "Mengerti",
@@ -645,9 +644,9 @@ const DASH_STR = {
     toolShopName: "Toko Saya",
     toolShopDesc: "Kelola produk, pesanan, dan tautan toko Anda.",
     toolShopTag: "Termasuk",
-    toolNetName: "Jaringan Kuda Merah",
-    toolNetDesc: "Pantau 19 level komisi dan tarik saldo Anda.",
-    toolNetTag: "19 level",
+    toolNetName: "Program Afiliasi",
+    toolNetDesc: "Pantau komisi dan tarik saldo Anda.",
+    toolNetTag: "Tunai",
     openAction: "Buka",
     needHelp: "Butuh bantuan?",
     teamHelp: "Tim kami dapat membantu menyiapkan toko Anda.",
@@ -658,8 +657,8 @@ const DASH_STR = {
     copiedBtn: "Disalin!",
     manualCopyBtn: "Salin manual",
     shareWhatsapp: "Bagikan WhatsApp",
-    level1: "50% level 1",
-    level2: "20% level 2–19",
+    rateNoteA: "Komisi tunai hingga 70%",
+    rateNoteB: "Anggota dirujuk: pembelian software",
     instantCredit: "Komisi dikredit seketika",
     noAffiliateCode: "Belum ada kode afiliasi.",
     clipboardBlocked: "Browser memblokir papan klip. Salin tautan di atas secara manual.",
@@ -936,7 +935,7 @@ function MetricRow({
       <span className="text-[11px] text-slate-500">{label}</span>
       <span
         className={cn(
-          "text-xs font-medium tabular-nums",
+          "min-w-0 text-right text-xs font-medium break-words tabular-nums",
           tone === "emerald" ? "text-emerald-700" : tone === "amber" ? "text-amber-700" : "text-slate-700",
         )}
       >
@@ -955,7 +954,7 @@ export function MemberDashboard({
   overview: MemberOverview;
   payouts: MemberPayout[];
   name: string;
-  /** Per-level matrix rows; `null` when the member has no code yet. */
+  /** Per-tier referral rows; `null` when the member has no code yet. */
   levels?: NetworkLevel[] | null;
 }) {
   const [tab, setTab] = useState<Tab>("overview");
@@ -1653,14 +1652,14 @@ export function MemberDashboard({
                     tone: "brand" as const,
                   },
                   {
-                    label: t.directL1,
+                    label: t.directCom,
                     value: money(affiliate.directMinor, affiliate.currency),
                     hint: t.directHint,
                     icon: Share2,
                     tone: "emerald" as const,
                   },
                   {
-                    label: t.passiveL2,
+                    label: t.passiveNet,
                     value: money(affiliate.passiveMinor, affiliate.currency),
                     hint: t.passiveHint,
                     icon: Wallet,
@@ -1767,55 +1766,36 @@ export function MemberDashboard({
                 <CardContent className="p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
-                      <Network className="size-4 text-brand" /> {t.matrix19}
+                      <Network className="size-4 text-brand" /> {t.networkTitle}
                     </h2>
-                    <Pill tone="slate">
-                      <Target className="size-3" /> {t.deepestLevel} {deepestLevel || t.none}
+                    <Pill tone="blue">
+                      <Users className="size-3" /> {affiliate.networkSize} {t.inNetwork}
                     </Pill>
                   </div>
 
-                  {levels && levels.length > 0 ? (
-                    <>
-                      <div className="mt-3 grid grid-cols-5 gap-1.5 sm:grid-cols-10">
-                        {levels.map((level) => {
-                          const active = level.people > 0;
-                          return (
-                            <div
-                              key={level.level}
-                              title={`Level ${level.level} · ${level.people} ${t.people} · ${level.percent}%`}
-                              className={cn(
-                                "relative rounded-lg border px-1 py-2 text-center transition-colors",
-                                active
-                                  ? "border-brand/30 bg-brand/[0.08]"
-                                  : "border-slate-100 bg-slate-50",
-                              )}
-                            >
-                              <p
-                                className={cn(
-                                  "text-[9px] font-medium tracking-[0.06em] uppercase",
-                                  active ? "text-brand" : "text-slate-400",
-                                )}
-                              >
-                                L{level.level}
-                              </p>
-                              <p
-                                className={cn(
-                                  "text-[13px] leading-tight font-semibold tabular-nums",
-                                  active ? "text-slate-900" : "text-slate-400",
-                                )}
-                              >
-                                {level.people}
-                              </p>
-                              <p className="text-[8px] text-slate-400 tabular-nums">{level.percent}%</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <p className="mt-2.5 text-[10px] leading-relaxed text-slate-500">
-                        {t.matrixNote}
-                      </p>
-                    </>
-                  ) : (
+                  <div className="mt-4 space-y-0.5">
+                    <MetricRow
+                      label={t.directCom}
+                      value={money(affiliate.directMinor, affiliate.currency)}
+                      tone="emerald"
+                    />
+                    <Separator className="bg-slate-100" />
+                    <MetricRow
+                      label={t.passiveNet}
+                      value={money(affiliate.passiveMinor, affiliate.currency)}
+                    />
+                    <Separator className="bg-slate-100" />
+                    <MetricRow
+                      label={t.networkSize}
+                      value={`${affiliate.networkSize} ${t.people}`}
+                    />
+                  </div>
+
+                  <p className="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-600">
+                    {t.networkNote}
+                  </p>
+
+                  {affiliate.networkSize === 0 && (
                     <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs font-medium text-slate-700">{t.networkEmpty}</p>
                       <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
@@ -2244,10 +2224,10 @@ function ReferralHero({
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] text-slate-500">
               <span className="flex items-center gap-1.5">
-                <Percent className="size-3 text-emerald-600" /> {t.level1}
+                <Percent className="size-3 text-emerald-600" /> {t.rateNoteA}
               </span>
               <span className="flex items-center gap-1.5">
-                <LayersIcon /> {t.level2}
+                <LayersIcon /> {t.rateNoteB}
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock3 className="size-3 text-brand" /> {t.instantCredit}

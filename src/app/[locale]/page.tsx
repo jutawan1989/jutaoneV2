@@ -50,7 +50,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const tokenName = price.tokensLabel[locale];
 
   // Dual-Tone (Boss spec, gaya Dynadot): Hero biru gelap di atas,
-  // body putih/cerah di bawah. Kuda Merah / affiliate DIHARAMKAN di
+  // body putih/cerah di bawah. Program Affiliate DIHARAMKAN di
   // homepage awam (pematuhan Chip.Asia) — hanya BizMatchSection.
   return (
     <>

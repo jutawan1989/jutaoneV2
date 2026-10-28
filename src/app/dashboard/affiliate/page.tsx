@@ -12,7 +12,7 @@ export const metadata = {
 };
 
 /**
- * Affiliate network dashboard: a 19-level table plus passive income.
+ * Affiliate program dashboard: a referral summary plus commission totals.
  *
  * Two ways in:
  *   - `?ref=CODE` — explicit lookup. Stable and shareable, and the only way to

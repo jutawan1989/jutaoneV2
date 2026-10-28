@@ -11,20 +11,20 @@ import { getSupabase } from "@/lib/db";
 export type NetworkLevel = {
   level: number;
   people: number;
-  /** Earnings this level produced, in minor units. */
+  /** Earnings this tier produced, in minor units. */
   earnedMinor: number;
-  /** Matrix percentage for this level, e.g. 50 for level 1. */
+  /** Commission percentage for this tier, e.g. 50 for tier 1. */
   percent: number;
 };
 
 export type AffiliateSummary = {
   code: string;
   levels: NetworkLevel[];
-  /** Downline size excluding the visitor themselves. */
+  /** Referred-member count excluding the visitor themselves. */
   totalPeople: number;
-  /** Level 1 earnings, which are direct referrals rather than passive. */
+  /** Tier 1 earnings, which are direct referrals rather than passive. */
   directMinor: number;
-  /** Levels 2-19: the "passive income" the brief asks for. */
+  /** Tiers 2-19: the network share of the commission. */
   passiveMinor: number;
   /** Available now (unpaid minus reserved payouts). */
   availableMinor: number;
@@ -32,11 +32,11 @@ export type AffiliateSummary = {
 };
 
 /**
- * Matrix percentages, mirrored from `jutaone_level_bps` for display.
+ * Commission percentages, mirrored from `jutaone_level_bps` for display.
  *
- * Exported so the member dashboard can draw the full 19-level matrix without
- * duplicating the table: two copies of a payout rate is exactly how a member
- * ends up seeing a number that disagrees with their own payout.
+ * Exported so the member dashboard can summarise the referral commission
+ * without duplicating the schedule: two copies of a payout rate is exactly
+ * how a member ends up seeing a number that disagrees with their own payout.
  */
 export function percentFor(level: number): number {
   if (level === 1) return 50;

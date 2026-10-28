@@ -325,8 +325,34 @@ main {
   /* Hero CTA: the only element allowed to cast a coloured shadow. */
   .cta-glow {
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.16),
-      0 18px 44px -20px rgba(37, 99, 235, 0.85);
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 0 1px rgba(96, 165, 250, 0.55),
+      0 0 24px rgba(59, 130, 246, 0.75),
+      0 18px 44px -20px rgba(37, 99, 235, 0.9);
+  }
+
+  /* Marketing hero: bright blue "menyala" pulse so the demo CTA pops on
+     TikTok/FB mobile traffic. Paused under prefers-reduced-motion. */
+  .hero-cta {
+    animation: hero-glow 2.4s ease-in-out infinite;
+  }
+
+  @keyframes hero-glow {
+    0%,
+    100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 0 0 1px rgba(96, 165, 250, 0.55),
+        0 0 18px rgba(59, 130, 246, 0.65),
+        0 18px 44px -20px rgba(37, 99, 235, 0.9);
+    }
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 0 0 1px rgba(147, 197, 253, 0.8),
+        0 0 34px rgba(59, 130, 246, 0.95),
+        0 18px 54px -18px rgba(37, 99, 235, 1);
+    }
   }
 
   .cta-glow-emerald {
@@ -470,9 +496,17 @@ main {
   .signal-live,
   .widget-float,
   .modal-enter,
+  .hero-cta,
   .ai-dots > span,
   .ai-spinner {
     animation: none !important;
+  }
+
+  .hero-cta {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 0 1px rgba(96, 165, 250, 0.55),
+      0 0 18px rgba(59, 130, 246, 0.65);
   }
 
   .btn-glow:hover:not(:disabled),

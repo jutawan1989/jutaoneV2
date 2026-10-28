@@ -26,6 +26,8 @@ export const en = {
     ctaPrimary: "Try the free demo",
     ctaSecondary: "See token pricing",
     trustBadge: "Trusted by merchants in Malaysia & Indonesia",
+    trustSocial: "⭐ Joined by 1,000+ merchants in Malaysia & Indonesia",
+    trustSecure: "🔒 Your data is safe — no spam, no card needed",
     stats: [
       { value: "Seconds", label: "Average caption time" },
       { value: "3 languages", label: "Malay, Indonesian, English" },
@@ -105,14 +107,14 @@ export const en = {
   },
   earn: {
     eyebrow: "Earn side income",
-    title: "Kuda Merah — share a link, earn cash commission",
-    body: "Every time a friend tops up through your link, you earn cash commission down to 19 levels — level 1 pays 50%. No stock, no shipping. Just share and earn.",
+    title: "Affiliate Program — share a link, earn cash commission",
+    body: "Every time a referred friend buys our software, you earn up to 70% cash commission on the purchase value. No stock, no shipping. Just share and the rest is automatic.",
     bullets: [
       "Cash commission, not reward points",
       "One link — tracked automatically",
       "Withdraw once your balance qualifies",
     ],
-    cta: "Join Affiliate Now",
+    cta: "Join the Affiliate Program",
   },
   suppliers: {
     eyebrow: "Biz-Match — AI supplier search",

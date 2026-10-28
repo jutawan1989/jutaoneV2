@@ -27,6 +27,8 @@ export const ms: Dictionary = {
     ctaPrimary: "Cuba demo percuma",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercayai peniaga Malaysia & Indonesia",
+    trustSocial: "⭐ Disertai 1,000+ peniaga di Malaysia & Indonesia",
+    trustSecure: "🔒 Data anda selamat — tanpa spam, tanpa kad",
     stats: [
       { value: "Beberapa saat", label: "Masa purata jana kapsyen" },
       { value: "3 bahasa", label: "Melayu, Indonesia, Inggeris" },
@@ -106,14 +108,14 @@ export const ms: Dictionary = {
   },
   earn: {
     eyebrow: "Jana pendapatan sampingan",
-    title: "Kuda Merah — kongsi pautan, dapat komisen tunai",
-    body: "Setiap kali kawan top-up guna pautan anda, anda dapat komisen tunai sehingga 19 level — level 1 dibayar 50%. Tiada stok, tiada pos barang. Kongsi je, duit jalan.",
+    title: "Program Affiliate — kongsi pautan, dapat komisen tunai",
+    body: "Setiap kali rakan yang anda rujuk membuat pembelian software, anda dapat komisen tunai sehingga 70% daripada nilai pembelian. Tiada stok, tiada pos barang. Kongsi je, selebihnya automatik.",
     bullets: [
       "Komisen tunai, bukan mata ganjaran",
       "Satu pautan je — track automatik",
       "Boleh tarik duit bila cukup RM10",
     ],
-    cta: "Join Affiliate Sekarang",
+    cta: "Join Program Affiliate Sekarang",
   },
   suppliers: {
     eyebrow: "Biz-Match — carian pembekal AI",

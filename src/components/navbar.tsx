@@ -82,18 +82,21 @@ export function Navbar({
         <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher locale={locale} pathSuffix={pathSuffix} label={dict.nav.languageLabel} />
           {signedIn ? (
-            <Link href="/dashboard" className="btn-brand hidden px-3.5 py-2 sm:inline-flex">
+            <Link href="/dashboard" className="btn-brand min-h-[44px] px-3.5 py-2 sm:inline-flex">
               {dict.nav.dashboard}
             </Link>
           ) : (
             <>
               <Link
                 href="/login"
-                className="hidden px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-white sm:inline-flex"
+                className="hidden min-h-[44px] items-center px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-white sm:inline-flex"
               >
                 {dict.nav.login}
               </Link>
-              <Link href="/register" className="btn-brand hidden px-3.5 py-2 sm:inline-flex">
+              <Link href="/register" className="btn-brand btn-glow inline-flex min-h-[44px] items-center px-4 py-2 text-sm font-semibold sm:hidden sm:px-3.5">
+                {dict.nav.register}
+              </Link>
+              <Link href="/register" className="btn-brand hidden min-h-[44px] items-center px-3.5 py-2 sm:inline-flex">
                 {dict.nav.register}
               </Link>
             </>

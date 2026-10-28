@@ -64,8 +64,8 @@ async function activateRent(db: Db, payload: ChipCallback, purchase: ClassifiedP
   if (applied && grossMinor && currency) {
     const { data: buyerCode } = await db.from("referral_codes").select("id").eq("owner_ref", ownerRef).maybeSingle();
     if (buyerCode?.id) {
-      const { data: written, error: matrixError } = await db.rpc("jutaone_distribute_commission", { p_source: "rent", p_topup_id: null, p_rent_id: subscriptionId, p_from_code_id: buyerCode.id, p_gross_minor: grossMinor, p_currency: currency });
-      if (!matrixError) levelsPaid = typeof written === "number" ? written : 0;
+      const { data: written, error: distError } = await db.rpc("jutaone_distribute_commission", { p_source: "rent", p_topup_id: null, p_rent_id: subscriptionId, p_from_code_id: buyerCode.id, p_gross_minor: grossMinor, p_currency: currency });
+      if (!distError) levelsPaid = typeof written === "number" ? written : 0;
     } else levelsPaid = 0;
   }
   return { activated: true, applied, paidUntil: row?.period_end ?? null, levelsPaid, replayed: !applied };
