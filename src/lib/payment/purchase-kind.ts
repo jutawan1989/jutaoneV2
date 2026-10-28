@@ -34,11 +34,17 @@ export function classifyPurchase(notes: string | undefined): ClassifiedPurchase 
   const owner = notes?.match(/owner=([a-f0-9]{64})(?:;|$)/);
   const usd = notes?.match(/usd=(\d+)(?:;|$)/);
   const usdCents = usd ? Number(usd[1]) : null;
+  const rm = notes?.match(/rm=(\d+)(?:;|$)/);
+  const rmCents = rm ? Number(rm[1]) : null;
+  const fx = notes?.match(/fx=([\d.]+)(?:;|$)/);
+  const fxRate = fx ? Number(fx[1]) : null;
 
   return {
     kind,
     ownerRef: owner ? owner[1] : null,
     usdCents: Number.isFinite(usdCents) ? usdCents : null,
     monthly: /(^|;)monthly(;|$)/.test(notes ?? ""),
+    rmCents: Number.isFinite(rmCents) && (rmCents as number) > 0 ? (rmCents as number) : null,
+    fxRate: Number.isFinite(fxRate) && (fxRate as number) > 0 ? (fxRate as number) : null,
   };
 }

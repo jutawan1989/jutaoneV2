@@ -52,6 +52,12 @@ create table if not exists public.topups (
   status text,
   amount bigint,
   currency text,
+  -- RM-anchored FX (Boss spec): Chip settles `amount`/`currency` (e.g. IDR),
+  -- while `base_amount`/`base_currency` record the RM value the price was
+  -- derived from, and `fx_rate` the RM->IDR rate used at checkout.
+  base_amount numeric,
+  base_currency text,
+  fx_rate numeric,
   created_at timestamptz not null default now()
 );
 
@@ -68,3 +74,8 @@ stable
 as $$
   select coalesce(sum(cost_usd), 0)::numeric from public.ai_usage where day = target_day;
 $$;
+
+-- Migration (idempotent): RM-anchored FX columns for existing `topups` tables.
+alter table public.topups add column if not exists base_amount numeric;
+alter table public.topups add column if not exists base_currency text;
+alter table public.topups add column if not exists fx_rate numeric;
