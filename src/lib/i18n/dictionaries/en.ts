@@ -182,7 +182,10 @@ export const en = {
     proceed: "Proceed to Payment",
     trustBadge: "Secure payment processed by Chip.Asia",
     invalidAmount: "Minimum top-up is $1.00",
-    invalidEmail: "Enter a valid email — Chip sends your payment code there",
+    invalidEmail: "Enter a valid email — your payment code is sent there",
+    toyyibpayNote: "Malaysia: FPX / DuitNow QR (ToyyibPay)",
+    chipNote: "International / Indonesia: Credit Card / DuitNow QR (Chip.Asia)",
+    feeLine: "Price: {base} + Service fee {fee} = {total}",
     tokenUnit: "Tokens",
     tokensFor: "You get",
     bullets: [

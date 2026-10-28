@@ -9,6 +9,8 @@ import type { Variant } from "@/lib/analytics/variant";
 import {
   MIN_TOPUP_USD,
   QUICK_TOPUP_AMOUNTS,
+  TOYYIBPAY_FEE_RM,
+  formatRm,
   formatTokenCount,
   parseTopUpAmount,
   withUsdAmount,
@@ -153,6 +155,14 @@ export function Pricing({
                   {preview.localDisplay}
                 </p>
               )}
+              {preview.currency === "MYR" && valid && (
+                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-800 tabular-nums ring-1 ring-amber-200 ring-inset">
+                  {dict.pricing.feeLine
+                    .replace("{base}", formatRm(usd as number))
+                    .replace("{fee}", `RM${TOYYIBPAY_FEE_RM.toFixed(2)}`)
+                    .replace("{total}", formatRm((usd as number) + TOYYIBPAY_FEE_RM / 4.7))}
+                </p>
+              )}
               <p className="mt-1.5 text-xs text-slate-500">{dict.pricing.priceLabel}</p>
             </div>
 
@@ -174,10 +184,15 @@ export function Pricing({
               </TopUpButton>
             </div>
 
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-slate-500">
-              <ShieldCheck className="size-3.5 shrink-0 text-emerald-600" aria-hidden />
-              {dict.pricing.topupNote.replace("{currency}", preview.currency)}
-            </p>
+            <div className="mt-3 space-y-1.5 text-center text-[11px] leading-relaxed text-slate-500">
+              <p className="flex items-center justify-center gap-1.5">
+                <ShieldCheck className="size-3.5 shrink-0 text-emerald-600" aria-hidden />
+                {dict.pricing.topupNote.replace("{currency}", preview.currency)}
+              </p>
+              <p className="font-medium">
+                🇲🇾 {dict.pricing.toyyibpayNote} · 🌍 {dict.pricing.chipNote}
+              </p>
+            </div>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-slate-400">
               <Lock className="size-3 shrink-0" aria-hidden />
               {dict.pricing.trustBadge}

@@ -33,6 +33,13 @@ export const TOKENS_PER_USD = 1_000_000;
 export const MIN_TOPUP_USD = 1;
 export const MAX_TOPUP_USD = 10_000;
 
+/**
+ * ToyyibPay FPX/DuitNow QR fee passed to the Malaysian customer
+ * (Boss + Linda decision). RM1.00 flat per bill, in RM and sen.
+ */
+export const TOYYIBPAY_FEE_RM = 1;
+export const TOYYIBPAY_FEE_SEN = 100;
+
 /** Quick-pick buttons on the pricing card. */
 export const QUICK_TOPUP_AMOUNTS = [1, 5, 10, 50] as const;
 

@@ -183,7 +183,10 @@ export const ms: Dictionary = {
     proceed: "Teruskan ke Pembayaran",
     trustBadge: "Pembayaran selamat diproses oleh Chip.Asia",
     invalidAmount: "Top-up minimum ialah $1.00",
-    invalidEmail: "Masukkan emel yang sah — Chip hantar kod pembayaran ke sana",
+    invalidEmail: "Masukkan emel yang sah — kod pembayaran dihantar ke sana",
+    toyyibpayNote: "Malaysia: FPX / DuitNow QR (ToyyibPay)",
+    chipNote: "Antarabangsa / Indonesia: Kad Kredit / DuitNow QR (Chip.Asia)",
+    feeLine: "Harga: {base} + Caj Perkhidmatan {fee} = {total}",
     tokenUnit: "Token",
     tokensFor: "Anda dapat",
     bullets: [
