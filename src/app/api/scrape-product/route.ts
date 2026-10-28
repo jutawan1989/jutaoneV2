@@ -33,6 +33,14 @@ function shopeeCountry(hostname: string): string | null {
   return null;
 }
 
+function isTikTokShopUrl(hostname: string, rawUrl: string): boolean {
+  const host = hostname.toLowerCase();
+  if (host.includes("tiktok.com")) return true;
+  // vt.tiktok.com short links redirect to shop pages — resolve then check.
+  if (host.startsWith("vt.tiktok.")) return true;
+  return /tiktok/i.test(rawUrl);
+}
+
 /**
  * RapidAPI Shopee scraper (best-shopee-scraper-free-1000-calls):
  * GET /products/details?product={full product url}.
@@ -171,6 +179,72 @@ function firstImageUrl(value: unknown): string | null {
   return null;
 }
 
+/**
+ * RapidAPI TikTok Shop scraper (tiktok-shop-scraper-api1): product details.
+ *
+ * The exact endpoint path for this vendor is NOT yet confirmed — probes of
+ * /product, /products/details and 30+ guesses all 404 "does not exist",
+ * while the key itself is valid. So this function tries the documented
+ * candidates in order and returns the first usable image; when none hits,
+ * the caller falls through to Open Graph. Update
+ * RAPIDAPI_TIKTOK_PATHS once the Code Snippet tab gives the real path.
+ */
+const TIKTOK_PATH_CANDIDATES = ["/product", "/products/details", "/product/details"];
+
+async function scrapeTikTokViaRapidApi(
+  productUrl: string,
+): Promise<{ imageUrl: string; name: string | null; price: string | null } | null> {
+  const key = process.env.RAPIDAPI_KEY ?? "";
+  if (!key) return null;
+  const host = process.env.RAPIDAPI_TIKTOK_HOST ?? "tiktok-shop-scraper-api1.p.rapidapi.com";
+  const paths = (process.env.RAPIDAPI_TIKTOK_PATHS ?? "").trim();
+  const candidates = paths ? paths.split(",").map((p) => p.trim()).filter(Boolean) : TIKTOK_PATH_CANDIDATES;
+
+  for (const path of candidates) {
+    try {
+      const endpoint =
+        `https://${host}${path.startsWith("/") ? path : `/${path}`}` +
+        `?url=${encodeURIComponent(productUrl)}&region=MY`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: { "x-rapidapi-key": key, "x-rapidapi-host": host },
+        signal: AbortSignal.timeout(RAPID_TIMEOUT_MS),
+        cache: "no-store",
+      });
+      if (!response.ok) continue;
+      const payload = (await response.json().catch(() => null)) as unknown;
+      const data = extractDataNode(payload);
+      if (!data) continue;
+      const imageUrl = firstImageUrl([
+        data.images,
+        data.image,
+        data.cover,
+        data.thumbnail,
+        data.main_image,
+        data.product_image,
+      ]);
+      if (!imageUrl) continue;
+      const name =
+        (typeof data.name === "string" && data.name.trim()) ||
+        (typeof data.title === "string" && data.title.trim()) ||
+        null;
+      const price =
+        (typeof data.price === "string" && data.price.trim()) ||
+        (typeof data.price === "number" ? String(data.price) : null) ||
+        null;
+      return {
+        imageUrl,
+        name: name?.slice(0, 200) ?? null,
+        price: price?.slice(0, 32) ?? null,
+      };
+    } catch {
+      // Try the next candidate path.
+    }
+  }
+  console.error("[jutaone] rapidapi tiktok: no candidate path returned an image");
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   let rawUrl: unknown = null;
   try {
@@ -210,6 +284,25 @@ export async function POST(request: NextRequest) {
           name: scraped.name,
           price: scraped.price,
           source: "shopee-api",
+        },
+        { status: 200 },
+      );
+    }
+    // Fall through to Open Graph rather than failing outright.
+  }
+
+  // TikTok Shop links: dedicated scraper first (TikTok bot-walls plain
+  // fetch even harder than Shopee), then the same OG fallback.
+  if (isTikTokShopUrl(target.hostname, rawUrl.trim())) {
+    const scraped = await scrapeTikTokViaRapidApi(target.href);
+    if (scraped) {
+      return NextResponse.json(
+        {
+          ok: true,
+          imageUrl: scraped.imageUrl,
+          name: scraped.name,
+          price: scraped.price,
+          source: "tiktok-api",
         },
         { status: 200 },
       );
