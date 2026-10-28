@@ -14,6 +14,24 @@ const DIRECT_HOSTS = [
   "lh3.googleusercontent.com",
   "drive.google.com",
 ];
+// Shopee / TikTok image CDNs serve direct files without an extension
+// (e.g. https://down-my.img.susercontent.com/file/abc123), so scraped
+// product images must be accepted by host even with no file extension.
+// NOTE: page/short-link hosts (s.shopee.com.my, shopee.com.my, tiktok.com)
+// are DELIBERATELY excluded — those are product pages, not image files,
+// and accepting them reintroduces the broken-image bug Boss reported.
+const DIRECT_CDN_SUFFIXES = [
+  ".img.susercontent.com",
+  "img.susercontent.com",
+  ".shopeecdn.com",
+  ".tiktokcdn.com",
+  ".tiktokcdn-us.com",
+  ".ibyteimg.com",
+  ".tiktokv.com",
+  ".pstatp.com",
+  ".lazcdn.com",
+  ".alicdn.com",
+];
 export function normalizeImageUrl(raw: string): string {
   const value = raw.trim();
   if (!value) return "";
@@ -43,6 +61,8 @@ export function isDirectImageUrl(raw: string): boolean {
   const path = url.pathname.toLowerCase();
   if (DIRECT_EXT.some((ext) => path.endsWith(ext))) return true;
   if (DIRECT_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`))) return true;
+  const host = url.hostname.toLowerCase();
+  if (DIRECT_CDN_SUFFIXES.some((suffix) => host === suffix.replace(/^\./, "") || host.endsWith(suffix))) return true;
   if (url.pathname.includes("/storage/v1/object/public/")) return true;
   return false;
 }

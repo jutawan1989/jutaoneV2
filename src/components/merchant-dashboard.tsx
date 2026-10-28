@@ -37,6 +37,9 @@ export function MerchantDashboard({
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [productLink, setProductLink] = useState("");
+  const [scraping, setScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -103,6 +106,48 @@ export function MerchantDashboard({
     event.preventDefault();
     setDragActive(false);
     handleFile(event.dataTransfer.files?.[0]);
+  }
+
+  async function scrapeFromLink() {
+    if (scraping) return;
+    const link = productLink.trim();
+    if (!link) {
+      setScrapeError("Tampal pautan produk Shopee / TikTok dahulu.");
+      return;
+    }
+    setScraping(true);
+    setScrapeError(null);
+    setError(null);
+    try {
+      const response = await fetch("/api/scrape-product", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: link }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.imageUrl) {
+        setScrapeError("Gagal ambil gambar. Sila muat naik gambar secara manual.");
+        return;
+      }
+      // A scraped image replaces any in-flight upload, like a newer drop.
+      uploadSeq.current += 1;
+      setUploading(false);
+      if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
+      setFilePreview(null);
+      setImageUrl(data.imageUrl);
+      setPreviewBroken(false);
+      if (typeof data.name === "string" && data.name.trim() !== "" && name.trim() === "") {
+        setName(data.name.trim().slice(0, 120));
+      }
+      if (typeof data.price === "string" && data.price.trim() !== "" && price.trim() === "") {
+        const numeric = data.price.replace(/[^0-9.,]/g, "").replace(/,/g, "");
+        if (numeric && Number(numeric) > 0) setPrice(numeric);
+      }
+    } catch {
+      setScrapeError("Gagal ambil gambar. Sila muat naik gambar secara manual.");
+    } finally {
+      setScraping(false);
+    }
   }
 
   const storedUrl = imageUrl.trim() ? normalizeImageUrl(imageUrl) : "";
@@ -308,6 +353,45 @@ export function MerchantDashboard({
 
           {/* Right: image upload + shop handle + live preview */}
           <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <label htmlFor="plink" className="block text-sm font-medium text-slate-900">
+                Tampal Pautan Produk (Shopee / TikTok)
+              </label>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Auto-ambil gambar produk dari pautan — nama diisi automatik jika kosong.
+              </p>
+              <div className="mt-2 flex gap-2">
+                <input
+                  id="plink"
+                  value={productLink}
+                  onChange={(event) => {
+                    setProductLink(event.target.value);
+                    if (scrapeError) setScrapeError(null);
+                  }}
+                  placeholder="https://shopee.com.my/…"
+                  inputMode="url"
+                  className="min-h-[42px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <button
+                  type="button"
+                  onClick={scrapeFromLink}
+                  disabled={scraping}
+                  className="inline-flex min-h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
+                >
+                  {scraping ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <ImagePlus className="size-4" aria-hidden />
+                  )}
+                  {scraping ? "Mengambil…" : "Ambil Gambar"}
+                </button>
+              </div>
+              {scrapeError && (
+                <p role="alert" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-relaxed text-amber-700">
+                  {scrapeError}
+                </p>
+              )}
+            </div>
             <div>
               <span className="block text-sm font-medium text-slate-900">Gambar Produk</span>
               <button
