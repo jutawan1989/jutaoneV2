@@ -85,11 +85,14 @@ export const en = {
   gold: {
     title: "Don't let your profit sit idle",
     subtitle:
-      "Track Gold & Silver markets the easy way. Our AI tells you when it's time to BUY, SELL, or HOLD — simple signals anyone can read.",
-    screenTitle: "Market signals",
-    priceRow: "Signal · 24h window",
+      "Track Gold & Silver markets the easy way. Live market prices refresh every 4 hours — the Current Market Price label below is real data, not a simulation.",
+    screenTitle: "Current Market Price",
+    priceRow: "Real spot · USD converted to local currency",
+    liveBadge: "LIVE",
+    perOunce: "/oz",
+    updatedAt: "Updated at",
     disclaimer: COMPLIANCE_DISCLAIMER_EN,
-    note: "All figures and signals shown here are simulated. They do not reflect real market data or real performance.",
+    note: "Prices below are live market spot (converted to local currency). Not investment advice. Deep analysis with BUY/SELL/HOLD signals is available in the member dashboard (2,000 tokens).",
     signals: {
       buy: "BUY",
       sell: "SELL",

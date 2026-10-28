@@ -86,11 +86,14 @@ export const ms: Dictionary = {
   gold: {
     title: "Duit untung jangan dibiarkan mati",
     subtitle:
-      "Pantau pasaran Emas & Perak dengan mudah. AI kami beritahu bila masa sesuai untuk BELI, JUAL, atau SIMPAN — isyarat ringkas yang senang faham.",
-    screenTitle: "Isyarat pasaran",
-    priceRow: "Isyarat · tetingkap 24 jam",
+      "Pantau pasaran Emas & Perak dengan mudah. Harga pasaran semasa dikemas kini setiap 4 jam — label Harga Pasaran Semasa di bawah adalah data sebenar, bukan simulasi.",
+    screenTitle: "Harga Pasaran Semasa",
+    priceRow: "Harga spot sebenar · USD ditukar ke mata wang tempatan",
+    liveBadge: "LIVE",
+    perOunce: "/oz",
+    updatedAt: "Dikemaskini pada",
     disclaimer: COMPLIANCE_DISCLAIMER_MS,
-    note: "Semua angka dan isyarat di sini adalah simulasi. Ia tidak menggambarkan data pasaran sebenar atau prestasi sebenar.",
+    note: "Harga di bawah adalah harga pasaran semasa (spot sebenar, ditukar ke mata wang tempatan). Bukan nasihat pelaburan. Analisis mendalam dengan isyarat BELI/JUAL/TAHAN tersedia di dashboard untuk ahli (2,000 token).",
     signals: {
       buy: "BELI",
       sell: "JUAL",

@@ -86,11 +86,14 @@ export const id: Dictionary = {
   gold: {
     title: "Jangan biarkan untung menganggur",
     subtitle:
-      "Pantau pasar Emas & Perak dengan gampang. AI kami kasih tahu kapan saat yang pas untuk BELI, JUAL, atau TAHAN — sinyal simpel yang gampang dimengerti.",
-    screenTitle: "Sinyal pasar",
-    priceRow: "Sinyal · jendela 24 jam",
+      "Pantau pasar Emas & Perak dengan gampang. Harga pasar terkini diperbarui tiap 4 jam — label Harga Pasar Terkini di bawah adalah data asli, bukan simulasi.",
+    screenTitle: "Harga Pasar Terkini",
+    priceRow: "Spot asli · USD dikonversi ke mata uang lokal",
+    liveBadge: "LIVE",
+    perOunce: "/oz",
+    updatedAt: "Diperbarui pada",
     disclaimer: COMPLIANCE_DISCLAIMER_ID,
-    note: "Semua angka dan sinyal di sini adalah simulasi. Tidak menggambarkan data pasar sebenarnya maupun kinerja sebenarnya.",
+    note: "Harga di bawah adalah harga pasar terkini (spot asli, dikonversi ke mata uang lokal). Bukan nasihat investasi. Analisis mendalam dengan sinyal BELI/JUAL/TAHAN tersedia di dashboard anggota (2.000 token).",
     signals: {
       buy: "BELI",
       sell: "JUAL",

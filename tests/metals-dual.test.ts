@@ -1,0 +1,158 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  __clearGoldpriceMemoryCache,
+  getPublicMetalPrices,
+  goldpriceConfigured,
+  publicCurrencyForRegion,
+} from "@/lib/goldprice";
+import {
+  getPremiumMetalAnalysis,
+  metalCurrencyForRegion,
+  metalsConfigured,
+} from "@/lib/metals";
+import { METALS_COST_TOKENS } from "@/lib/tokens";
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+describe("Dual metals API (homepage free, dashboard premium)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.GOLDPRICE_API_KEY;
+    delete process.env.RAPIDAPI_KEY;
+    __clearGoldpriceMemoryCache();
+  });
+
+  it("costs 2,000 tokens per premium analysis", () => {
+    expect(METALS_COST_TOKENS).toBe(2_000);
+  });
+
+  it("maps regions to display currency (MY -> MYR, ID -> IDR, OTHER -> MYR)", () => {
+    expect(publicCurrencyForRegion("MY")).toBe("MYR");
+    expect(publicCurrencyForRegion("ID")).toBe("IDR");
+    expect(publicCurrencyForRegion("OTHER")).toBe("MYR");
+    expect(metalCurrencyForRegion("ID")).toBe("IDR");
+    expect(metalCurrencyForRegion("MY")).toBe("MYR");
+  });
+
+  it("free feed is unconfigured without GOLDPRICE_API_KEY", () => {
+    expect(goldpriceConfigured()).toBe(false);
+    process.env.GOLDPRICE_API_KEY = "k";
+    expect(goldpriceConfigured()).toBe(true);
+  });
+
+  it("premium feed is unconfigured without RAPIDAPI_KEY", () => {
+    expect(metalsConfigured()).toBe(false);
+    process.env.RAPIDAPI_KEY = "k";
+    expect(metalsConfigured()).toBe(true);
+  });
+
+  it("free feed converts USD to MYR with the Boss fixed rate (x4.70)", async () => {
+    process.env.GOLDPRICE_API_KEY = "test-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          symbols: [
+            { symbol: "XAU", quote_currency: "USD", price: "4000.00", is_stale: false },
+            { symbol: "XAG", quote_currency: "USD", price: "50.00", is_stale: false },
+          ],
+        }),
+      ),
+    );
+
+    const prices = await getPublicMetalPrices("MYR");
+    expect(prices?.currency).toBe("MYR");
+    expect(prices?.source).toBe("live");
+    expect(prices?.gold).toBe(18_800);
+    expect(prices?.silver).toBe(235);
+  });
+
+  it("free feed converts USD to IDR with the Boss fixed rate (x16000)", async () => {
+    process.env.GOLDPRICE_API_KEY = "test-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          symbols: [
+            { symbol: "XAU", quote_currency: "USD", price: "4000.00" },
+            { symbol: "XAG", quote_currency: "USD", price: "50.00" },
+          ],
+        }),
+      ),
+    );
+
+    const prices = await getPublicMetalPrices("IDR");
+    expect(prices?.gold).toBe(64_000_000);
+    expect(prices?.silver).toBe(800_000);
+  });
+
+  it("free feed serves the 4h cache instead of calling the vendor twice", async () => {
+    process.env.GOLDPRICE_API_KEY = "test-key";
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({ symbols: [{ symbol: "XAU", price: "4000.00" }] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = await getPublicMetalPrices("MYR");
+    const second = await getPublicMetalPrices("MYR");
+    expect(first?.source).toBe("live");
+    expect(second?.source).toBe("cache");
+    expect(second?.gold).toBe(first?.gold);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("premium analysis returns karat/fineness breakdowns plus trend", async () => {
+    process.env.RAPIDAPI_KEY = "test-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/gold-price")) {
+          return jsonResponse({
+            results: [
+              {
+                symbol: "AU",
+                currency: "MYR",
+                ask: 19001,
+                mid: 19000,
+                bid: 18999,
+                high: 19100,
+                low: 18900,
+                timestamp: 1793101620,
+                change: 120,
+                changePercentage: 0.63,
+                karat_prices: { "24k": 19000, "18k": 14250, "14k": 11083, "9k": 7125 },
+              },
+            ],
+          });
+        }
+        return jsonResponse({
+          results: [
+            {
+              symbol: "AG",
+              currency: "MYR",
+              mid: 250,
+              change: -2,
+              changePercentage: -0.8,
+              fineness_prices: { "999": 250, "958": 239, "925": 231, "900": 225, "800": 200 },
+            },
+          ],
+        });
+      }),
+    );
+
+    const analysis = await getPremiumMetalAnalysis("MYR");
+    expect(analysis.gold?.karatPrices?.["24k"]).toBe(19000);
+    expect(analysis.gold?.trend).toBe("up");
+    expect(analysis.silver?.finenessPrices?.["999"]).toBe(250);
+    expect(analysis.silver?.trend).toBe("down");
+  });
+
+  it("premium analysis throws without a key (route maps to 503, never charges)", async () => {
+    await expect(getPremiumMetalAnalysis("MYR")).rejects.toThrow(/RAPIDAPI_KEY/);
+  });
+});

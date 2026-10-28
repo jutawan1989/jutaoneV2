@@ -4,48 +4,112 @@ import { useEffect, useState } from "react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 
-const SIGNALS = ["buy", "sell", "hold"] as const;
-type SignalKey = (typeof SIGNALS)[number];
-
-/**
- * Signals stay readable without turning the card into a traffic light: a dot
- * carries the colour, the label carries the meaning.
- */
-const SIGNAL_DOT: Record<SignalKey, string> = {
-  buy: "bg-emerald-400",
-  sell: "bg-rose-400",
-  hold: "bg-amber-400",
+type MetalApiResponse = {
+  ok?: boolean;
+  currency?: string;
+  gold?: number | null;
+  silver?: number | null;
+  source?: "live" | "cache";
+  fetchedAt?: string;
 };
 
-const SIGNAL_TEXT: Record<SignalKey, string> = {
-  buy: "text-emerald-600",
-  sell: "text-rose-600",
-  hold: "text-amber-600",
+type DualPrices = {
+  status: "loading" | "ready" | "unavailable";
+  myr: { gold: number | null; silver: number | null; fetchedAt: string | null };
+  idr: { gold: number | null; silver: number | null; fetchedAt: string | null };
 };
 
+function formatPrice(value: number | null, currency: "MYR" | "IDR"): string {
+  if (value === null || value === undefined) return "—";
+  try {
+    return new Intl.NumberFormat(currency === "IDR" ? "id-ID" : "ms-MY", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: currency === "IDR" ? 0 : 2,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toLocaleString("en-US")}`;
+  }
+}
+
+async function fetchOne(currency: "MYR" | "IDR"): Promise<MetalApiResponse | null> {
+  try {
+    const res = await fetch(`/api/metals/public?currency=${currency}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as MetalApiResponse;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * D2 — simulated gold/silver signal widget. Everything on screen is generated
- * locally and labelled as a simulation; no prices, returns or performance
- * figures are shown, and no investment advice is given.
+ * Homepage metals widget — FREE Goldprice.dev feed (cached 4h server-side).
+ *
+ * Label "Harga Pasaran Semasa" (dict.gold.screenTitle) with real converted
+ * spot prices per troy ounce. No BUY/SELL/HOLD signals here: signals live in
+ * the premium dashboard analysis (2,000 tokens), not on the free page — the
+ * free page must never look like investment advice. The compliance disclaimer
+ * stays. When the feed is down, the widget hides itself rather than showing
+ * stale-looking numbers.
  */
 export function GoldWidget({ dict }: { dict: Dictionary }) {
-  const [tick, setTick] = useState(0);
+  const [prices, setPrices] = useState<DualPrices>({
+    status: "loading",
+    myr: { gold: null, silver: null, fetchedAt: null },
+    idr: { gold: null, silver: null, fetchedAt: null },
+  });
 
   useEffect(() => {
-    const id = setInterval(() => setTick((value) => value + 1), 3200);
-    return () => clearInterval(id);
+    let cancelled = false;
+    Promise.all([fetchOne("MYR"), fetchOne("IDR")]).then(([myr, idr]) => {
+      if (cancelled) return;
+      const hasAny =
+        (myr?.ok && (myr.gold != null || myr.silver != null)) ||
+        (idr?.ok && (idr.gold != null || idr.silver != null));
+      if (!hasAny) {
+        setPrices((prev) => ({ ...prev, status: "unavailable" }));
+        return;
+      }
+      setPrices({
+        status: "ready",
+        myr: { gold: myr?.gold ?? null, silver: myr?.silver ?? null, fetchedAt: myr?.fetchedAt ?? null },
+        idr: { gold: idr?.gold ?? null, silver: idr?.silver ?? null, fetchedAt: idr?.fetchedAt ?? null },
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  if (prices.status === "unavailable") return null;
+
+  const updatedRaw = prices.myr.fetchedAt ?? prices.idr.fetchedAt;
+  let updatedLabel: string | null = null;
+  if (updatedRaw) {
+    try {
+      updatedLabel = new Date(updatedRaw).toLocaleString(undefined, {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      updatedLabel = null;
+    }
+  }
 
   const rows = [
     {
       name: dict.gold.instruments.gold,
-      signal: SIGNALS[tick % SIGNALS.length],
+      myr: prices.status === "ready" ? `${formatPrice(prices.myr.gold, "MYR")}${dict.gold.perOunce}` : "…",
+      idr: prices.status === "ready" ? `${formatPrice(prices.idr.gold, "IDR")}${dict.gold.perOunce}` : "…",
       art: "/assets/gold.jpg",
       glow: "gold" as const,
     },
     {
       name: dict.gold.instruments.silver,
-      signal: SIGNALS[(tick + 1) % SIGNALS.length],
+      myr: prices.status === "ready" ? `${formatPrice(prices.myr.silver, "MYR")}${dict.gold.perOunce}` : "…",
+      idr: prices.status === "ready" ? `${formatPrice(prices.idr.silver, "IDR")}${dict.gold.perOunce}` : "…",
       art: "/assets/silver.jpg",
       glow: "silver" as const,
     },
@@ -78,9 +142,9 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
                   </p>
                   <p className="mt-1 text-[11px] text-slate-400">{dict.gold.priceRow}</p>
                 </div>
-                <span className="flex items-center gap-1.5 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.1em] text-slate-500 uppercase">
+                <span className="flex items-center gap-1.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.1em] text-emerald-600 uppercase">
                   <span aria-hidden className="signal-live h-1 w-1 rounded-full bg-emerald-500" />
-                  SIM
+                  {dict.gold.liveBadge}
                 </span>
               </div>
 
@@ -91,19 +155,19 @@ export function GoldWidget({ dict }: { dict: Dictionary }) {
                       <PremiumArt src={row.art} alt={row.name} size={44} glow={row.glow} rounded="rounded-xl" />
                       <span className="truncate text-sm font-medium text-slate-700">{row.name}</span>
                     </span>
-                    <span
-                      className={`flex items-center gap-2 text-[11px] font-semibold tracking-[0.1em] ${SIGNAL_TEXT[row.signal]}`}
-                    >
-                      <span
-                        aria-hidden
-                        className={`h-1.5 w-1.5 rounded-full ${SIGNAL_DOT[row.signal]}`}
-                      />
-                      {dict.gold.signals[row.signal]}
+                    <span className="text-right">
+                      <span className="block text-sm font-semibold text-slate-900 tabular-nums">{row.myr}</span>
+                      <span className="mt-0.5 block text-[11px] font-medium text-slate-500 tabular-nums">{row.idr}</span>
                     </span>
                   </li>
                 ))}
               </ul>
 
+              {updatedLabel && (
+                <p className="mt-3 text-[11px] text-slate-500">
+                  {dict.gold.updatedAt}: {updatedLabel}
+                </p>
+              )}
               <p className="mt-4 text-[10px] leading-relaxed text-slate-500">{dict.gold.disclaimer}</p>
             </div>
           </div>

@@ -15,6 +15,9 @@ export const SEARCH_COST_TOKENS = 10_000;
 /** Cost of one Smart Assistant answer, in tokens. */
 export const CHAT_COST_TOKENS = 5_000;
 
+/** Cost of one live Metals (gold/silver) quote, in tokens. */
+export const METALS_COST_TOKENS = 2_000;
+
 export const ledgerConfigured = (): boolean => Boolean(getSupabase());
 
 /** Current balance, or 0 when the visitor has no ledger rows yet. */

@@ -15,6 +15,8 @@ export const ANALYTICS_EVENTS = [
   "rent_success",
   // Smart Assistant (paid chat, 5,000 tokens per answer).
   "chat_success",
+  // Metals widget (live gold/silver quote, 2,000 tokens per fetch).
+  "metals_success",
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
