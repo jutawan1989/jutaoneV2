@@ -222,6 +222,10 @@ export function AdGenerator({
       return;
     }
 
+    // Copy FIRST, open the tab AFTER (300ms delay). Browsers may block
+    // clipboard writes issued synchronously with window.open, and Facebook /
+    // LinkedIn forbid pre-filled text via share URLs — so the user pastes
+    // manually (Ctrl+V) on the platform.
     const ok = await copyText(shareText());
     if (!ok) {
       setShareNotice(dict.generator.shareFailed);
@@ -229,7 +233,10 @@ export function AdGenerator({
     }
 
     setShareNotice(format(dict.generator.sharedTo, { platform: SHARE_NAMES[target] }));
-    window.open(SHARE_URLS[target], "_blank", "noopener,noreferrer");
+    const url = SHARE_URLS[target];
+    setTimeout(() => {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }, 300);
   }
 
   const exhausted = remaining <= 0 && !demoDisabled;
