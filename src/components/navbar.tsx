@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { LOCALES, LOCALE_META, localePath, type Locale } from "@/lib/i18n/config";
@@ -70,8 +71,16 @@ export function Navbar({
           </Link>
           <Link
             href="/directory"
-            className="btn-glow rounded-full border border-brand/40 bg-brand/10 px-3 py-1 font-semibold text-brand-soft transition-colors hover:border-brand hover:text-white"
+            className="btn-glow flex items-center gap-2 rounded-full border border-brand/40 bg-brand/10 py-1 pr-3 pl-1 font-semibold text-brand-soft transition-colors hover:border-brand hover:text-white"
           >
+            <Image
+              src="/assets/biz-match.jpg"
+              alt=""
+              width={24}
+              height={24}
+              className="h-6 w-6 rounded-full object-cover ring-1 ring-white/20"
+              unoptimized
+            />
             {dict.nav.suppliers}
           </Link>
           <Link href="#pricing" className="transition-colors hover:text-white">
@@ -125,8 +134,16 @@ export function Navbar({
               </Link>
               <Link
                 href="/directory"
-                className="btn-glow rounded-lg border border-brand/40 bg-brand/10 px-3 py-2.5 text-sm font-semibold text-brand-soft transition-colors hover:text-white"
+                className="btn-glow flex items-center gap-2.5 rounded-lg border border-brand/40 bg-brand/10 px-2.5 py-2 text-sm font-semibold text-brand-soft transition-colors hover:text-white"
               >
+                <Image
+                  src="/assets/biz-match.jpg"
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-lg object-cover ring-1 ring-white/20"
+                  unoptimized
+                />
                 {dict.nav.suppliers}
               </Link>
               <Link

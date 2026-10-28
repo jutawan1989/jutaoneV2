@@ -55,14 +55,20 @@ export function BizMatchSection({ dict }: { dict: Dictionary }) {
             </Link>
           </div>
         </div>
-        <div className="flex justify-center">
-          <PremiumArt
-            src="/assets/silver.jpg"
-            alt={dict.suppliers.title}
-            size={280}
-            glow="silver"
-            className="h-auto w-full max-w-[280px]"
-          />
+        <div className="flex w-full justify-center lg:justify-end">
+          <div className="relative w-full max-w-[320px] overflow-hidden rounded-3xl bg-gradient-to-b from-[#0a1f4d] via-[#0b2557] to-[#0a1730] p-4 shadow-[0_32px_70px_-30px_rgba(10,31,77,0.65)] ring-1 ring-slate-900/10 sm:p-5">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(16rem_8rem_at_50%_0%,rgba(56,189,248,0.25),transparent_70%)]"
+            />
+            <PremiumArt
+              src="/assets/biz-match.jpg"
+              alt={dict.suppliers.title}
+              size={280}
+              glow="cyan"
+              className="relative h-auto w-full"
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -96,8 +102,8 @@ export function EarnSections({ dict }: { dict: Dictionary }) {
       bullets: dict.suppliers.bullets,
       cta: dict.suppliers.cta,
       href: "/directory" as const,
-      art: "/assets/silver.jpg",
-      glow: "silver" as const,
+      art: "/assets/biz-match.jpg",
+      glow: "cyan" as const,
     },
   ];
 

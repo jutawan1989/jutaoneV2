@@ -2012,7 +2012,7 @@ export function MemberDashboard({
                     icon: Bot,
                     tone: "emerald" as const,
                     tag: t.toolBizTag,
-                    art: "/assets/silver.jpg" as string | null,
+                    art: "/assets/biz-match.jpg" as string | null,
                     glow: "group-hover:border-emerald-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(16,185,129,0.9)]",
                     wash: "from-emerald-500/20",
                   },
