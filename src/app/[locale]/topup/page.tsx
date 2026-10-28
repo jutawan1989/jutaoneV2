@@ -26,9 +26,9 @@ export default async function TopUpPage({ params, searchParams }: TopUpPageProps
 
   const dict = getDictionary(locale);
   const region = detectRegion(requestHeaders);
-  const base = getPrice(region);
+  const base = getPrice(region, locale);
   const usd = parseTopUpAmount(amount) ?? 1;
-  const price = withUsdAmount(base, usd);
+  const price = withUsdAmount(base, usd, locale);
   const visitor = identifyVisitor(requestHeaders);
   const variant = resolveVariant(visitor.visitorKey);
 
@@ -42,7 +42,7 @@ export default async function TopUpPage({ params, searchParams }: TopUpPageProps
           locale={locale}
           variant={variant}
           dict={dict}
-          priceDisplay={`${price.display} ${price.usdCode}`}
+          priceDisplay={`${price.display} ${price.baseCode}`}
           priceLocal={price.localDisplay}
           tokensDisplay={formatTokenCount(price.tokens, locale)}
           tokenName={price.tokensLabel[locale]}

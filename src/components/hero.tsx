@@ -103,7 +103,7 @@ export function Hero({
                   <p className="mt-1 flex flex-wrap items-baseline gap-1.5 text-lg font-semibold text-white">
                     <span className="tabular-nums">{price.display}</span>
                     <span className="text-[10px] font-semibold tracking-[0.16em] text-white/60 uppercase">
-                      {price.usdCode}
+                      {price.baseCode}
                     </span>
                   </p>
                   {price.localDisplay && (

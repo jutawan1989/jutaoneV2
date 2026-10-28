@@ -36,7 +36,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
 
   const dict = getDictionary(locale);
   const region = detectRegion(requestHeaders);
-  const price = getPrice(region);
+  const price = getPrice(region, locale);
   const visitor = identifyVisitor(requestHeaders);
   const variant = resolveVariant(visitor.visitorKey, variantOverride ?? null);
 

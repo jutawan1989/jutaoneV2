@@ -18,6 +18,10 @@ export type ClassifiedPurchase = {
   ownerRef: string | null;
   usdCents: number | null;
   monthly: boolean;
+  /** RM base in sen (from `rm=` note) — the base value for IDR checkouts. */
+  rmCents: number | null;
+  /** RM->IDR rate used at checkout (from `fx=` note). */
+  fxRate: number | null;
 };
 
 export function classifyPurchase(notes: string | undefined): ClassifiedPurchase {

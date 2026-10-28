@@ -5,17 +5,22 @@ export type CurrencyCode = "MYR" | "IDR" | "USD";
 export type Price = {
   /** Currency actually charged at checkout, per billing region. */
   currency: CurrencyCode;
-  /** Top-up size in USD. The headline price everywhere. */
+  /** Top-up size in USD. The internal anchor every amount scales from. */
   usd: number;
   /** Amount charged in major units, e.g. 4.70 or 16000. */
   amount: number;
   /** Chip.Asia expects integer minor units (sen / rupiah / cents). */
   amountMinor: number;
-  /** Headline price, always 2 decimals: `$1.00`, `$5.00`. */
+  /** Headline price, always in RM with 2 decimals: `RM4.70`, `RM23.50`. */
   display: string;
   /** ISO code shown beside the headline. */
-  usdCode: "USD";
-  /** Estimated local charge, e.g. `≈ RM4.70`; null when no estimate applies. */
+  baseCode: "MYR";
+  /**
+   * Secondary estimate under the RM headline. Rupiah (`≈ Rp16,000`) when the
+   * billing region is Indonesia or the visitor chose Bahasa Indonesia; the
+   * USD charged-equivalent (`≈ $1.00`) elsewhere outside Malaysia; null in
+   * Malaysia where the headline already is the charge.
+   */
   localDisplay: string | null;
   /** Tokens granted by this top-up. */
   tokens: number;
@@ -33,6 +38,12 @@ export const QUICK_TOPUP_AMOUNTS = [1, 5, 10, 50] as const;
 
 /** Local-charge estimates shown under the USD headline (not a second price). */
 const MYR_PER_USD = 4.7;
+/**
+ * Static IDR anchor. The CHECKOUT path (`priceForCheckout`) overrides this
+ * with the live/ops rate from `lib/fx.ts`; this constant only feeds the
+ * synchronous display helpers (`formatIdrEstimate`, `getPrice`, and the
+ * server-rendered headline) so they stay pure and cacheable.
+ */
 const IDR_PER_USD = 16_000;
 
 const BASE_CURRENCY: Record<Region, CurrencyCode> = {
@@ -43,6 +54,16 @@ const BASE_CURRENCY: Record<Region, CurrencyCode> = {
 
 export function formatUsd(usd: number): string {
   return `$${usd.toFixed(2)}`;
+}
+
+/** Headline formatter: the base price is always shown in RM. */
+export function formatRm(usd: number): string {
+  return `RM${(usd * MYR_PER_USD).toFixed(2)}`;
+}
+
+/** Rupiah estimate for Indonesian visitors (IP region or ID language). */
+export function formatIdrEstimate(usd: number): string {
+  return `\u2248 Rp${Math.round(usd * IDR_PER_USD).toLocaleString("en-US")}`;
 }
 
 /** `5000000, "en"` -> `"5,000,000 Tokens"`; ms/id use `Token`. */
@@ -66,14 +87,18 @@ export function parseTopUpAmount(value: unknown): number | null {
   return cents;
 }
 
-function localDisplayFor(currency: CurrencyCode, usd: number): string | null {
-  if (currency === "MYR") return `\u2248 RM${(usd * MYR_PER_USD).toFixed(2)}`;
-  if (currency === "IDR")
-    return `\u2248 Rp${Math.round(usd * IDR_PER_USD).toLocaleString("en-US")}`;
+function localDisplayFor(currency: CurrencyCode, usd: number, locale: Locale): string | null {
+  if (currency === "IDR") return formatIdrEstimate(usd);
+  // Indonesian by language choice: still show the Rupiah estimate even when
+  // the billing region charges MYR or USD.
+  if (locale === "id") return formatIdrEstimate(usd);
+  // Outside Malaysia/Indonesia the charge is USD: show the charged equivalent
+  // under the RM headline so the headline never misleads.
+  if (currency === "USD") return `\u2248 ${formatUsd(usd)}`;
   return null;
 }
 
-function buildPrice(currency: CurrencyCode, usd: number): Price {
+function buildPrice(currency: CurrencyCode, usd: number, locale: Locale): Price {
   const tokens = Math.round(usd * TOKENS_PER_USD);
   const amount =
     currency === "MYR" ? usd * MYR_PER_USD : currency === "IDR" ? usd * IDR_PER_USD : usd;
@@ -87,20 +112,59 @@ function buildPrice(currency: CurrencyCode, usd: number): Price {
     usd,
     amount,
     amountMinor,
-    display: formatUsd(usd),
-    usdCode: "USD",
-    localDisplay: localDisplayFor(currency, usd),
+    display: formatRm(usd),
+    baseCode: "MYR",
+    localDisplay: localDisplayFor(currency, usd, locale),
     tokens,
     tokensLabel: { en: "1 Million Tokens", ms: "1 Juta Token", id: "1 Juta Token" },
   };
 }
 
-/** Base $1.00 price for a region. */
-export function getPrice(region: Region): Price {
-  return buildPrice(BASE_CURRENCY[region] ?? "USD", MIN_TOPUP_USD);
+/** Base $1.00 price for a region. `locale` only affects the Rupiah estimate. */
+export function getPrice(region: Region, locale: Locale = "ms"): Price {
+  return buildPrice(BASE_CURRENCY[region] ?? "USD", MIN_TOPUP_USD, locale);
 }
 
 /** Scale a regional base price to the chosen USD amount. */
-export function withUsdAmount(base: Price, usd: number): Price {
-  return buildPrice(base.currency, usd);
+export function withUsdAmount(base: Price, usd: number, locale: Locale = "ms"): Price {
+  return buildPrice(base.currency, usd, locale);
+}
+
+/**
+ * Checkout price for Indonesia: RM-anchored via `getExchangeRate()`.
+ *
+ * Flow: USD amount -> RM base (MYR_PER_USD) -> IDR at the live/ops RM->IDR
+ * rate, rounded with `roundIdr` so Chip receives a "cantik" whole-rupiah
+ * amount (e.g. Rp16,000) instead of a raw conversion. The RM base is kept on
+ * the returned `Price.rmBase` so the callback can record it in Supabase.
+ * Non-IDR currencies pass through `withUsdAmount` unchanged.
+ */
+export async function priceForCheckout(
+  currency: CurrencyCode,
+  usd: number,
+  locale: Locale = "ms",
+): Promise<Price & { rmBase: number | null; fxRate: number | null }> {
+  if (currency !== "IDR") {
+    const plain = buildPrice(currency, usd, locale);
+    return { ...plain, rmBase: null, fxRate: null };
+  }
+  const { getExchangeRate, roundIdr } = await import("@/lib/fx");
+  const rate = await getExchangeRate("IDR");
+  const rmBase = Math.round(usd * MYR_PER_USD * 100) / 100;
+  const idrAmount = roundIdr(rmBase * rate);
+  const tokens = Math.round(usd * TOKENS_PER_USD);
+  const amountMinor = Math.round(idrAmount * 100);
+  return {
+    currency: "IDR",
+    usd,
+    amount: idrAmount,
+    amountMinor,
+    display: formatRm(usd),
+    baseCode: "MYR",
+    localDisplay: `≈ Rp${idrAmount.toLocaleString("en-US")}`,
+    tokens,
+    tokensLabel: { en: "1 Million Tokens", ms: "1 Juta Token", id: "1 Juta Token" },
+    rmBase,
+    fxRate: rate,
+  };
 }

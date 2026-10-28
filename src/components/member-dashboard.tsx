@@ -957,10 +957,24 @@ export function MemberDashboard({
   /** Per-tier referral rows; `null` when the member has no code yet. */
   levels?: NetworkLevel[] | null;
 }) {
-  // Hard guard: server loader always sends a full overview, but a null here
-  // (DB outage, stale Worker bundle, bad props) used to throw during render
-  // and Next showed "Application error: a client-side exception". Render a
-  // plain retry state instead so the dashboard never whitescreens.
+  const [tab, setTab] = useState<Tab>("overview");
+  const [requesting, setRequesting] = useState(false);
+  const [requestNote, setRequestNote] = useState<string | null>(null);
+  const [payoutOpen, setPayoutOpen] = useState(false);
+  const [rankOpen, setRankOpen] = useState(false);
+  const [lang, setLang] = useState<DashLang>("ms");
+  const t = DASH_STR[lang];
+
+  const activeLevels = useMemo(
+    () => (levels ?? []).filter((level) => level.people > 0),
+    [levels],
+  );
+
+  // Hard guard AFTER hooks (rules-of-hooks): server loader always sends a
+  // full overview, but a null here (DB outage, stale Worker bundle, bad
+  // props) used to throw during render and Next showed "Application error: a
+  // client-side exception". Render a plain retry state instead so the
+  // dashboard never whitescreens.
   if (!overview || !overview.affiliate || !overview.store) {
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-6">
@@ -994,13 +1008,6 @@ export function MemberDashboard({
 
   const safePayouts: MemberPayout[] = Array.isArray(payouts) ? payouts : [];
   const safeName = typeof name === "string" && name.trim() ? name : "rakan";
-  const [tab, setTab] = useState<Tab>("overview");
-  const [requesting, setRequesting] = useState(false);
-  const [requestNote, setRequestNote] = useState<string | null>(null);
-  const [payoutOpen, setPayoutOpen] = useState(false);
-  const [rankOpen, setRankOpen] = useState(false);
-  const [lang, setLang] = useState<DashLang>("ms");
-  const t = DASH_STR[lang];
 
   const TABS_UI = [
     { id: "overview" as const, label: t.tabs.overview, hint: t.tabs.overviewHint, icon: LayoutDashboard, art: null as string | null },
@@ -1049,10 +1056,6 @@ export function MemberDashboard({
     ? `https://wa.me/?text=${encodeURIComponent(`${t.shareText} ${referralHref}`)}`
     : null;
 
-  const activeLevels = useMemo(
-    () => (levels ?? []).filter((level) => level.people > 0),
-    [levels],
-  );
   const deepestLevel = activeLevels.reduce((deep, level) => Math.max(deep, level.level), 0);
 
   async function requestPayout() {

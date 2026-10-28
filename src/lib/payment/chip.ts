@@ -1,5 +1,5 @@
 import { randomUUID, verify as verifySignature } from "node:crypto";
-import { formatTokenCount, getPrice, parseTopUpAmount, withUsdAmount, type Price } from "@/lib/pricing";
+import { formatTokenCount, parseTopUpAmount, type Price } from "@/lib/pricing";
 import type { Locale, Region } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
@@ -109,7 +109,9 @@ export function paymentMethodWhitelist(): string[] | undefined {
  */
 export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSession> {
   const usd = parseTopUpAmount(req.amountUsd) ?? 1;
-  const price = withUsdAmount(getPrice(req.region), usd);
+  const { getPrice, priceForCheckout } = await import("@/lib/pricing");
+  const base = getPrice(req.region, req.locale);
+  const price = await priceForCheckout(base.currency, usd, req.locale);
   const reference = generateReference(req.locale);
   const localePath = `/${req.locale}/topup`;
 
@@ -126,6 +128,12 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
   const customerEmail = parseCustomerEmail(req.customerEmail);
   if (!customerEmail) throw new InvalidCustomerEmailError();
   const whitelist = paymentMethodWhitelist();
+  // RM base + FX rate ride in the notes so the callback can record the RM
+  // value in Supabase even though Chip only settles the IDR amount.
+  const fxNote =
+    price.currency === "IDR" && "rmBase" in price && price.rmBase !== null
+      ? `;rm=${Math.round(price.rmBase * 100)};fx=${price.fxRate ?? ""}`
+      : "";
   const body = {
     brand_id: process.env.CHIP_BRAND_ID,
     reference,
@@ -147,7 +155,7 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
           quantity: 1,
         },
       ],
-      notes: req.ownerRef ? `variant=${req.variant};region=${req.region};owner=${req.ownerRef};usd=${Math.round(usd * 100)}` : `variant=${req.variant};region=${req.region}`,
+      notes: req.ownerRef ? `variant=${req.variant};region=${req.region};owner=${req.ownerRef};usd=${Math.round(usd * 100)}${fxNote}` : `variant=${req.variant};region=${req.region}${fxNote}`,
     },
     success_redirect: `${req.origin}${localePath}?status=success&ref=${reference}`,
     failure_redirect: `${req.origin}${localePath}?status=failed&ref=${reference}`,

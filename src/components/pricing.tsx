@@ -38,7 +38,7 @@ export function Pricing({
 
   const usd = picked === "custom" ? parseTopUpAmount(custom) : picked;
   const valid = usd !== null;
-  const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD);
+  const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD, locale);
 
   return (
     <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 px-5 py-12 sm:px-6 sm:py-20">
@@ -145,7 +145,7 @@ export function Pricing({
               <p className="mt-4 text-[44px] leading-none font-semibold tracking-[-0.03em] text-slate-900 tabular-nums">
                 {preview.display}
                 <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                  {preview.usdCode}
+                  {preview.baseCode}
                 </span>
               </p>
               {preview.localDisplay && (
