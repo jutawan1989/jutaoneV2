@@ -3,6 +3,7 @@ import {
   __clearGoldpriceMemoryCache,
   getPublicMetalPrices,
   goldpriceConfigured,
+  publicCurrencyForLocale,
   publicCurrencyForRegion,
 } from "@/lib/goldprice";
 import {
@@ -39,6 +40,13 @@ describe("Dual metals API (homepage free, dashboard premium)", () => {
     expect(metalCurrencyForRegion("MY")).toBe("MYR");
   });
 
+  it("maps locales to widget currency (ms -> MYR, id -> IDR, en -> USD)", () => {
+    expect(publicCurrencyForLocale("ms")).toBe("MYR");
+    expect(publicCurrencyForLocale("id")).toBe("IDR");
+    expect(publicCurrencyForLocale("en")).toBe("USD");
+    expect(publicCurrencyForLocale("xx")).toBe("MYR");
+  });
+
   it("free feed is unconfigured without GOLDPRICE_API_KEY", () => {
     expect(goldpriceConfigured()).toBe(false);
     process.env.GOLDPRICE_API_KEY = "k";
@@ -70,6 +78,33 @@ describe("Dual metals API (homepage free, dashboard premium)", () => {
     expect(prices?.source).toBe("live");
     expect(prices?.gold).toBe(18_800);
     expect(prices?.silver).toBe(235);
+    // Tri-quote: same spot in all three as clean floats for Intl.NumberFormat.
+    expect(prices?.usd).toEqual({ gold: 4000, silver: 50 });
+    expect(prices?.myr).toEqual({ gold: 18_800, silver: 235 });
+    expect(prices?.idr).toEqual({ gold: 64_000_000, silver: 800_000 });
+  });
+
+  it("free feed returns raw USD spot for the en locale", async () => {
+    process.env.GOLDPRICE_API_KEY = "test-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          symbols: [
+            { symbol: "XAU", quote_currency: "USD", price: "4000.00", is_stale: false },
+            { symbol: "XAG", quote_currency: "USD", price: "50.00", is_stale: false },
+          ],
+        }),
+      ),
+    );
+
+    const prices = await getPublicMetalPrices("USD");
+    expect(prices?.currency).toBe("USD");
+    expect(prices?.gold).toBe(4000);
+    expect(prices?.silver).toBe(50);
+    expect(prices?.usd).toEqual({ gold: 4000, silver: 50 });
+    expect(prices?.myr).toEqual({ gold: 18_800, silver: 235 });
+    expect(prices?.idr).toEqual({ gold: 64_000_000, silver: 800_000 });
   });
 
   it("free feed converts USD to IDR with the Boss fixed rate (x16000)", async () => {
