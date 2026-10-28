@@ -46,6 +46,24 @@ export function isDirectImageUrl(raw: string): boolean {
   if (url.pathname.includes("/storage/v1/object/public/")) return true;
   return false;
 }
+/**
+ * Submit-time validation for the merchant form.
+ *
+ * Returns the normalised URL to save, or a failure code the form turns into a
+ * clear Malay error message. Kept beside the other helpers so the vitest suite
+ * covers the exact rule the submit button enforces.
+ */
+export function validateImageForSubmit(
+  raw: string,
+): { ok: true; url: string | null } | { ok: false; code: "invalid_url" | "not_direct" } {
+  if (!raw.trim()) return { ok: true, url: null };
+  const url = normalizeImageUrl(raw);
+  if (!isSafeImageUrl(url)) return { ok: false, code: "invalid_url" };
+  if (/^(blob:|data:)/i.test(raw.trim())) return { ok: false, code: "invalid_url" };
+  if (!isDirectImageUrl(url)) return { ok: false, code: "not_direct" };
+  return { ok: true, url };
+}
+
 export function productInitials(name: string): string {
   const clean = name.trim().replace(/\s+/g, " ");
   if (!clean) return "JO";

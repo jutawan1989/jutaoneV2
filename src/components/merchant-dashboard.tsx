@@ -3,7 +3,7 @@
 import { useRef, useState, type DragEvent, type FormEvent } from "react";
 import { ImagePlus, Loader2, ShoppingBag, X } from "lucide-react";
 import { StoreSubscriptionModal } from "@/components/store-subscription-modal";
-import { isDirectImageUrl, normalizeImageUrl } from "@/lib/product-image";
+import { isDirectImageUrl, normalizeImageUrl, validateImageForSubmit } from "@/lib/product-image";
 
 type SubscriptionState = {
   status: string;
@@ -45,8 +45,12 @@ export function MerchantDashboard({
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<AddedProduct[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Guards the stale-upload race: a late upload response must never overwrite
+  // a URL the user typed/pasted after the upload started, and a submit that
+  // already cleared the form must not gain a ghost image afterwards.
+  const uploadSeq = useRef(0);
 
-  async function uploadFile(file: File) {
+  async function uploadFile(file: File, seq: number) {
     setError(null);
     setUploading(true);
     try {
@@ -54,6 +58,9 @@ export function MerchantDashboard({
       form.append("file", file);
       const response = await fetch("/api/products/image", { method: "POST", body: form });
       const data = await response.json().catch(() => null);
+      // Stale response (user typed a URL or dropped a newer file meanwhile):
+      // never overwrite the current form state.
+      if (seq !== uploadSeq.current) return;
       if (!response.ok || !data?.url) {
         const messages: Record<string, string> = {
           upload_type: "Fail bukan imej. Pilih JPG, PNG, WebP atau GIF.",
@@ -68,23 +75,28 @@ export function MerchantDashboard({
       setImageUrl(data.url);
       setPreviewBroken(false);
     } catch {
+      if (seq !== uploadSeq.current) return;
       setError("Rangkaian bermasalah. Cuba lagi atau tampal pautan https.");
     } finally {
-      setUploading(false);
+      if (seq === uploadSeq.current) setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
   function handleFile(file: File | undefined) {
-    if (!file || uploading) return;
+    if (!file) return;
     if (!file.type.startsWith("image/")) {
       setError("Fail bukan imej. Pilih JPG, PNG, WebP atau GIF.");
       return;
     }
+    // New drop replaces any in-flight upload; its late response is discarded
+    // via the sequence check so the preview never snaps back to an old URL.
+    uploadSeq.current += 1;
     if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
     setFilePreview(URL.createObjectURL(file));
     setPreviewBroken(false);
-    void uploadFile(file);
+    setUploading(true);
+    void uploadFile(file, uploadSeq.current);
   }
 
   function handleDrop(event: DragEvent) {
@@ -94,7 +106,10 @@ export function MerchantDashboard({
   }
 
   const storedUrl = imageUrl.trim() ? normalizeImageUrl(imageUrl) : "";
-  const previewImage = storedUrl.startsWith("http") ? storedUrl : filePreview;
+  const storedHttp = storedUrl.startsWith("http") ? storedUrl : null;
+  // Local drop preview wins while an upload is in flight so the preview
+  // updates instantly; otherwise the saved URL is shown.
+  const previewImage = filePreview ?? storedHttp;
   const urlWarning =
     storedUrl && !isDirectImageUrl(storedUrl)
       ? "Pautan ini nampak seperti halaman web (contoh: pautan pendek Shopee / Drive share). Sila masukkan pautan gambar yang berakhir dengan .jpg atau .png — jika tidak, gambar tidak akan dipaparkan."
@@ -104,8 +119,22 @@ export function MerchantDashboard({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
+    if (uploading) {
+      setError("Sila tunggu gambar dimuat naik sehingga selesai sebelum menyimpan.");
+      return;
+    }
+    const checked = validateImageForSubmit(imageUrl);
+    if (!checked.ok) {
+      setError(
+        checked.code === "invalid_url"
+          ? "Sila masukkan URL gambar yang sah bermula dengan https:// ."
+          : "Sila masukkan URL gambar yang sah berakhir dengan .jpg atau .png.",
+      );
+      return;
+    }
     setBusy(true);
     setError(null);
+    uploadSeq.current += 1;
 
     try {
       const response = await fetch("/api/products", {
@@ -116,7 +145,7 @@ export function MerchantDashboard({
           name,
           price: Number(price),
           description: description || null,
-          image_url: storedUrl || null,
+          image_url: checked.ok ? (checked.url ?? null) : null,
         }),
       });
       const data = await response.json();
@@ -142,6 +171,7 @@ export function MerchantDashboard({
       setPrice("");
       setDescription("");
       setImageUrl("");
+      setPreviewBroken(false);
       if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
       setFilePreview(null);
     } catch {
@@ -339,6 +369,7 @@ export function MerchantDashboard({
                   id="pimg"
                   value={imageUrl}
                   onChange={(event) => {
+                    uploadSeq.current += 1;
                     setImageUrl(event.target.value);
                     setPreviewBroken(false);
                   }}
@@ -351,6 +382,8 @@ export function MerchantDashboard({
                     type="button"
                     aria-label="Buang gambar"
                     onClick={() => {
+                      uploadSeq.current += 1;
+                      setUploading(false);
                       setImageUrl("");
                       setPreviewBroken(false);
                       if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
