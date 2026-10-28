@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/db";
 import { searchSuppliers, type SupplierResult } from "@/lib/search";
 import { emptyMessage, isSearchCountry, type SearchCountry } from "@/lib/geo-domains";
 import { SEARCH_COST_TOKENS, chargeTokens, getTokenBalance } from "@/lib/tokens";
+import { SESSION_COOKIE, verifySession } from "@/lib/auth/member";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
@@ -63,12 +64,21 @@ export async function GET(request: NextRequest) {
   const visitor = identifyVisitor(request.headers);
   const freeMode = process.env.BIZ_MATCH_FREE === "1";
 
+  // Members pay from their ledger identity (owner_ref from the signed
+  // session cookie) — the same identity the dashboard sums for the balance
+  // display. Anonymous visitors keep the header-derived visitor key (their
+  // only identity). Reading the wrong one is exactly the bug Boss hit:
+  // dashboard showed 2.26M tokens while search read an empty visitor key.
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const sessionOwner = verifySession(readSessionCookie(cookieHeader));
+  const ledgerKey = sessionOwner ?? visitor.visitorKey;
+
   // A retried request reuses the same reference, so it cannot double-charge.
   const reference =
     request.nextUrl.searchParams.get("rid")?.slice(0, 64) ??
-    `search:${visitor.visitorKey.slice(0, 16)}:${Buffer.from(query).toString("base64url").slice(0, 24)}`;
+    `search:${ledgerKey.slice(0, 16)}:${Buffer.from(query).toString("base64url").slice(0, 24)}`;
 
-  const balance = await getTokenBalance(visitor.visitorKey);
+  const balance = await getTokenBalance(ledgerKey);
 
   // Step 1: refuse before spending a live-layer request.
   if (!freeMode && balance < SEARCH_COST_TOKENS) {
@@ -101,7 +111,7 @@ export async function GET(request: NextRequest) {
         const charge = freeMode
           ? ({ ok: true, charged: false, balanceAfter: balance, replayed: false } as const)
           : await chargeTokens({
-              visitorKey: visitor.visitorKey,
+              visitorKey: ledgerKey,
               cost: SEARCH_COST_TOKENS,
               reference,
               note: `biz-match:${query.slice(0, 80)}`,
@@ -166,6 +176,15 @@ export async function GET(request: NextRequest) {
       freeMode,
     },
   });
+}
+
+/** Reads the signed member session cookie value from a Cookie header. */
+function readSessionCookie(header: string): string | undefined {
+  for (const part of header.split(";")) {
+    const [rawKey, ...rest] = part.trim().split("=");
+    if (rawKey === SESSION_COOKIE) return decodeURIComponent(rest.join("="));
+  }
+  return undefined;
 }
 
 /** Local fallback over the seeded/imported supplier table. */
