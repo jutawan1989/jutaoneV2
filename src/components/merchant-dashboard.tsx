@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type DragEvent, type FormEvent } from "react";
+import { Camera, ImagePlus, ShoppingBag, X } from "lucide-react";
 import { StoreSubscriptionModal } from "@/components/store-subscription-modal";
 
 type SubscriptionState = {
@@ -35,9 +36,27 @@ export function MerchantDashboard({
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<AddedProduct[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(file: File | undefined) {
+    if (!file || !file.type.startsWith("image/")) return;
+    if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
+    setFilePreview(URL.createObjectURL(file));
+  }
+
+  function handleDrop(event: DragEvent) {
+    event.preventDefault();
+    setDragActive(false);
+    handleFile(event.dataTransfer.files?.[0]);
+  }
+
+  const previewImage = imageUrl.trim().startsWith("http") ? imageUrl.trim() : filePreview;
+  const previewPrice = Number(price) > 0 ? `RM ${Number(price).toFixed(2)}` : "RM 0.00";
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -80,6 +99,8 @@ export function MerchantDashboard({
       setPrice("");
       setDescription("");
       setImageUrl("");
+      if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
+      setFilePreview(null);
     } catch {
       setError("Rangkaian bermasalah. Sila cuba lagi.");
     } finally {
@@ -90,7 +111,7 @@ export function MerchantDashboard({
   const slug = added[0]?.shopSlug ?? shopSlug;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
       <header className="border-b border-line pb-5">
         <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
           Auto-Store & Invoice
@@ -154,32 +175,21 @@ export function MerchantDashboard({
         }}
       />
 
-      <form onSubmit={submit} className="card mt-6 p-5">
-        <h2 className="text-base font-semibold text-white">Tambah produk</h2>
+      {/* ── Light product form ── */}
+      <form onSubmit={submit} className="mt-6 rounded-xl bg-white p-5 shadow-md sm:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-900">Tambah produk</h2>
+        </div>
+        <p className="mt-1 text-sm text-slate-500">
+          Isi maklumat produk — preview pelanggan muncul secara langsung di sebelah kanan.
+        </p>
 
-        <div className="mt-4 space-y-3">
-          <div>
-            <label htmlFor="shop" className="block text-sm font-medium text-white">
-              Handle kedai
-            </label>
-            <p className="mt-0.5 text-xs text-muted">
-              Pautan anda: <span className="text-silver">/shop/{shopSlug || "nama-kedai"}</span>
-            </p>
-            <input
-              id="shop"
-              value={shopSlug}
-              onChange={(event) => setShopSlug(event.target.value.toLowerCase())}
-              required
-              maxLength={32}
-              placeholder="kek-lapis-sarawak"
-              className="mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-brand focus:outline-none"
-            />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+        <div className="mt-5 grid gap-6 md:grid-cols-[1fr_300px]">
+          {/* Left: product details */}
+          <div className="space-y-4">
             <div>
-              <label htmlFor="pname" className="block text-sm font-medium text-white">
-                Nama produk
+              <label htmlFor="pname" className="block text-sm font-medium text-slate-900">
+                Nama Produk
               </label>
               <input
                 id="pname"
@@ -187,11 +197,13 @@ export function MerchantDashboard({
                 onChange={(event) => setName(event.target.value)}
                 required
                 maxLength={120}
-                className="mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white focus:border-brand focus:outline-none"
+                placeholder="cth: Kek Lapis Sarawak Original"
+                className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
             </div>
+
             <div>
-              <label htmlFor="pprice" className="block text-sm font-medium text-white">
+              <label htmlFor="pprice" className="block text-sm font-medium text-slate-900">
                 Harga (RM)
               </label>
               <input
@@ -201,45 +213,183 @@ export function MerchantDashboard({
                 required
                 inputMode="decimal"
                 placeholder="45.00"
-                className="mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-brand focus:outline-none"
+                className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="pdesc" className="block text-sm font-medium text-slate-900">
+                Penerangan <span className="font-normal text-slate-400">(pilihan)</span>
+              </label>
+              <textarea
+                id="pdesc"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                rows={4}
+                maxLength={500}
+                placeholder="Ceritakan kenapa produk ini istimewa…"
+                className="mt-1.5 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="pdesc" className="block text-sm font-medium text-white">
-              Penerangan <span className="font-normal text-muted">(pilihan)</span>
-            </label>
-            <textarea
-              id="pdesc"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={2}
-              maxLength={500}
-              className="mt-1.5 w-full resize-none rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white focus:border-brand focus:outline-none"
-            />
-          </div>
+          {/* Right: image upload + shop handle + live preview */}
+          <div className="space-y-4">
+            <div>
+              <span className="block text-sm font-medium text-slate-900">Gambar Produk</span>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={handleDrop}
+                className={`mt-1.5 flex aspect-square w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed bg-slate-50 text-center transition-colors ${
+                  dragActive
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-slate-300 hover:border-blue-400 hover:bg-blue-50/40"
+                }`}
+              >
+                {previewImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewImage}
+                    alt="Preview produk"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex flex-col items-center gap-2 px-4">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
+                      <Camera className="size-5 text-blue-600" aria-hidden />
+                    </span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      Muat Naik Gambar Produk
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      Seret & letak atau klik untuk pilih gambar
+                    </span>
+                  </span>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+              <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                <ImagePlus className="size-4 shrink-0 text-slate-400" aria-hidden />
+                <input
+                  id="pimg"
+                  value={imageUrl}
+                  onChange={(event) => setImageUrl(event.target.value)}
+                  placeholder="atau tampal pautan gambar https://…"
+                  inputMode="url"
+                  className="w-full bg-transparent text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                />
+                {previewImage && (
+                  <button
+                    type="button"
+                    aria-label="Buang gambar"
+                    onClick={() => {
+                      setImageUrl("");
+                      if (filePreview?.startsWith("blob:")) URL.revokeObjectURL(filePreview);
+                      setFilePreview(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+                  >
+                    <X className="size-3.5" aria-hidden />
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                Preview fail adalah segera; pautan https disimpan bersama produk.
+              </p>
+            </div>
 
-          <div>
-            <label htmlFor="pimg" className="block text-sm font-medium text-white">
-              URL gambar <span className="font-normal text-muted">(pilihan)</span>
-            </label>
-            <input
-              id="pimg"
-              value={imageUrl}
-              onChange={(event) => setImageUrl(event.target.value)}
-              placeholder="https://…"
-              className="mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-brand focus:outline-none"
-            />
+            <div>
+              <label htmlFor="shop" className="block text-sm font-medium text-slate-900">
+                Handle Kedai
+              </label>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Pautan anda: <span className="font-medium text-blue-700">/shop/{shopSlug || "nama-kedai"}</span>
+              </p>
+              <input
+                id="shop"
+                value={shopSlug}
+                onChange={(event) => setShopSlug(event.target.value.toLowerCase())}
+                required
+                maxLength={32}
+                placeholder="kek-lapis-sarawak"
+                className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            {/* Live preview */}
+            <div>
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-slate-400 uppercase">
+                Live Preview — paparan pelanggan
+              </p>
+              <article className="mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                  {previewImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={previewImage}
+                      alt={name || "Preview produk"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-slate-50 to-slate-100 text-slate-400">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
+                        <Camera className="size-5" aria-hidden />
+                      </span>
+                      <span className="text-[11px] font-medium tracking-wide uppercase">
+                        Tiada gambar
+                      </span>
+                    </div>
+                  )}
+                  <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 shadow-sm">
+                    <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Stok Tersedia
+                  </span>
+                </div>
+                <div className="p-4">
+                  <h3 className="truncate text-[15px] font-semibold text-slate-900">
+                    {name || "Nama Produk"}
+                  </h3>
+                  {description && (
+                    <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-slate-500">
+                      {description}
+                    </p>
+                  )}
+                  <p className="mt-2 text-lg font-bold tracking-tight text-slate-900 tabular-nums">
+                    {previewPrice}
+                  </p>
+                  <span className="mt-3 inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white">
+                    <ShoppingBag className="size-4" aria-hidden />
+                    Beli Sekarang
+                  </span>
+                </div>
+              </article>
+            </div>
           </div>
         </div>
 
-        <button type="submit" disabled={busy} className="btn-brand mt-4 w-full">
-          {busy ? "Menyimpan…" : "Tambah produk"}
+        <button
+          type="submit"
+          disabled={busy}
+          className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-bold text-white shadow-[0_10px_30px_-12px_rgba(37,99,235,0.8)] transition-colors hover:bg-blue-700 disabled:opacity-60"
+        >
+          {busy ? "Menyimpan…" : "Tambah Produk"}
         </button>
 
         {error && (
-          <p role="alert" className="mt-3 text-sm text-red-300">
+          <p role="alert" className="mt-3 text-sm font-medium text-red-600">
             {error}
           </p>
         )}
