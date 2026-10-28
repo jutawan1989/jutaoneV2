@@ -19,10 +19,10 @@ export const en = {
   },
   hero: {
     eyebrow: "AI Ad Engine for Merchants & Service Providers",
-    title: "Tired of ChatGPT Not Getting Your Business?",
-    titleAccent: "Let Our AI Handle Your Ads, Shop & Suppliers.",
+    title: "Tired of AI That Doesn't Understand Your Business?",
+    titleAccent: "JutaOne.Biz — Your Business Brain.",
     subtitle:
-      "JutaOne.Biz isn't just another chatbot. It's a complete business ecosystem. Write viral ads, open an online shop, and find wholesale suppliers — all on one platform.",
+      "The first AI business platform in Asia. JutaOne.Biz unites 'Write Ads + Open Shop + Find Suppliers + Save Gold' in one place, from just $1. This isn't just AI.",
     ctaPrimary: "Try the free demo",
     ctaSecondary: "See token pricing",
     trustBadge: "Trusted by merchants in Malaysia & Indonesia",
@@ -133,6 +133,34 @@ export const en = {
     ],
     cta: "Try Finding Suppliers Now",
     searchPlaceholder: "E.g. cotton fabric supplier KL, cheap plastic bags…",
+  },
+  why: {
+    eyebrow: "Why JutaOne.Biz?",
+    title: "Ordinary AI Writes Text. We Move Business.",
+    subtitle: "An honest comparison — what you get from just $1.",
+    genericName: "Ordinary AI",
+    genericItems: [
+      "Writes text only — not connected to business",
+      "Forces you across many separate apps",
+      "Expensive monthly subscription",
+      "Doesn't grasp local language & style",
+    ],
+    brandName: "JutaOne.Biz",
+    brandBadge: "Merchants' Choice",
+    brandItems: [
+      "Write viral TikTok/FB ads in 1.5 seconds",
+      "Open an online shop + automatic PDF invoices",
+      "Find wholesale suppliers (Biz-Match)",
+      "Track live gold & silver prices",
+      "One token — no subscription, no contract",
+    ],
+    ecoTitle: "One flow. Four systems.",
+    ecoSteps: [
+      "Write Viral Ads",
+      "Open Shop + Invoices",
+      "Meet Suppliers",
+      "Track Gold",
+    ],
   },
   pricing: {
     title: "Token only. Nothing hidden.",

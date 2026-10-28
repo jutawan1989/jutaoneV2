@@ -94,7 +94,12 @@ describe("Dual metals API (homepage free, dashboard premium)", () => {
   it("free feed serves the 4h cache instead of calling the vendor twice", async () => {
     process.env.GOLDPRICE_API_KEY = "test-key";
     const fetchMock = vi.fn(async () =>
-      jsonResponse({ symbols: [{ symbol: "XAU", price: "4000.00" }] }),
+      jsonResponse({
+        symbols: [
+          { symbol: "XAU", price: "4000.00" },
+          { symbol: "XAG", price: "50.00" },
+        ],
+      }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -104,6 +109,51 @@ describe("Dual metals API (homepage free, dashboard premium)", () => {
     expect(second?.source).toBe("cache");
     expect(second?.gold).toBe(first?.gold);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("free feed backfills gold when the combined response omits XAU (keyless tier)", async () => {
+    delete process.env.GOLDPRICE_API_KEY;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const u = String(url);
+        // Exact production reproduction: combined call returns XAG only.
+        if (u.includes("symbol=XAU-USD-SPOT&symbol=XAG-USD-SPOT")) {
+          return jsonResponse({ symbols: [{ symbol: "XAG", quote_currency: "USD", price: "50.00" }] });
+        }
+        // Single-symbol backfill returns the missing gold row.
+        if (u.includes("symbol=XAU-USD-SPOT")) {
+          return jsonResponse({ symbols: [{ symbol: "XAU", quote_currency: "USD", price: "4000.00" }] });
+        }
+        return jsonResponse({ symbols: [] });
+      }),
+    );
+
+    const prices = await getPublicMetalPrices("MYR");
+    expect(prices?.gold).toBe(18_800);
+    expect(prices?.silver).toBe(235);
+  });
+
+  it("free feed falls back to gold-api.com when goldprice.dev has no gold row", async () => {
+    delete process.env.GOLDPRICE_API_KEY;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const u = String(url);
+        if (u.includes("api.gold-api.com/price/XAU")) {
+          return jsonResponse({ price: 4000.5, currency: "USD", symbol: "XAU" });
+        }
+        if (u.includes("api.gold-api.com/price/XAG")) {
+          return jsonResponse({ price: 50.25, currency: "USD", symbol: "XAG" });
+        }
+        // goldprice.dev returns nothing usable at all.
+        return jsonResponse({ symbols: [] });
+      }),
+    );
+
+    const prices = await getPublicMetalPrices("MYR");
+    expect(prices?.gold).toBe(18_802.35);
+    expect(prices?.silver).toBe(236.18);
   });
 
   it("premium analysis returns karat/fineness breakdowns plus trend", async () => {

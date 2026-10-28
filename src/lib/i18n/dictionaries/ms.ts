@@ -20,10 +20,10 @@ export const ms: Dictionary = {
   },
   hero: {
     eyebrow: "Enjin Iklan AI untuk Peniaga & Penyedia Perkhidmatan",
-    title: "Bosan ChatGPT Tak Faham Bisnes Anda?",
-    titleAccent: "Biar AI Kami Uruskan Iklan, Kedai, & Pembekal Anda.",
+    title: "Bosan Guna AI Yang Tak Faham Bisnes Anda?",
+    titleAccent: "JutaOne.Biz — Otak Perniagaan Anda.",
     subtitle:
-      "JutaOne.Biz bukan sekadar chatbots. Ia adalah ekosistem perniagaan lengkap. Tulis iklan viral, buka kedai online, dan cari pembekal borong — semuanya dalam satu platform.",
+      "Platform AI Perniagaan Pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Kedai + Cari Pembekal + Simpan Emas' dalam satu tempat, dengan harga serendah RM4.70. Ini bukan sekadar AI.",
     ctaPrimary: "Cuba demo percuma",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercayai peniaga Malaysia & Indonesia",
@@ -134,6 +134,34 @@ export const ms: Dictionary = {
     ],
     cta: "Cuba Cari Pembekal Sekarang",
     searchPlaceholder: "Cth: pembekal kain cotton KL, beg plastik murah…",
+  },
+  why: {
+    eyebrow: "Mengapa JutaOne.Biz?",
+    title: "AI Biasa Tulis Teks. Kami Gerakkan Bisnes.",
+    subtitle: "Perbandingan jujur — apa yang anda dapat dengan harga serendah RM4.70.",
+    genericName: "AI Biasa",
+    genericItems: [
+      "Hanya tulis teks — tak sambung ke bisnes",
+      "Kena buka banyak aplikasi berasingan",
+      "Langganan bulanan yang mahal",
+      "Tak faham bahasa & gaya tempatan",
+    ],
+    brandName: "JutaOne.Biz",
+    brandBadge: "Pilihan Peniaga",
+    brandItems: [
+      "Tulis iklan viral TikTok/FB dalam 1.5 saat",
+      "Buka kedai online + invois PDF automatik",
+      "Cari pembekal borong (Biz-Match)",
+      "Pantau harga emas & perak live",
+      "Satu token — tanpa langganan, tanpa kontrak",
+    ],
+    ecoTitle: "Satu aliran. Empat sistem.",
+    ecoSteps: [
+      "Tulis Iklan Viral",
+      "Buka Kedai + Invois",
+      "Jumpa Pembekal",
+      "Pantau Emas",
+    ],
   },
   pricing: {
     title: "Token sahaja. Tiada yang tersembunyi.",

@@ -5,9 +5,20 @@
  * 4 hours so the free quota is not burned on every page load.
  *
  * Vendor: `GET https://api.goldprice.dev/v1/prices?symbol=XAU-USD-SPOT` with
- * `Authorization: Bearer KEY` (or `X-API-Key` alias). Response:
+ * `Authorization: Bearer *** (or `X-API-Key` alias). Response:
  * `{ symbols: [{ symbol, quote_currency, unit, price, is_stale, computed_at }] }`
- * with price as a DECIMAL STRING in USD per troy ounce.
+ * with price as a DECIMAL STRING in USD per troy ounce. NOTE: the `symbol`
+ * field in the RESPONSE is the bare code (`XAU`/`XAG`), not the full
+ * `XAU-USD-SPOT` request form — match on the bare code.
+ *
+ * Production lesson (2026-10-28): with no/invalid key, a COMBINED request
+ * (`?symbol=XAU-USD-SPOT&symbol=XAG-USD-SPOT`) returns only the XAG row, so
+ * gold came back null while silver worked. Fix: fetchLive now fills each
+ * missing metal via a keyless single-symbol request, then via the keyless
+ * gold-api.com fallback (`GET https://api.gold-api.com/price/XAU` ->
+ * `{ price: number, currency: "USD" }`). The auth header is only sent when
+ * GOLDPRICE_API_KEY is actually set — an empty `Bearer` header is what
+ * triggered the gated combined response.
  *
  * Conversion: USD -> MYR x4.70, USD -> IDR x16000 (Boss fixed rates for now).
  * A `?currency=` override is NOT accepted on the free path: the homepage shows
@@ -77,15 +88,55 @@ function pickPrice(symbols: VendorSymbol[] | undefined, want: "XAU" | "XAG"): nu
   return toUsd(row?.price);
 }
 
-async function fetchLive(currency: PublicMetalCurrency): Promise<PublicMetalPrices> {
-  const key = process.env.GOLDPRICE_API_KEY;
-  if (!key) throw new Error("GOLDPRICE_API_KEY is not configured");
+function authHeaders(): Record<string, string> {
+  // Only send the auth header when a key is actually configured. An empty
+  // `Bearer` header triggers a gated keyless response (XAU row dropped).
+  const key = process.env.GOLDPRICE_API_KEY?.trim();
+  return key ? { authorization: `Bearer ${key}` } : {};
+}
 
+async function fetchSingleUsd(fullSymbol: string, want: "XAU" | "XAG"): Promise<number | null> {
+  try {
+    const response = await fetch(`https://api.goldprice.dev/v1/prices?symbol=${fullSymbol}`, {
+      method: "GET",
+      headers: authHeaders(),
+      signal: AbortSignal.timeout(12_000),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json().catch(() => null)) as VendorResponse | null;
+    return pickPrice(payload?.symbols, want);
+  } catch {
+    return null;
+  }
+}
+
+/** Keyless fallback for gold only: GET https://api.gold-api.com/price/XAU -> { price, currency }. */
+async function fetchGoldApiFallbackUsd(symbol: "XAU" | "XAG"): Promise<number | null> {
+  try {
+    const response = await fetch(`https://api.gold-api.com/price/${symbol}`, {
+      method: "GET",
+      signal: AbortSignal.timeout(12_000),
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json().catch(() => null)) as {
+      price?: number;
+      currency?: string;
+    } | null;
+    const n = typeof payload?.price === "number" ? payload.price : Number(payload?.price);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchLive(currency: PublicMetalCurrency): Promise<PublicMetalPrices> {
   const response = await fetch(
     `https://api.goldprice.dev/v1/prices?symbol=${GOLD_SYMBOL}&symbol=${SILVER_SYMBOL}`,
     {
       method: "GET",
-      headers: { authorization: `Bearer ${key}` },
+      headers: authHeaders(),
       signal: AbortSignal.timeout(12_000),
       cache: "no-store",
     },
@@ -96,8 +147,19 @@ async function fetchLive(currency: PublicMetalCurrency): Promise<PublicMetalPric
   if (!response.ok) throw new Error(`Goldprice.dev responded ${response.status}`);
 
   const payload = (await response.json().catch(() => null)) as VendorResponse | null;
-  const gold = convert(pickPrice(payload?.symbols, "XAU"), currency);
-  const silver = convert(pickPrice(payload?.symbols, "XAG"), currency);
+  let goldUsd = pickPrice(payload?.symbols, "XAU");
+  let silverUsd = pickPrice(payload?.symbols, "XAG");
+
+  // The combined request can legally omit a row (observed: keyless call
+  // returns XAG only). Backfill each missing metal separately rather than
+  // blanking the widget. Order: single-symbol goldprice.dev, then gold-api.
+  if (goldUsd === null) goldUsd = (await fetchSingleUsd(GOLD_SYMBOL, "XAU")) ?? (await fetchGoldApiFallbackUsd("XAU"));
+  if (silverUsd === null) silverUsd = (await fetchSingleUsd(SILVER_SYMBOL, "XAG")) ?? (await fetchGoldApiFallbackUsd("XAG"));
+
+  if (goldUsd === null && silverUsd === null) throw new Error("Goldprice.dev returned no usable rows");
+
+  const gold = convert(goldUsd, currency);
+  const silver = convert(silverUsd, currency);
 
   return { currency, gold, silver, source: "live", fetchedAt: new Date().toISOString() };
 }

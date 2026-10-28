@@ -20,10 +20,10 @@ export const id: Dictionary = {
   },
   hero: {
     eyebrow: "Mesin Iklan AI untuk Pedagang & Penyedia Jasa",
-    title: "Bosan ChatGPT Tak Paham Bisnis Anda?",
-    titleAccent: "Biar AI Kami yang Urus Iklan, Toko, & Supplier Anda.",
+    title: "Bosan Pakai AI yang Tak Paham Bisnis Anda?",
+    titleAccent: "JutaOne.Biz — Otak Bisnis Anda.",
     subtitle:
-      "JutaOne.Biz bukan sekadar chatbot. Ia ekosistem bisnis lengkap. Tulis iklan viral, buka toko online, dan cari supplier grosir — semua dalam satu platform.",
+      "Platform AI bisnis pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Toko + Cari Supplier + Simpan Emas' dalam satu tempat, mulai dari Rp16rb. Ini bukan sekadar AI.",
     ctaPrimary: "Coba demo gratis",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercaya pedagang Indonesia & Malaysia",
@@ -134,6 +134,34 @@ export const id: Dictionary = {
     ],
     cta: "Coba Cari Supplier Sekarang",
     searchPlaceholder: "Cth: supplier kain katun JKT, plastik murah…",
+  },
+  why: {
+    eyebrow: "Kenapa JutaOne.Biz?",
+    title: "AI Biasa Nulis Teks. Kami Menggerakkan Bisnis.",
+    subtitle: "Perbandingan jujur — apa yang Anda dapat mulai dari Rp16rb.",
+    genericName: "AI Biasa",
+    genericItems: [
+      "Hanya nulis teks — tak nyambung ke bisnis",
+      "Harus buka banyak aplikasi terpisah",
+      "Langganan bulanan yang mahal",
+      "Tak paham bahasa & gaya lokal",
+    ],
+    brandName: "JutaOne.Biz",
+    brandBadge: "Pilihan Pedagang",
+    brandItems: [
+      "Tulis iklan viral TikTok/FB dalam 1,5 detik",
+      "Buka toko online + faktur PDF otomatis",
+      "Cari supplier grosir (Biz-Match)",
+      "Pantau harga emas & perak live",
+      "Satu token — tanpa langganan, tanpa kontrak",
+    ],
+    ecoTitle: "Satu alur. Empat sistem.",
+    ecoSteps: [
+      "Tulis Iklan Viral",
+      "Buka Toko + Faktur",
+      "Temu Supplier",
+      "Pantau Emas",
+    ],
   },
   pricing: {
     title: "Hanya token. Tidak ada yang tersembunyi.",
