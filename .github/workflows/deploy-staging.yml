@@ -1,9 +1,16 @@
 # Deploys staging when the default branch moves, so merging the PR is the only
 # step — nobody has to run `npm run deploy` from a laptop.
 #
-# Required repository secrets:
+# Required repository secrets (GitHub repo Settings -> Secrets and variables
+# -> Actions -> Repository secrets — NOT Cloudflare Worker secrets):
 #   CLOUDFLARE_API_TOKEN   — Workers Scripts:Edit (scoped, not a Global Key)
 #   CLOUDFLARE_ACCOUNT_ID  — account that owns the `jutaonev2` Worker
+#
+# A token pasted only into Cloudflare (wrangler secret put / dashboard Worker
+# secrets) is invisible to this workflow — that store is runtime config on the
+# Worker, this workflow reads GitHub repository secrets. Missing secrets used
+# to fail late with wrangler's "set a CLOUDFLARE_API_TOKEN" error; the
+# "Check Cloudflare credentials" step below now fails fast with directions.
 #
 # The build runs through `node scripts/build-worker.mjs`, which refuses to build
 # if a secret reaches the bundle. That script reads `.env.local`, so the env file
@@ -43,6 +50,22 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+
+      - name: Check Cloudflare credentials (fail fast)
+        # Secrets are empty strings when unset — fail here with directions
+        # instead of burning 10 minutes of build then hitting wrangler's
+        # "set a CLOUDFLARE_API_TOKEN" error at the very last step.
+        run: |
+          missing=0
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Go to the GitHub repo: Settings -> Secrets and variables -> Actions -> Repository secrets -> New repository secret, name CLOUDFLARE_API_TOKEN, value = the new token from the Cloudflare dashboard (NOT a wrangler secret put)."
+            missing=1
+          fi
+          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID is not set. Same place: New repository secret, name CLOUDFLARE_ACCOUNT_ID, value = the account ID that owns the jutaonev2 Worker."
+            missing=1
+          fi
+          exit $missing
 
       - name: Typecheck
         run: npm run typecheck
