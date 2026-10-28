@@ -182,14 +182,20 @@ function firstImageUrl(value: unknown): string | null {
 /**
  * RapidAPI TikTok Shop scraper (tiktok-shop-scraper-api1): product details.
  *
- * The exact endpoint path for this vendor is NOT yet confirmed — probes of
- * /product, /products/details and 30+ guesses all 404 "does not exist",
- * while the key itself is valid. So this function tries the documented
- * candidates in order and returns the first usable image; when none hits,
- * the caller falls through to Open Graph. Update
- * RAPIDAPI_TIKTOK_PATHS once the Code Snippet tab gives the real path.
+ * Boss-confirmed shape (Code Snippet): POST with JSON body `{ urls: [...] }`
+ * to /v2/tiktok-shop/products/search/suggestions. The vendor catalogue
+ * currently 404s nearly every path; the two paths below returned 429
+ * (rate-limit = path EXISTS) during probing while 40+ others 404
+ * ("does not exist"). So: POST candidates in order, treat 429 as
+ * "stop, quota exhausted" (fall to OG), accept the first 2xx with an
+ * image. Set RAPIDAPI_TIKTOK_PATHS=/real/path once the vendor confirms
+ * the live path and discovery is skipped.
  */
-const TIKTOK_PATH_CANDIDATES = ["/product", "/products/details", "/product/details"];
+const TIKTOK_POST_CANDIDATES = [
+  "/api/v2/tiktok-shop/products/search/suggestions",
+  "/v2/shop/products",
+  "/v2/tiktok-shop/products/search/suggestions",
+];
 
 async function scrapeTikTokViaRapidApi(
   productUrl: string,
@@ -198,22 +204,32 @@ async function scrapeTikTokViaRapidApi(
   if (!key) return null;
   const host = process.env.RAPIDAPI_TIKTOK_HOST ?? "tiktok-shop-scraper-api1.p.rapidapi.com";
   const paths = (process.env.RAPIDAPI_TIKTOK_PATHS ?? "").trim();
-  const candidates = paths ? paths.split(",").map((p) => p.trim()).filter(Boolean) : TIKTOK_PATH_CANDIDATES;
+  const candidates = paths ? paths.split(",").map((p) => p.trim()).filter(Boolean) : TIKTOK_POST_CANDIDATES;
 
   for (const path of candidates) {
     try {
-      const endpoint =
-        `https://${host}${path.startsWith("/") ? path : `/${path}`}` +
-        `?url=${encodeURIComponent(productUrl)}&region=MY`;
+      const endpoint = `https://${host}${path.startsWith("/") ? path : `/${path}`}`;
       const response = await fetch(endpoint, {
-        method: "GET",
-        headers: { "x-rapidapi-key": key, "x-rapidapi-host": host },
+        method: "POST",
+        headers: {
+          "x-rapidapi-key": key,
+          "x-rapidapi-host": host,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ urls: [productUrl] }),
         signal: AbortSignal.timeout(RAPID_TIMEOUT_MS),
         cache: "no-store",
       });
+      // 429 = quota exhausted for the hour: stop probing, caller falls to OG.
+      // A 429 also proves the path EXISTS (unknown paths 404) — logged
+      // once so the real path can be locked in via RAPIDAPI_TIKTOK_PATHS.
+      if (response.status === 429) {
+        console.error(`[jutaone] rapidapi tiktok 429 at ${path} (path exists, quota exhausted)`);
+        return null;
+      }
       if (!response.ok) continue;
       const payload = (await response.json().catch(() => null)) as unknown;
-      const data = extractDataNode(payload);
+      const data = extractTikTokNode(payload);
       if (!data) continue;
       const imageUrl = firstImageUrl([
         data.images,
@@ -243,6 +259,27 @@ async function scrapeTikTokViaRapidApi(
   }
   console.error("[jutaone] rapidapi tiktok: no candidate path returned an image");
   return null;
+}
+
+/** TikTok vendor nests per-URL results: { data: { items: [...] } } or flat. */
+function extractTikTokNode(payload: unknown): Record<string, unknown> | null {
+  if (!payload || typeof payload !== "object") return null;
+  const record = payload as Record<string, unknown>;
+  const data = record.data;
+  if (Array.isArray(data)) {
+    const first = data[0];
+    if (first && typeof first === "object") return first as Record<string, unknown>;
+    return null;
+  }
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    const node = data as Record<string, unknown>;
+    const items = node.items;
+    if (Array.isArray(items) && items.length > 0 && typeof items[0] === "object") {
+      return items[0] as Record<string, unknown>;
+    }
+    return node;
+  }
+  return record;
 }
 
 export async function POST(request: NextRequest) {
