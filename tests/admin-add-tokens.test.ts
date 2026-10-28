@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAddTokensInput } from "@/lib/admin/tokens";
+import { parseAddTokensInput, sanitizeAmountInput } from "@/lib/admin/tokens";
 
 describe("admin manual token top-up input", () => {
   it("accepts a valid email and 1,000,000 tokens", () => {
@@ -27,5 +27,17 @@ describe("admin manual token top-up input", () => {
 
   it("rejects absurd amounts that are likely a typo", () => {
     expect(parseAddTokensInput({ user_email: "a@b.co", amount: 999_999_999 }).ok).toBe(false);
+  });
+});
+
+describe("sanitizeAmountInput", () => {
+  it("keeps digits and strips grouping separators", () => {
+    // Gagal sebenar yang dilaporkan: input type=number menolak "1,000,000"
+    // (format paparan Malaysia), jadi Boss hanya boleh taip digit tanpa koma.
+    expect(sanitizeAmountInput("1,000,000")).toBe("1000000");
+    expect(sanitizeAmountInput("1 000 000")).toBe("1000000");
+    expect(sanitizeAmountInput("RM 1,000")).toBe("1000");
+    expect(sanitizeAmountInput("1000000")).toBe("1000000");
+    expect(sanitizeAmountInput("")).toBe("");
   });
 });

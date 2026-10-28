@@ -31,6 +31,7 @@ import {
 import { LogoMark } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import type { AdminMember, AdminPayout, AdminStats } from "@/lib/admin/data";
+import { sanitizeAmountInput } from "@/lib/admin/tokens";
 
 const PANEL = "panel gap-0 py-0 ring-0";
 
@@ -151,6 +152,12 @@ export function AdminPanel({
   async function submitTopup(event: FormEvent) {
     event.preventDefault();
     if (topupBusy) return;
+    const cleanedAmount = sanitizeAmountInput(topupAmount);
+    if (!topupEmail.trim() || !cleanedAmount || Number(cleanedAmount) <= 0) {
+      setTopupNote(null);
+      setTopupError("Isi e-mel pengguna dan jumlah token yang sah dahulu.");
+      return;
+    }
     setTopupBusy(true);
     setTopupNote(null);
     setTopupError(null);
@@ -158,7 +165,7 @@ export function AdminPanel({
       const response = await fetch("/api/admin/add-tokens", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ user_email: topupEmail, amount: Number(topupAmount) }),
+        body: JSON.stringify({ user_email: topupEmail, amount: Number(cleanedAmount) }),
       });
       const data = await response.json().catch(() => null);
       if (response.ok && data?.ok) {
@@ -579,13 +586,12 @@ export function AdminPanel({
                     </label>
                     <Input
                       id="topup-amount"
-                      type="number"
+                      type="text"
                       required
-                      min={1}
-                      step={1}
                       inputMode="numeric"
+                      pattern="[0-9, ]*"
                       value={topupAmount}
-                      onChange={(event) => setTopupAmount(event.target.value)}
+                      onChange={(event) => setTopupAmount(sanitizeAmountInput(event.target.value))}
                       placeholder="1000000"
                       className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 text-xs text-silver tabular-nums placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
                     />

@@ -9,6 +9,17 @@
 /** Upper bound on a single manual credit: a typo above this is caller error. */
 export const MAX_MANUAL_TOPUP = 100_000_000;
 
+/**
+ * Strips grouping separators from the amount field before submit.
+ *
+ * The input is `type=text inputMode=numeric` so pasting a Malaysian display
+ * value like "1,000,000" keeps every digit; dropping the minus sign means a
+ * leading `-` can never smuggle a negative credit past `parseAddTokensInput`.
+ */
+export function sanitizeAmountInput(value: string): string {
+  return value.replace(/[^0-9]/g, "");
+}
+
 export type AddTokensInput = { email: string; amount: number };
 
 export function parseAddTokensInput(body: unknown): { ok: true } & AddTokensInput | { ok: false; code: string } {
