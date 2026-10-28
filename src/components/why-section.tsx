@@ -40,22 +40,25 @@ export function WhySection({ dict }: { dict: Dictionary }) {
             return (
               <li
                 key={step}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0a1f4d] to-[#0a1730] p-3 ring-1 ring-slate-900/10"
+                className="flex min-w-0 flex-col rounded-2xl bg-gradient-to-b from-[#0a1f4d] to-[#0a1730] p-3 ring-1 ring-slate-900/10"
               >
-                <span
-                  aria-hidden
-                  className="absolute top-2 right-3 text-[11px] font-bold text-white/30 tabular-nums"
-                >
-                  {index + 1}
-                </span>
-                <PremiumArt
-                  src={art.src}
-                  alt={step}
-                  size={160}
-                  glow={art.glow}
-                  className="h-auto w-full"
-                />
-                <p className="mt-2.5 text-center text-xs leading-snug font-semibold text-white">
+                <div className="relative aspect-square w-full overflow-hidden rounded-xl">
+                  <span
+                    aria-hidden
+                    className="absolute top-2 right-2.5 z-10 text-[11px] font-bold text-white/40 tabular-nums"
+                  >
+                    {index + 1}
+                  </span>
+                  <PremiumArt
+                    src={art.src}
+                    alt={step}
+                    size={320}
+                    glow={art.glow}
+                    rounded="rounded-xl"
+                    className="h-full w-full"
+                  />
+                </div>
+                <p className="mt-2.5 flex min-h-8 items-start justify-center text-center text-xs leading-snug font-semibold break-words text-white">
                   {step}
                 </p>
               </li>

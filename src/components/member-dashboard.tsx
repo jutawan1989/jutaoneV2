@@ -951,12 +951,49 @@ export function MemberDashboard({
   name,
   levels = null,
 }: {
-  overview: MemberOverview;
-  payouts: MemberPayout[];
-  name: string;
+  overview: MemberOverview | null | undefined;
+  payouts: MemberPayout[] | null | undefined;
+  name: string | null | undefined;
   /** Per-tier referral rows; `null` when the member has no code yet. */
   levels?: NetworkLevel[] | null;
 }) {
+  // Hard guard: server loader always sends a full overview, but a null here
+  // (DB outage, stale Worker bundle, bad props) used to throw during render
+  // and Next showed "Application error: a client-side exception". Render a
+  // plain retry state instead so the dashboard never whitescreens.
+  if (!overview || !overview.affiliate || !overview.store) {
+    return (
+      <div className="mx-auto w-full max-w-xl px-4 py-16 text-center sm:px-6">
+        <p className="text-sm font-semibold text-white">Data dashboard tiada buat masa ini</p>
+        <p className="mt-2 text-xs leading-relaxed text-muted">
+          Sila muat semula halaman. Jika masih berlaku, log keluar dan log masuk semula.
+        </p>
+        <div className="mt-5 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="btn-brand min-h-[44px] px-4 py-2 text-sm"
+          >
+            Muat semula
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              fetch("/api/auth", { method: "DELETE" }).finally(() => {
+                window.location.href = "/login?next=/dashboard";
+              });
+            }}
+            className="min-h-[44px] rounded-lg border border-line px-4 py-2 text-sm text-silver"
+          >
+            Log masuk semula
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const safePayouts: MemberPayout[] = Array.isArray(payouts) ? payouts : [];
+  const safeName = typeof name === "string" && name.trim() ? name : "rakan";
   const [tab, setTab] = useState<Tab>("overview");
   const [requesting, setRequesting] = useState(false);
   const [requestNote, setRequestNote] = useState<string | null>(null);
@@ -1067,10 +1104,10 @@ export function MemberDashboard({
 
             <div className="relative mt-4 flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand/30 to-brand/5 text-[11px] font-semibold text-brand-soft ring-1 ring-brand/25 ring-inset">
-                {initials(name)}
+                {initials(safeName)}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-white">{name}</p>
+                <p className="truncate text-xs font-medium text-white">{safeName}</p>
                 <p className="text-[10px] text-muted">{t.memberAccount}</p>
               </div>
               <Pill tone="emerald" className="px-1.5 py-0.5 text-[9px]">
@@ -1161,7 +1198,7 @@ export function MemberDashboard({
                     {t.overviewEyebrow}
                   </p>
                   <h1 className="mt-1.5 text-2xl leading-tight font-semibold tracking-[-0.03em] text-slate-900 break-words sm:text-3xl">
-                    {t.greeting}, {name}
+                    {t.greeting}, {safeName}
                   </h1>
                   <p className="mt-1 text-[13px] text-slate-500">
                     {t.overviewSub}
@@ -1415,7 +1452,7 @@ export function MemberDashboard({
                       </button>
                     </div>
 
-                    {payouts.length === 0 ? (
+                    {safePayouts.length === 0 ? (
                       <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
                         <p className="text-xs font-medium text-slate-700">{t.noPayouts}</p>
                         <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
@@ -1424,7 +1461,7 @@ export function MemberDashboard({
                       </div>
                     ) : (
                       <ul className="mt-3 space-y-2">
-                        {payouts.slice(0, 4).map((payout) => (
+                        {safePayouts.slice(0, 4).map((payout) => (
                           <li
                             key={payout.id}
                             className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5"
@@ -1879,15 +1916,15 @@ export function MemberDashboard({
                       <p className="text-[10px] tracking-[0.14em] text-slate-500 uppercase">
                         {t.payoutHistory}
                       </p>
-                      <Pill tone="slate">{payouts.length}</Pill>
+                      <Pill tone="slate">{safePayouts.length}</Pill>
                     </div>
-                    {payouts.length === 0 ? (
+                    {safePayouts.length === 0 ? (
                       <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
                         {t.noPayoutYet}
                       </p>
                     ) : (
                       <ul className="mt-3 space-y-2">
-                        {payouts.slice(0, 5).map((payout) => (
+                        {safePayouts.slice(0, 5).map((payout) => (
                           <li
                             key={payout.id}
                             className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
