@@ -75,7 +75,7 @@ export function Storefront({ shopSlug, products }: { shopSlug: string; products:
           onClick={() => setActive(null)}
         >
           <div
-            className="w-full max-w-md overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl"
+            className="container mx-auto w-full max-w-md overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">

@@ -232,18 +232,18 @@ export function AdGenerator({
   const submitDisabled = loading || demoDisabled || exhausted || text.trim().length < MIN_CHARS;
 
   return (
-    <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-24 px-5 py-12 sm:px-6 sm:py-20">
+    <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-24 bg-[#0A0F1D] px-5 py-12 sm:px-6 sm:py-20">
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
             {dict.generator.title}
           </h2>
-          <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600">
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
             {dict.generator.subtitle}
           </p>
 
           <form onSubmit={submit} className="mt-7">
-            <label htmlFor="product" className="block text-sm font-medium text-slate-900">
+            <label htmlFor="product" className="block text-sm font-medium text-silver">
               {dict.generator.label}
             </label>
             <textarea
@@ -255,9 +255,9 @@ export function AdGenerator({
               rows={4}
               disabled={demoDisabled}
               aria-describedby="product-hint"
-              className="mt-2 w-full resize-none rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-brand focus:outline-none disabled:opacity-60"
+              className="mt-2 w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3.5 py-3 text-sm text-white shadow-sm transition-colors placeholder:text-muted/60 focus:border-brand focus:outline-none disabled:opacity-60"
             />
-            <div className="mt-1.5 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
               <span id="product-hint">{dict.generator.hint}</span>
               <span aria-live="polite" className="tabular-nums">
                 {text.length}/{MAX_CHARS}
@@ -306,7 +306,7 @@ export function AdGenerator({
                   {dict.generator.errorBlocked}
                 </span>
               ) : (
-                <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-500 tabular-nums">
+                <span className="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-muted tabular-nums">
                   {format(remaining === 1 ? dict.generator.remaining : dict.generator.remainingPlural, {
                     // The copy now reads "Kuota Harian: X/5", so it needs both
                     // values; passing only `count` left the placeholders raw.
@@ -319,16 +319,16 @@ export function AdGenerator({
             </div>
 
             {error && (
-              <p role="alert" className="mt-3 text-sm text-red-600">
+              <p role="alert" className="mt-3 text-sm text-red-300">
                 {error}
               </p>
             )}
           </form>
         </div>
 
-        <div className="flex min-h-[18rem] flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <p className="text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase">
+        <div className="flex min-h-[18rem] flex-col rounded-xl border border-white/[0.07] bg-[#0B1220] p-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+            <p className="text-[11px] font-medium tracking-[0.1em] text-muted uppercase">
               {dict.generator.outputLabel}
             </p>
             {caption && (
@@ -339,8 +339,8 @@ export function AdGenerator({
                 title={copyAllowed ? undefined : dict.generator.copyLocked}
                 className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
                   copyAllowed
-                    ? "border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900"
-                    : "border-amber-300 bg-amber-50 text-amber-700"
+                    ? "border-white/10 text-silver hover:border-white/25 hover:text-white"
+                    : "border-amber-500/40 bg-amber-500/10 text-amber-300"
                 }`}
               >
                 {copied
@@ -355,31 +355,31 @@ export function AdGenerator({
           {caption ? (
             <p
               aria-live="polite"
-              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 select-text"
+              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-silver select-text"
               style={{ WebkitUserSelect: "text", userSelect: "text" }}
             >
               {withWatermarkChoice(caption, locale, includeWatermark)}
             </p>
           ) : (
             <div className="flex flex-1 items-center justify-center">
-              <p className="max-w-xs text-center text-sm text-slate-400">{dict.generator.placeholder}</p>
+              <p className="max-w-xs text-center text-sm text-muted/60">{dict.generator.placeholder}</p>
             </div>
           )}
 
           {lockNotice && (
-            <p role="alert" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+            <p role="alert" className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-200">
               {lockNotice}
             </p>
           )}
 
           {caption && (
             <div className="mt-4 space-y-2.5">
-              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-600 select-none">
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-muted select-none">
                 <input
                   type="checkbox"
                   checked={includeWatermark}
                   onChange={(event) => setIncludeWatermark(event.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-slate-300 accent-slate-900"
+                  className="h-3.5 w-3.5 rounded border-white/20 bg-black/40 accent-sky-400"
                 />
                 <span className="font-medium">✨ {dict.generator.includeLink}</span>
               </label>
@@ -387,7 +387,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("tiktok")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Music2 className="size-3.5" aria-hidden />
                   {dict.generator.postTiktok}
@@ -395,7 +395,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("facebook")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <ThumbsUp className="size-3.5" aria-hidden />
                   {dict.generator.postFacebook}
@@ -403,7 +403,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("instagram")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Camera className="size-3.5" aria-hidden />
                   {dict.generator.postInstagram}
@@ -411,7 +411,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("threads")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <AtSign className="size-3.5" aria-hidden />
                   {dict.generator.postThreads}
@@ -419,7 +419,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("twitter")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Send className="size-3.5" aria-hidden />
                   {dict.generator.postTwitter}
@@ -427,7 +427,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("linkedin")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Briefcase className="size-3.5" aria-hidden />
                   {dict.generator.postLinkedin}
@@ -437,19 +437,19 @@ export function AdGenerator({
           )}
 
           {shareNotice && (
-            <p role="status" className="mt-3 text-xs leading-relaxed text-slate-600">
+            <p role="status" className="mt-3 text-xs leading-relaxed text-muted">
               {shareNotice}
             </p>
           )}
 
-          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
+          <div className="mt-auto flex items-center justify-between border-t border-white/[0.06] pt-3 text-[11px] text-muted">
             <span className="tabular-nums">
               {format(dict.generator.limitBadge, {
                 count: Math.min(used, maxAttempts),
                 max: maxAttempts,
               })}
             </span>
-            <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-medium text-slate-600">
+            <span className="rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.5 font-medium text-muted">
               {dict.pricing.tokenName}
             </span>
           </div>

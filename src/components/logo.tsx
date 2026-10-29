@@ -1,14 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/config";
-import { PremiumArt } from "@/components/premium-art";
 
 /**
  * Brand mark supplied by the client (`public/assets/logo2.jpg`, JOB + globe).
  * Square artwork with a dark background, so it is rendered cropped-rounded
  * with a ring + cyan glow to lift it off the ink surfaces.
  */
-const MARK_SRC = "/assets/logo2.jpg";
+const MARK_SRC = "/assets/logo-job.png";
 
 type LogoMarkProps = {
   /** Rendered width/height in px (square artwork). */
@@ -18,15 +18,17 @@ type LogoMarkProps = {
   label?: string;
 };
 
-export function LogoMark({ size = 32, className, label }: LogoMarkProps) {
+export function LogoMark({ size = 34, className, label }: LogoMarkProps) {
   return (
-    <PremiumArt
+    <Image
       src={MARK_SRC}
       alt={label ?? "JutaOne.Biz"}
-      size={size}
-      glow="cyan"
-      className={className}
-      rounded="rounded-2xl"
+      width={Math.round(size * 2.4)}
+      height={size}
+      style={{ height: size, width: "auto" }}
+      className={`h-9 w-auto shrink-0 object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.35)] ${className ?? ""}`}
+      unoptimized
+      priority
     />
   );
 }
@@ -45,7 +47,7 @@ export function Logo({
   size?: "sm" | "md";
   tone?: "dark" | "light";
 }) {
-  const markHeight = size === "sm" ? 22 : 26;
+  const markHeight = size === "sm" ? 26 : 32;
   const text = size === "sm" ? "text-[13px]" : "text-sm";
   const wordmarkColor = tone === "light" ? "text-slate-900" : "text-white";
 
@@ -56,8 +58,8 @@ export function Logo({
       aria-label="JutaOne.Biz"
     >
       <LogoMark
-        size={Math.round(markHeight * 1.6)}
-        className="shrink-0 rounded-lg"
+        size={markHeight}
+        className="shrink-0"
       />
       <span className={`${text} font-semibold tracking-[0.12em] ${wordmarkColor}`}>
         JUTAONE<span className="text-brand">.BIZ</span>

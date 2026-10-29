@@ -54,7 +54,7 @@ export default async function ShopPage({ params }: Props) {
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(28rem_12rem_at_50%_-20%,rgba(56,189,248,0.28),transparent_70%)]"
           />
-          <div className="relative mx-auto w-full max-w-4xl px-4 pt-10 pb-10 sm:px-6">
+          <div className="relative container mx-auto w-full max-w-6xl px-4 pt-10 pb-10 sm:px-6">
             <div className="flex items-center gap-2.5">
               <LogoMark size={28} label="JutaOne.Biz" />
               <span className="text-[11px] font-medium tracking-[0.12em] text-white/70 uppercase">
@@ -66,7 +66,7 @@ export default async function ShopPage({ params }: Props) {
             </h1>
           </div>
         </div>
-        <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+        <div className="container mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
           <section className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
             <p className="text-[11px] font-bold tracking-[0.12em] text-amber-600 uppercase">
               Kedai tidak aktif
@@ -100,7 +100,7 @@ export default async function ShopPage({ params }: Props) {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(20rem_10rem_at_85%_110%,rgba(16,185,129,0.18),transparent_70%)]"
         />
-        <div className="relative mx-auto w-full max-w-4xl px-4 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14">
+        <div className="relative container mx-auto w-full max-w-6xl px-4 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14">
           <div className="flex items-center gap-2.5">
             <LogoMark size={28} label="JutaOne.Biz" />
             <span className="text-[11px] font-medium tracking-[0.12em] text-white/70 uppercase">
@@ -124,7 +124,7 @@ export default async function ShopPage({ params }: Props) {
       </div>
 
       {/* TASK 2+3: Shopify-style product grid + bottom-sheet checkout */}
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="container mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <Storefront
           shopSlug={slug}
           products={products.map((product) => ({

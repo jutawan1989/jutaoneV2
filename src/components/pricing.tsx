@@ -43,17 +43,17 @@ export function Pricing({
   const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD, locale);
 
   return (
-    <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 px-5 py-12 sm:px-6 sm:py-20">
+    <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 bg-[#0A0F1D] px-5 py-12 sm:px-6 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
         <div>
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
             {dict.pricing.title}
           </h2>
-          <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600">{dict.pricing.subtitle}</p>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">{dict.pricing.subtitle}</p>
 
           <ul className="mt-7 space-y-3">
             {dict.pricing.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-start gap-3 text-sm text-slate-700">
+              <li key={bullet} className="flex items-start gap-3 text-sm text-silver">
                 <span aria-hidden className="mt-0.5 text-xs font-semibold text-brand">
                   ✓
                 </span>
@@ -63,10 +63,10 @@ export function Pricing({
           </ul>
         </div>
 
-        <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+        <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0B1220] p-6 shadow-sm sm:p-7">
           <div className="relative">
-            <p className="flex items-center gap-2 text-[11px] font-medium tracking-[0.12em] text-slate-500 uppercase">
-              <Zap className="size-3.5 text-brand" aria-hidden />
+            <p className="flex items-center gap-2 text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
+              <Zap className="size-3.5 text-brand-soft" aria-hidden />
               {dict.pricing.amountTitle}
             </p>
 
@@ -81,8 +81,8 @@ export function Pricing({
                     aria-pressed={active}
                     className={`min-h-[44px] rounded-xl border px-2 py-2.5 text-sm font-semibold tabular-nums transition-colors ${
                       active
-                        ? "border-brand bg-brand/10 text-slate-900 shadow-[0_0_0_1px_var(--color-brand)]"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900"
+                        ? "border-brand bg-brand/10 text-white shadow-[0_0_0_1px_var(--color-brand)]"
+                        : "border-white/10 bg-white/[0.03] text-silver hover:border-white/25 hover:text-white"
                     }`}
                   >
                     ${amount}
@@ -94,14 +94,14 @@ export function Pricing({
             <div className="mt-3">
               <label
                 htmlFor={customId}
-                className="text-[11px] font-medium tracking-[0.12em] text-slate-500 uppercase"
+                className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase"
               >
                 {dict.pricing.customLabel}
               </label>
               <div className="relative mt-1.5">
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-semibold text-slate-400"
+                  className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-semibold text-muted"
                 >
                   $
                 </span>
@@ -119,39 +119,39 @@ export function Pricing({
                   }}
                   onFocus={() => setPicked("custom")}
                   aria-invalid={picked === "custom" && custom !== "" && !valid}
-                  className="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-3 pl-8 text-sm font-semibold text-slate-900 tabular-nums placeholder:font-normal placeholder:text-slate-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                  className="min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pr-3 pl-8 text-sm font-semibold text-white tabular-nums placeholder:font-normal placeholder:text-muted/60 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
                 />
               </div>
             </div>
 
             {!valid && picked === "custom" && custom !== "" && (
-              <p role="alert" className="mt-2 text-xs text-red-600">
+              <p role="alert" className="mt-2 text-xs text-red-300">
                 {dict.pricing.invalidAmount}
               </p>
             )}
 
-            <div className="my-6 h-px bg-slate-100" aria-hidden />
+            <div className="my-6 h-px bg-white/[0.06]" aria-hidden />
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center">
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-5 py-5 text-center">
               <div className="flex justify-center">
                 <PremiumArt src="/assets/token.jpg" alt={dict.pricing.tokensFor} size={64} glow="cyan" />
               </div>
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-slate-500 uppercase">
-                <Coins className="size-3.5 text-brand" aria-hidden />
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
+                <Coins className="size-3.5 text-brand-soft" aria-hidden />
                 {dict.pricing.tokensFor}
               </p>
-              <p className="mt-1.5 text-xl font-semibold break-words text-slate-900 sm:text-2xl">
+              <p className="mt-1.5 text-xl font-semibold break-words text-white sm:text-2xl">
                 {valid ? formatTokenCount(preview.tokens, locale) : `— ${dict.pricing.tokenUnit}`}
               </p>
 
-              <p className="mt-4 text-[44px] leading-none font-semibold tracking-[-0.03em] text-slate-900 tabular-nums">
+              <p className="mt-4 text-[44px] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums">
                 {preview.display}
-                <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-muted uppercase">
                   {preview.baseCode}
                 </span>
               </p>
               {preview.localDisplay && (
-                <p className="mt-2 text-sm font-medium text-slate-600 tabular-nums">
+                <p className="mt-2 text-sm font-medium text-muted tabular-nums">
                   {preview.localDisplay}
                 </p>
               )}
@@ -163,7 +163,7 @@ export function Pricing({
                     .replace("{total}", formatRm((usd as number) + TOYYIBPAY_FEE_RM / 4.7))}
                 </p>
               )}
-              <p className="mt-1.5 text-xs text-slate-500">{dict.pricing.priceLabel}</p>
+              <p className="mt-1.5 text-xs text-muted">{dict.pricing.priceLabel}</p>
             </div>
 
             <div className="mt-5">
@@ -184,16 +184,16 @@ export function Pricing({
               </TopUpButton>
             </div>
 
-            <div className="mt-3 space-y-1.5 text-center text-[11px] leading-relaxed text-slate-500">
+            <div className="mt-3 space-y-1.5 text-center text-[11px] leading-relaxed text-muted">
               <p className="flex items-center justify-center gap-1.5">
-                <ShieldCheck className="size-3.5 shrink-0 text-emerald-600" aria-hidden />
+                <ShieldCheck className="size-3.5 shrink-0 text-emerald-400" aria-hidden />
                 {dict.pricing.topupNote.replace("{currency}", preview.currency)}
               </p>
               <p className="font-medium">
                 🇲🇾 {dict.pricing.toyyibpayNote} · 🌍 {dict.pricing.chipNote}
               </p>
             </div>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-slate-400">
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-muted/70">
               <Lock className="size-3 shrink-0" aria-hidden />
               {dict.pricing.trustBadge}
             </p>

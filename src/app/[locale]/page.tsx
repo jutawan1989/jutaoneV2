@@ -55,15 +55,15 @@ export default async function HomePage({ params, searchParams }: PageProps) {
 
   const tokenName = price.tokensLabel[locale];
 
-  // Dual-Tone (Boss spec, gaya Dynadot): Hero biru gelap di atas,
-  // body putih/cerah di bawah. Program Affiliate DIHARAMKAN di
-  // homepage awam (pematuhan Chip.Asia) — hanya BizMatchSection.
+  // Dark Slate Blue body (Boss + Linda spec): every body section matches
+  // the Hero — #0A0F1D surfaces, white text, dark cards with subtle borders.
+  // Affiliate stays off the public homepage (Chip.Asia compliance).
   return (
     <>
       <Navbar locale={locale} dict={dict} price={price} signedIn={signedIn} />
       <main id="main">
         <Hero dict={dict} price={price} locale={locale} />
-        <div className="bg-slate-50 text-slate-900">
+        <div className="bg-[#0A0F1D] text-slate-100">
           <Billboard dict={dict} />
           <AdGenerator
             locale={locale}

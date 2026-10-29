@@ -229,7 +229,7 @@ export function MerchantDashboard({
   const slug = added[0]?.shopSlug ?? shopSlug;
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+    <main className="container mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <header className="border-b border-line pb-5">
         <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
           Auto-Store & Invoice
@@ -294,7 +294,7 @@ export function MerchantDashboard({
       />
 
       {/* ── Light product form ── */}
-      <form onSubmit={submit} className="mt-6 rounded-xl bg-white p-5 shadow-md sm:p-7">
+      <form onSubmit={submit} className="container mx-auto mt-6 max-w-6xl rounded-xl bg-white p-5 shadow-md sm:p-7">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-slate-900">Tambah produk</h2>
         </div>

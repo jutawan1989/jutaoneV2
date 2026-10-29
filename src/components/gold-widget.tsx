@@ -135,14 +135,14 @@ export function GoldWidget({ dict, locale }: { dict: Dictionary; locale: Locale 
   ];
 
   return (
-    <section id="gold" className="scroll-mt-24 border-y border-slate-200 bg-sky-50 py-20">
+    <section id="gold" className="scroll-mt-24 border-y border-white/[0.06] bg-[#0A0F1D] py-20">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
         <div className="order-2 lg:order-1">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
             {dict.gold.title}
           </h2>
-          <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600">{dict.gold.subtitle}</p>
-          <p className="mt-6 max-w-lg border-l-2 border-brand/60 pl-4 text-sm leading-relaxed text-slate-700">
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">{dict.gold.subtitle}</p>
+          <p className="mt-6 max-w-lg border-l-2 border-brand/60 pl-4 text-sm leading-relaxed text-silver">
             {dict.gold.note}
           </p>
         </div>
@@ -152,39 +152,39 @@ export function GoldWidget({ dict, locale }: { dict: Dictionary; locale: Locale 
             <div
               role="group"
               aria-label={dict.gold.screenTitle}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0B1220] p-5 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] font-medium tracking-[0.12em] text-slate-500 uppercase">
+                  <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
                     {dict.gold.screenTitle}
                   </p>
-                  <p className="mt-1 text-[11px] text-slate-400">{dict.gold.priceRow}</p>
+                  <p className="mt-1 text-[11px] text-muted/70">{dict.gold.priceRow}</p>
                 </div>
-                <span className="flex items-center gap-1.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.1em] text-emerald-600 uppercase">
-                  <span aria-hidden className="signal-live h-1 w-1 rounded-full bg-emerald-500" />
+                <span className="flex items-center gap-1.5 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.1em] text-emerald-300 uppercase">
+                  <span aria-hidden className="signal-live h-1 w-1 rounded-full bg-emerald-400" />
                   {dict.gold.liveBadge}
                 </span>
               </div>
 
-              <ul className="mt-5 divide-y divide-slate-100 border-y border-slate-100">
+              <ul className="mt-5 divide-y divide-white/[0.06] border-y border-white/[0.06]">
                 {rows.map((row) => (
                   <li key={row.name} className="signal-row flex items-center justify-between gap-3 py-3.5">
                     <span className="flex min-w-0 items-center gap-3">
                       <PremiumArt src={row.art} alt={row.name} size={44} glow={row.glow} rounded="rounded-xl" />
-                      <span className="truncate text-sm font-medium text-slate-700">{row.name}</span>
+                      <span className="truncate text-sm font-medium text-silver">{row.name}</span>
                     </span>
-                    <span className="text-base font-semibold text-slate-900 tabular-nums">{row.price}</span>
+                    <span className="text-base font-semibold text-white tabular-nums">{row.price}</span>
                   </li>
                 ))}
               </ul>
 
               {updatedLabel && (
-                <p className="mt-3 text-[11px] text-slate-500">
+                <p className="mt-3 text-[11px] text-muted">
                   {dict.gold.updatedAt}: {updatedLabel}
                 </p>
               )}
-              <p className="mt-4 text-[10px] leading-relaxed text-slate-500">{dict.gold.disclaimer}</p>
+              <p className="mt-4 text-[10px] leading-relaxed text-muted/70">{dict.gold.disclaimer}</p>
             </div>
           </div>
         </div>
