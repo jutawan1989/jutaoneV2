@@ -8,7 +8,6 @@ import {
   issueSession,
   verifyPassword,
 } from "@/lib/auth/member";
-import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,10 +48,10 @@ function recordFailure(key: string, now: number) {
 /**
  * Signs a member in, or registers one.
  *
- * `owner_ref` is the visitor hash of *this* browser, so a new account is
- * immediately joined to any tokens, store or affiliate code already created
- * here. That is the only identity the rest of the system knows; asking the user
- * for it would be asking for a hash.
+ * `owner_ref` NEVER changes: login always reuses the one already stored on the
+ * member row. Minting a fresh visitor hash here is the bug that locked Boss
+ * out of 2.26M tokens — the dashboard sums `owner_ref` while the login had
+ * issued a session for a different key.
  */
 export async function POST(request: NextRequest) {
   const key = clientKey(request);
@@ -77,10 +76,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ code: "password_too_short", min: 8 }, { status: 400 });
   }
 
-  const ownerRef = identifyVisitor(request.headers).visitorKey;
-
   if (mode === "register") {
-    const created = await createMember({ email, password, displayName, ownerRef });
+    // A new member needs a ledger identity this browser has never used before.
+    // `crypto.randomUUID` is stable across IPs, devices and cookie clears —
+    // sealing the ledger to the account, not to this browser's headers.
+    const { randomUUID } = await import("node:crypto");
+    const created = await createMember({ email, password, displayName, ownerRef: randomUUID() });
     if (!created.ok) {
       const taken = created.reason === "email_taken";
       return NextResponse.json(

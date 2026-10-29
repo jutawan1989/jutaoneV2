@@ -38,15 +38,20 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const region = detectRegion(requestHeaders);
   const price = getPrice(region, locale);
   const visitor = identifyVisitor(requestHeaders);
-  const variant = resolveVariant(visitor.visitorKey, variantOverride ?? null);
+  const jar = await cookies();
+  const sessionOwner = verifySession(jar.get(SESSION_COOKIE)?.value);
+  const signedIn = sessionOwner !== null;
+  // Members are recognised by their ledger identity from the session cookie,
+  // so a shared IP or cleared visitor cookie never eats their quota.
+  const quotaIdentity = signedIn
+    ? { ...visitor, visitorKey: sessionOwner as string }
+    : visitor;
+  const variant = resolveVariant(quotaIdentity.visitorKey, variantOverride ?? null);
 
   const [access, killSwitch] = await Promise.all([
-    evaluateDemoAccess(visitor),
+    evaluateDemoAccess(quotaIdentity),
     getKillSwitchState(),
   ]);
-
-  const jar = await cookies();
-  const signedIn = verifySession(jar.get(SESSION_COOKIE)?.value) !== null;
 
   const tokenName = price.tokensLabel[locale];
 
@@ -67,9 +72,9 @@ export default async function HomePage({ params, searchParams }: PageProps) {
             priceDisplay={price.display}
             currency={price.currency}
             tokenName={tokenName}
-            initialRemaining={access.remaining}
-            initialCopyAllowed={access.copyAllowed}
-            initialUsed={access.used}
+            initialRemaining={signedIn ? DAILY_GENERATION_QUOTA : access.remaining}
+            initialCopyAllowed={signedIn ? true : access.copyAllowed}
+            initialUsed={signedIn ? 0 : access.used}
             maxAttempts={DAILY_GENERATION_QUOTA}
             demoDisabled={killSwitch.disabled}
           />

@@ -3,6 +3,7 @@ import { generateCaption } from "@/lib/ai";
 import { getKillSwitchState, recordAiSpend } from "@/lib/ai/budget";
 import { logEvent, parseUtm } from "@/lib/analytics/events";
 import { resolveVariant } from "@/lib/analytics/variant";
+import { sessionOwnerFromHeaders } from "@/lib/auth/member";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
 import {
@@ -30,7 +31,15 @@ export async function POST(request: NextRequest) {
   const locale = isLocale(requested) ? requested : detectLocale(headers);
   const region = detectRegion(headers);
   const visitor = identifyVisitor(headers);
-  const variant = resolveVariant(visitor.visitorKey, request.nextUrl.searchParams.get("variant"));
+  // Signed-in members use their ledger identity from the session cookie,
+  // so their quota is their own — never the anonymous hash of a shared IP.
+  // Member generations are unlimited: they pay tokens (dashboard balance),
+  // not the free-trial daily quota.
+  const sessionOwner = sessionOwnerFromHeaders(headers);
+  const memberMode = sessionOwner !== null;
+  const quotaKey = memberMode ? sessionOwner : visitor.visitorKey;
+  const quotaIdentity = { ...visitor, visitorKey: quotaKey };
+  const variant = resolveVariant(quotaKey, request.nextUrl.searchParams.get("variant"));
   const utm = parseUtm(request.nextUrl.search);
 
   if (text.length < MIN_CHARS) {
@@ -63,28 +72,74 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const access = await evaluateDemoAccess(visitor);
-  if (!access.allowed) {
+  if (!memberMode) {
+    const access = await evaluateDemoAccess(quotaIdentity);
+    if (!access.allowed) {
+      await logEvent({
+        event: "demo_limit_reached",
+        locale,
+        region,
+        variant,
+        utm,
+        visitorKey: visitor.visitorKey,
+        props: { reason: access.reason, used: access.used },
+      });
+      return NextResponse.json(
+        {
+          code: access.reason,
+          remaining: 0,
+          used: access.used,
+          max: access.max,
+          copyAllowed: false,
+          variant,
+        },
+        { status: 429 },
+      );
+    }
+
     await logEvent({
-      event: "demo_limit_reached",
+      event: "demo_start",
       locale,
       region,
       variant,
       utm,
-      visitorKey: visitor.visitorKey,
-      props: { reason: access.reason, used: access.used },
+      visitorKey: quotaKey,
+      props: { used: access.used },
     });
-    return NextResponse.json(
-      {
-        code: access.reason,
-        remaining: 0,
-        used: access.used,
-        max: access.max,
-        copyAllowed: false,
-        variant,
-      },
-      { status: 429 },
-    );
+
+    // Counted at acceptance so repeated failures cannot be used to farm the API.
+    await recordDemoAttempt(quotaIdentity, { locale, region });
+
+    const result = await generateCaption({ text, locale, region });
+    await recordAiSpend(result.costUsd, { model: result.model, locale });
+
+    await logEvent({
+      event: "demo_success",
+      locale,
+      region,
+      variant,
+      utm,
+      visitorKey: quotaKey,
+      props: { source: result.source, latencyMs: result.latencyMs, model: result.model },
+    });
+
+    const after = await evaluateDemoAccess(quotaIdentity);
+
+    return NextResponse.json({
+      caption: result.caption,
+      source: result.source,
+      latencyMs: result.latencyMs,
+      remaining: after.remaining,
+      used: after.used,
+      max: after.max,
+      // The client must not decide this itself: the lock is a paid feature, so the
+      // server states whether this generation's output is copyable.
+      // Derived from `after`, not `access`: `access` is the count *before* this
+      // attempt was recorded, so reading it here made the third generation look
+      // like the second and left copy unlocked one generation too long.
+      copyAllowed: after.used <= COPY_FREE_GENERATIONS,
+      variant,
+    });
   }
 
   await logEvent({
@@ -93,15 +148,12 @@ export async function POST(request: NextRequest) {
     region,
     variant,
     utm,
-    visitorKey: visitor.visitorKey,
-    props: { used: access.used },
+    visitorKey: quotaKey,
+    props: { used: null, member: true },
   });
 
-  // Counted at acceptance so repeated failures cannot be used to farm the API.
-  await recordDemoAttempt(visitor, { locale, region });
-
-  const result = await generateCaption({ text, locale, region });
-  await recordAiSpend(result.costUsd, { model: result.model, locale });
+  const memberResult = await generateCaption({ text, locale, region });
+  await recordAiSpend(memberResult.costUsd, { model: memberResult.model, locale });
 
   await logEvent({
     event: "demo_success",
@@ -109,25 +161,19 @@ export async function POST(request: NextRequest) {
     region,
     variant,
     utm,
-    visitorKey: visitor.visitorKey,
-    props: { source: result.source, latencyMs: result.latencyMs, model: result.model },
+    visitorKey: quotaKey,
+    props: { source: memberResult.source, latencyMs: memberResult.latencyMs, model: memberResult.model, member: true },
   });
 
-  const after = await evaluateDemoAccess(visitor);
-
   return NextResponse.json({
-    caption: result.caption,
-    source: result.source,
-    latencyMs: result.latencyMs,
-    remaining: after.remaining,
-    used: after.used,
-    max: after.max,
-    // The client must not decide this itself: the lock is a paid feature, so the
-    // server states whether this generation's output is copyable.
-    // Derived from `after`, not `access`: `access` is the count *before* this
-    // attempt was recorded, so reading it here made the third generation look
-    // like the second and left copy unlocked one generation too long.
-    copyAllowed: after.used <= COPY_FREE_GENERATIONS,
+    caption: memberResult.caption,
+    source: memberResult.source,
+    latencyMs: memberResult.latencyMs,
+    remaining: null,
+    used: null,
+    max: null,
+    copyAllowed: true,
+    member: true,
     variant,
   });
 }

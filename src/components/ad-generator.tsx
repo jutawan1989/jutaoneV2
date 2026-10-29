@@ -20,6 +20,8 @@ type DemoResponse = {
   used?: number | null;
   max?: number | null;
   copyAllowed?: boolean;
+  /** True when the server recognised the member session: no quota applies. */
+  member?: boolean;
   variant?: Variant;
   code?: string;
 };
@@ -107,6 +109,12 @@ export function AdGenerator({
           setCaption(data.caption);
           if (typeof data.copyAllowed === "boolean") setCopyAllowed(data.copyAllowed);
           setLockNotice(null);
+          if (data.member === true) {
+            // Signed-in member: unlimited, copy unlocked, no quota UI.
+            setRemaining(maxAttempts);
+            setUsed(0);
+            return;
+          }
           const nextRemaining = data.remaining ?? 0;
           setRemaining(nextRemaining);
           if (typeof data.used === "number") setUsed(data.used);

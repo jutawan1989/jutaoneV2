@@ -75,8 +75,11 @@ export function issueSession(ownerRef: string, now = Date.now()): string {
 export function verifySession(token: string | undefined, now = Date.now()): string | null {
   if (!token) return null;
   const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  const [ownerRef, expiry, signature] = parts;
+  if (parts.length < 3) return null;
+  // Split from the right: owner_ref may itself contain dots in future formats.
+  const signature = parts.pop();
+  const expiry = parts.pop();
+  const ownerRef = parts.join(".");
   if (!ownerRef || !expiry || !signature) return null;
 
   const expected = sign(`${ownerRef}.${expiry}`);
@@ -86,6 +89,44 @@ export function verifySession(token: string | undefined, now = Date.now()): stri
   const expiresAt = Number(expiry);
   if (!Number.isFinite(expiresAt) || expiresAt * 1000 <= now) return null;
   return ownerRef;
+}
+
+/**
+ * Reads the signed member session from a `Cookie` header.
+ * Returns the member's `owner_ref`, or null when not signed in.
+ *
+ * `owner_ref` never contains `.` (UUIDs for new accounts, salted hex hashes
+ * for legacy ones), so the last two dot-segments are always expiry + signature.
+ * Splitting from the right keeps verification working even if a future format
+ * adds dots to the identity part.
+ */
+export function sessionOwnerFromHeaders(
+  headers: { get(name: string): string | null },
+): string | null {
+  const header = headers.get("cookie") ?? "";
+  for (const part of header.split(";")) {
+    const [rawKey, ...rest] = part.trim().split("=");
+    if (rawKey !== SESSION_COOKIE) continue;
+    try {
+      return verifySession(decodeURIComponent(rest.join("=")));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Ledger/quota identity for metered routes: a signed-in member's `owner_ref`
+ * wins, an anonymous visitor falls back to the header-derived visitor hash.
+ * Reading the wrong one is the bug Boss hit — dashboard sums `owner_ref`
+ * while the route charged an empty visitor key.
+ */
+export function resolveIdentityKey(
+  headers: { get(name: string): string | null },
+  visitorKey: string,
+): string {
+  return sessionOwnerFromHeaders(headers) ?? visitorKey;
 }
 
 export type Member = { ownerRef: string; email: string; displayName: string | null };
