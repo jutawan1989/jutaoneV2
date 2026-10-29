@@ -14,12 +14,16 @@ export const metadata = {
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; ref?: string }>;
 }) {
   const jar = await cookies();
   if (verifySession(jar.get(SESSION_COOKIE)?.value)) redirect("/dashboard");
 
-  const { next } = await searchParams;
+  const { next, ref } = await searchParams;
   const target = typeof next === "string" && next.startsWith("/") ? next : "/dashboard";
-  return <MemberRegisterForm next={target} />;
+  const referredBy =
+    typeof ref === "string" && /^[a-z0-9][a-z0-9_-]{2,31}$/i.test(ref.trim())
+      ? ref.trim().toLowerCase()
+      : null;
+  return <MemberRegisterForm next={target} referredBy={referredBy} />;
 }

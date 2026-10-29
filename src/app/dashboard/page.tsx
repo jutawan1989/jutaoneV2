@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { MemberDashboard } from "@/components/member-dashboard";
 import { SESSION_COOKIE, getMemberProfile, verifySession } from "@/lib/auth/member";
 import { loadMemberOverview, loadMemberPayouts } from "@/lib/member-data";
-import { getAffiliateSummary, percentFor } from "@/lib/affiliate";
+import { ensureAffiliateCode, getAffiliateSummary, percentFor } from "@/lib/affiliate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +30,15 @@ export default async function DashboardPage() {
     getMemberProfile(ownerRef),
     getAffiliateSummary(ownerRef),
   ]);
+
+  // Auto-mint so "Pautan Rujukan" is never empty: a member who registered
+  // before auto-codes (or whose row somehow vanished) gets their code the
+  // first time they open the dashboard, linked flat (no referrer known here).
+  let overviewCode = overview.affiliate.code;
+  if (!overviewCode) {
+    overviewCode = await ensureAffiliateCode(ownerRef);
+    if (overviewCode) overview.affiliate.code = overviewCode;
+  }
 
   // The referral commission summary is already modelled by `getAffiliateSummary`. It is
   // passed through untouched so the dashboard can draw the same table the

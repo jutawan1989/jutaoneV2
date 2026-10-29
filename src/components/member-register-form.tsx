@@ -12,7 +12,7 @@ import Link from "next/link";
  * Posts to /api/auth with mode=register. On success the browser lands on
  * /dashboard where the Top-Up $1 CTA is one tap away.
  */
-export function MemberRegisterForm({ next }: { next: string }) {
+export function MemberRegisterForm({ next, referredBy = null }: { next: string; referredBy?: string | null }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +41,13 @@ export function MemberRegisterForm({ next }: { next: string }) {
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, password, displayName, mode: "register" }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password,
+          displayName,
+          mode: "register",
+          ...(referredBy ? { ref: referredBy } : {}),
+        }),
       });
       const data = await response.json();
 

@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { getSupabase } from "@/lib/db";
 
 /**
@@ -157,4 +158,94 @@ async function buildSummary(
     availableMinor: Number(balances?.[0]?.available_minor ?? 0),
     currency: (balances?.[0]?.currency as string | undefined) ?? "MYR",
   };
+}
+
+/**
+ * Looks up a referral code id by value. Used to attribute a new member to the
+ * referrer who brought them in (`?ref=CODE` on the register page).
+ */
+export async function findReferralCodeId(code: string): Promise<number | null> {
+  if (!isValidReferralCode(code)) return null;
+  const db = getSupabase();
+  if (!db) return null;
+
+  const { data } = await db
+    .from("referral_codes")
+    .select("id")
+    .eq("code", code)
+    .maybeSingle();
+  return typeof data?.id === "number" ? data.id : null;
+}
+
+/**
+ * Generates an 8-character referral code.
+ *
+ * Lowercase alphanumerics without lookalikes (no 0/1/i/l/o), so a code is
+ * readable over WhatsApp and always satisfies the
+ * `referral_codes_code_format` check (`^[a-z0-9][a-z0-9_-]{2,31}$`).
+ */
+const CODE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+
+export function generateReferralCode(): string {
+  const bytes = randomBytes(8);
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+  }
+  return code;
+}
+
+/**
+ * Ensures the member owns exactly one referral code, creating it on first use.
+ *
+ * Called on registration and when the Affiliate tab opens, so "Pautan Rujukan"
+ * is never empty. Idempotent: an existing code is returned untouched (the
+ * referrer link is never rewritten), and a code collision retries with a fresh
+ * value. Returns null when the store is unavailable rather than throwing, so
+ * callers can degrade to the empty state instead of breaking registration or
+ * the dashboard.
+ */
+export async function ensureAffiliateCode(
+  ownerRef: string,
+  opts?: { parentCodeId?: number | null },
+): Promise<string | null> {
+  if (!ownerRef) return null;
+  const db = getSupabase();
+  if (!db) return null;
+
+  const { data: rows } = await db
+    .from("referral_codes")
+    .select("id, code")
+    .eq("owner_ref", ownerRef)
+    .limit(1);
+  const existing = (rows as Array<{ code?: unknown }> | null)?.[0]?.code;
+  if (typeof existing === "string" && existing.length > 0) return existing;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateReferralCode();
+    const { error } = await db.from("referral_codes").insert({
+      code,
+      owner_ref: ownerRef,
+      ...(opts?.parentCodeId ? { parent_code_id: opts.parentCodeId } : {}),
+    });
+    if (!error) return code;
+
+    const collision = error.code === "23505" || /duplicate key|unique/i.test(error.message);
+    if (!collision) {
+      console.error("[jutaone] affiliate code insert failed", error.message);
+      return null;
+    }
+    // A collision (or a concurrent insert for this owner): re-read before
+    // minting another code so two tabs cannot mint two codes.
+    const { data: raced } = await db
+      .from("referral_codes")
+      .select("code")
+      .eq("owner_ref", ownerRef)
+      .limit(1);
+    const racedCode = (raced as Array<{ code?: unknown }> | null)?.[0]?.code;
+    if (typeof racedCode === "string" && racedCode.length > 0) return racedCode;
+  }
+
+  console.error("[jutaone] affiliate code mint exhausted retries");
+  return null;
 }

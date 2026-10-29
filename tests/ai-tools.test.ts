@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  AFFILIATE_ENSURE_API,
   BIZ_SEARCH_API,
   CHAT_API,
   isInsufficient,
   paywallMessage,
   readBalanceAfter,
 } from "@/lib/ai-tools";
+import { generateReferralCode, isValidReferralCode } from "@/lib/affiliate";
 
 describe("ai-tools contract (Ali's dashboard buttons)", () => {
   it("pins the chat endpoint Ali must call", () => {
@@ -20,6 +22,12 @@ describe("ai-tools contract (Ali's dashboard buttons)", () => {
     expect(BIZ_SEARCH_API.method).toBe("GET");
     expect(BIZ_SEARCH_API.costTokens).toBe(10_000);
     expect([...BIZ_SEARCH_API.queryKeys]).toEqual(["q", "country", "rid"]);
+  });
+
+  it("pins the affiliate-ensure endpoint Ali must call", () => {
+    expect(AFFILIATE_ENSURE_API.url).toBe("/api/affiliate/ensure");
+    expect(AFFILIATE_ENSURE_API.method).toBe("POST");
+    expect([...AFFILIATE_ENSURE_API.bodyKeys]).toEqual([]);
   });
 
   it("detects the shared 402 paywall both tools return", () => {
@@ -37,5 +45,25 @@ describe("ai-tools contract (Ali's dashboard buttons)", () => {
   it("writes a Malay paywall line with grouped numbers", () => {
     expect(paywallMessage(10_000, 500)).toContain("10,000");
     expect(paywallMessage(10_000, 500)).toContain("500");
+  });
+});
+
+describe("auto-generated referral codes", () => {
+  it("mints 8-char codes that satisfy the DB check constraint", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const code = generateReferralCode();
+      expect(code).toHaveLength(8);
+      expect(isValidReferralCode(code)).toBe(true);
+      seen.add(code);
+    }
+    // 200 draws from a 31^8 space must not collide.
+    expect(seen.size).toBe(200);
+  });
+
+  it("uses no lookalike characters (readable over WhatsApp)", () => {
+    for (let i = 0; i < 100; i++) {
+      expect(generateReferralCode()).not.toMatch(/[01ilo]/);
+    }
   });
 });

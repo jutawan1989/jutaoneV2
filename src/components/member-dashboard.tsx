@@ -53,6 +53,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LogoMark } from "@/components/logo";
 import { MemberChatFloat, OPEN_CHAT_EVENT } from "@/components/member-chat-float";
+import { AFFILIATE_ENSURE_API } from "@/lib/ai-tools";
 import { PremiumArt } from "@/components/premium-art";
 import { cn } from "@/lib/utils";
 import type { MemberOverview, MemberPayout } from "@/lib/member-data";
@@ -2298,7 +2299,7 @@ function ReferralHero({
             </div>
           </>
         ) : (
-          <p className="mt-3 text-sm text-slate-500">{t.noAffiliateCode}</p>
+          <AffiliateEmptyState t={t} />
         )}
       </CardContent>
     </Card>
@@ -2307,4 +2308,56 @@ function ReferralHero({
 
 function LayersIcon() {
   return <Network className="size-3 text-brand-deep" />;
+}
+
+/**
+ * Empty affiliate state with a one-tap self-heal.
+ *
+ * Server-side mint already runs on registration and on dashboard open, so
+ * reaching here means the mint failed (DB outage at register time) or the
+ * member predates auto-codes. POST /api/affiliate/ensure mints exactly one
+ * code, then a single reload picks up the minted link.
+ */
+function AffiliateEmptyState({ t }: { t: DashDict }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function generate() {
+    if (busy) return;
+    setBusy(true);
+    setFailed(false);
+    try {
+      const response = await fetch(AFFILIATE_ENSURE_API.url, {
+        method: AFFILIATE_ENSURE_API.method,
+      });
+      if (response.ok) {
+        window.location.reload();
+        return;
+      }
+      setFailed(true);
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <p className="mt-3 text-sm text-slate-500">{t.noAffiliateCode}</p>
+      <Button
+        type="button"
+        disabled={busy}
+        onClick={generate}
+        className="cta-glow mt-4 h-14 w-full gap-2.5 rounded-xl bg-brand text-sm font-semibold text-white hover:bg-brand-hover"
+      >
+        {busy ? "Menjana pautan…" : "Jana Pautan Rujukan"}
+      </Button>
+      {failed && (
+        <p role="alert" className="mt-2 text-[11px] text-amber-700">
+          Gagal menjana pautan. Sila muat semula halaman dan cuba lagi.
+        </p>
+      )}
+    </div>
+  );
 }

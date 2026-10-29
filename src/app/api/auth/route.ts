@@ -8,11 +8,12 @@ import {
   issueSession,
   verifyPassword,
 } from "@/lib/auth/member";
+import { ensureAffiliateCode, findReferralCodeId } from "@/lib/affiliate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Body = { email?: unknown; password?: unknown; mode?: unknown; displayName?: unknown };
+type Body = { email?: unknown; password?: unknown; mode?: unknown; displayName?: unknown; ref?: unknown };
 
 /** In-memory throttle; a Worker restart clears it, which is acceptable for login. */
 const attempts = new Map<string, { count: number; first: number }>();
@@ -88,6 +89,20 @@ export async function POST(request: NextRequest) {
         { code: taken ? "email_taken" : "register_failed" },
         { status: taken ? 409 : 500 },
       );
+    }
+    // Auto-mint the member's referral code so "Pautan Rujukan" is never empty.
+    // Best-effort by design: a referral-row failure must not fail registration.
+    // An optional `ref` (from `?ref=CODE` on the register page) links the new
+    // code under the referrer for the commission tree.
+    const referredBy = typeof body?.ref === "string" ? body.ref.trim().toLowerCase() : "";
+    try {
+      const parentCodeId = referredBy ? await findReferralCodeId(referredBy) : null;
+      await ensureAffiliateCode(
+        created.member.ownerRef,
+        parentCodeId ? { parentCodeId } : undefined,
+      );
+    } catch (error) {
+      console.error("[jutaone] affiliate auto-code failed", (error as Error).message);
     }
     return withSession(created.member.ownerRef, email, now);
   }

@@ -1,6 +1,7 @@
 /**
- * Shared contract for the four member-paid AI tools in the dashboard
- * tools tab (Penjana Iklan AI + Chat AI + Analisis Emas & Perak + Biz-Match).
+ * Shared contract for the dashboard tools Ali is wiring into the tools tab —
+ * the two member-paid AI tools (Chat AI + Cari Pembekal Live) plus the
+ * affiliate-code ensure call the Affiliate tab uses when a code is missing.
  *
  * One module, one source of truth: URL, method, request shape, cost and the
  * 402 copy all live here. The components import these constants instead of
@@ -14,6 +15,14 @@ export const CHAT_API = {
   costTokens: 5_000,
   /** Body keys the route reads. `rid` is optional idempotency. */
   bodyKeys: ["message", "locale", "rid"] as const,
+} as const;
+
+/** POST — idempotently mints the member's referral code when missing. */
+export const AFFILIATE_ENSURE_API = {
+  url: "/api/affiliate/ensure",
+  method: "POST" as const,
+  /** No request body keys: identity comes from the session cookie. */
+  bodyKeys: [] as const,
 } as const;
 
 /** GET ?q=&country=&rid= — 10,000 tokens per successful search. */
