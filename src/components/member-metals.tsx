@@ -99,7 +99,7 @@ function AiSignalHero({ gold, silver }: { gold: MetalQuote | null | undefined; s
       <p className="text-[11px] font-semibold tracking-[0.22em] text-white/70 uppercase">
         Isyarat AI · {primaryLabel}
       </p>
-      <h2 className={cn("mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl", config.heading)}>
+      <h2 className={cn("mt-2 text-3xl font-extrabold break-words tracking-tight sm:text-4xl", config.heading)}>
         {config.text}
       </h2>
       {reason && <p className="mx-auto mt-2 max-w-xl text-sm text-white/80">{reason}</p>}
@@ -137,7 +137,7 @@ function QuoteCard({ title, quote }: { title: string; quote: MetalQuote | null }
         <TrendIcon trend={quote.trend} />
       </div>
 
-      <p className="relative mt-4 text-3xl font-semibold tracking-tight text-white tabular-nums">
+      <p className="relative mt-4 text-3xl font-semibold break-words tracking-tight text-white tabular-nums">
         {formatMoney(quote.mid, quote.currency)}
       </p>
       <p className="relative mt-1 text-[11px] text-muted">

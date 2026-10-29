@@ -23,7 +23,7 @@ export const id: Dictionary = {
     title: "Bosan Pakai AI yang Tak Paham Bisnis Anda?",
     titleAccent: "JutaOne.Biz — Otak Bisnis Anda.",
     subtitle:
-      "Platform AI bisnis pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Toko + Cari Supplier + Simpan Emas' dalam satu tempat, mulai dari Rp16rb. Ini bukan sekadar AI.",
+      "Platform AI bisnis pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Toko + Cari Supplier + Simpan Emas' dalam satu tempat, mulai dari Rp18rb. Ini bukan sekadar AI.",
     ctaPrimary: "Uji AI Sekarang",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercaya pedagang Indonesia & Malaysia",
@@ -144,7 +144,7 @@ export const id: Dictionary = {
   why: {
     eyebrow: "Kenapa JutaOne.Biz?",
     title: "AI Biasa Nulis Teks. Kami Menggerakkan Bisnis.",
-    subtitle: "Perbandingan jujur — apa yang Anda dapat mulai dari Rp16rb.",
+    subtitle: "Perbandingan jujur — apa yang Anda dapat mulai dari Rp18rb.",
     genericName: "AI Biasa",
     genericItems: [
       "Hanya nulis teks — tak nyambung ke bisnis",

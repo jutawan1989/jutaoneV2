@@ -4,7 +4,7 @@ High-converting "moving billboard" landing page for small merchants in Malaysia
 and Indonesia: type what you sell, get a localized TikTok/Facebook caption in
 seconds, top up with tokens.
 
-Commercial model: **token only** — USD 1 (≈ RM4.70 / Rp16,000) = 1,000,000 tokens.
+Commercial model: **token only** — USD 1 (≈ RM4.70 / ≈ Rp17,900) = 1,000,000 tokens.
 
 ## Stack
 
