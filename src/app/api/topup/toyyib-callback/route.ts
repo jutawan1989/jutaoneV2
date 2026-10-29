@@ -16,10 +16,11 @@ export const dynamic = "force-dynamic";
 /**
  * ToyyibPay server callback (`billCallbackUrl`).
  *
- * ToyyibPay POSTs form fields: refno, status (1 = success), reason,
- * billcode, order_id, amount. There is NO signature, so a bare status=1 is
- * never trusted: `verifyToyyibCallback` re-checks the bill server-to-server
- * via getBillTransactions before any token is credited.
+ * ToyyibPay POSTs form fields: refno, status (1 = success), order_id,
+ * hash, reason, billcode, amount. The MD5 hash is verified first
+ * (`MD5(secret + status + order_id + refno + "ok")`), then `verifyToyyibCallback`
+ * re-checks the bill server-to-server via getBillTransactions before any
+ * token is credited.
  *
  * Idempotency rides on the `topups.provider_id` unique key (`toyyib:{billcode}`)
  * plus the spend_ref unique index, so a retried callback credits once.
@@ -33,6 +34,8 @@ export async function POST(request: NextRequest) {
 
   const callback: ToyyibCallback = {
     refno: get("refno"),
+    orderId: get("order_id"),
+    hash: get("hash"),
     status: get("status"),
     billcode: get("billcode"),
     amount: get("amount"),
@@ -50,7 +53,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, code: check.reason ?? "verification_failed" }, { status: 401 });
   }
 
-  const ref = parseToyyibReference(callback.refno);
+  // Our bill sends `billExternalReferenceNo`, so the vendor echoes that same
+  // value back as `order_id`. Parse THAT — `refno` is ToyyibPay's own payment
+  // reference, not our token-credit instruction.
+  const ref = parseToyyibReference(callback.orderId);
   const db = getSupabase();
   let outcome: Record<string, unknown> = {};
 
@@ -62,8 +68,8 @@ export async function POST(request: NextRequest) {
     event: "topup_success",
     locale: detectLocale(request.headers),
     region: detectRegion(request.headers),
-    variant: resolveVariant(callback.refno),
-    props: { provider: "toyyibpay", reference: callback.refno, ...outcome },
+    variant: resolveVariant(callback.orderId ?? callback.refno ?? "toyyib"),
+    props: { provider: "toyyibpay", reference: callback.orderId ?? callback.refno, ...outcome },
   });
 
   return NextResponse.json({ ok: true, ...outcome });
@@ -82,7 +88,7 @@ async function recordToyyibTopUp(
     {
       provider: "toyyibpay",
       provider_id: providerId,
-      reference: callback.refno,
+      reference: callback.orderId ?? callback.refno,
       status: "paid",
       amount: callback.amount ? Number(String(callback.amount).replace(/[^0-9.]/g, "")) : null,
       currency: "MYR",

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Locale, Region } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 import { parseTopUpAmount, type Price } from "@/lib/pricing";
@@ -21,9 +22,11 @@ import { parseTopUpAmount, type Price } from "@/lib/pricing";
  * - `billPaymentChannel`: 0 = FPX, 2 = FPX + credit card. Boss spec is
  *   FPX & DuitNow QR, so channel 0 + enableDuitNowQR=1 + chargeDuitNowQR=0
  *   (fee on bill owner) mirrors the FPX owner-pays posture here.
- * - The callback carries `refno` (our external reference), `status` (1 =
- *   success), `billcode`, `amount`, plus `reason`. There is NO signature —
- *   verification is server-to-server getBillTransactions with the secret.
+ * - The callback carries `refno` (ToyyibPay's payment reference), `order_id`
+ *   (our `billExternalReferenceNo`), `status` (1 = success), `billcode`,
+ *   `amount`, plus `reason` — and an MD5 `hash` signature verified as
+ *   `MD5(secret + status + order_id + refno + "ok")` before the
+ *   server-to-server getBillTransactions check.
  * - Sandbox: replace the host with dev.toyyibpay.com and use sandbox
  *   credentials. TOYYIBPAY_USE_SANDBOX=1 switches host automatically.
  */
@@ -38,6 +41,15 @@ const SANDBOX_BASE = "https://dev.toyyibpay.com";
  * callback split base vs fee for the ledger.
  */
 export const TOYYIBPAY_FEE_SEN = 100;
+
+/**
+ * Single webhook the vendor ever calls. Pinned to the live domain on
+ * purpose: a subdomain or preview URL in `billCallbackUrl` means ToyyibPay
+ * POSTs the payment result somewhere we never read, so the bill pays but
+ * no token is ever credited. The return URL stays per-request (it only
+ * redirects the payer's browser); the callback must never follow `origin`.
+ */
+export const TOYYIBPAY_CALLBACK_URL = "https://jutaone.biz/api/topup/toyyib-callback";
 
 export type ToyyibRequest = {
   locale: Locale;
@@ -154,7 +166,7 @@ export async function createToyyibBill(req: ToyyibRequest): Promise<ToyyibBill> 
     billPayorInfo: "1",
     billAmount: String(totalSen),
     billReturnUrl: `${req.origin}${localePath}?status=success&ref=${reference}`,
-    billCallbackUrl: `${req.origin}/api/topup/toyyib-callback`,
+    billCallbackUrl: TOYYIBPAY_CALLBACK_URL,
     billExternalReferenceNo: externalRef,
     billTo: customerName,
     billEmail: customerEmail,
@@ -223,6 +235,8 @@ function classifyBillError(text: string): string {
 
 export type ToyyibCallback = {
   refno: string | null;
+  orderId: string | null;
+  hash: string | null;
   status: string | null;
   billcode: string | null;
   amount: string | null;
@@ -230,11 +244,44 @@ export type ToyyibCallback = {
 };
 
 /**
- * Verifies a ToyyibPay callback server-to-server.
+ * Verifies the vendor's MD5 callback signature.
  *
- * The callback itself is unsigned, so a bare `status=1` is NEVER trusted:
- * we call getBillTransactions with our secret and only accept when the
- * vendor confirms this billcode is paid for this refno + amount.
+ * Official formula (https://toyyibpay.com/apireference/):
+ *   MD5(userSecretKey + status + order_id + refno + "ok")
+ *
+ * Fails closed: a missing secret, missing hash, or missing field refuses the
+ * callback. A lowercase hex compare keeps the check strict — the vendor
+ * sends lowercase hex, and anything else is not its hash.
+ */
+export function verifyToyyibHash(callback: {
+  status: string | null;
+  order_id: string | null;
+  refno: string | null;
+  hash: string | null;
+}): { ok: boolean; reason?: string } {
+  const secret = process.env.TOYYIBPAY_SECRET_KEY;
+  if (!secret) return { ok: false, reason: "toyyibpay_not_configured" };
+  if (!callback.hash) return { ok: false, reason: "missing_hash" };
+  if (callback.status == null || callback.order_id == null || callback.refno == null) {
+    return { ok: false, reason: "missing_hash_fields" };
+  }
+  const expected = createHash("md5")
+    .update(secret + callback.status + callback.order_id + callback.refno + "ok")
+    .digest("hex");
+  if (callback.hash.toLowerCase() !== expected) return { ok: false, reason: "invalid_hash" };
+  return { ok: true };
+}
+
+/**
+ * Verifies a ToyyibPay callback in two layers.
+ *
+ * Layer 1 (cheap, runs first): the MD5 hash the vendor POSTs must match
+ * `MD5(secret + status + order_id + refno + "ok")`. A forged or corrupted
+ * callback dies here without a vendor round trip.
+ *
+ * Layer 2 (authoritative): getBillTransactions with our secret must confirm
+ * this billcode is paid for this refno + amount. The hash proves the POST
+ * came from the vendor; only the server-to-server check proves money moved.
  */
 export async function verifyToyyibCallback(
   callback: ToyyibCallback,
@@ -244,6 +291,16 @@ export async function verifyToyyibCallback(
     return { ok: false, reason: "missing billcode or refno" };
   }
   if (callback.status !== "1") return { ok: false, reason: "payment not successful" };
+
+  // Layer 1: the vendor's own signature. A forged or corrupted POST dies
+  // here before we spend a round trip on getBillTransactions.
+  const hashCheck = verifyToyyibHash({
+    status: callback.status,
+    order_id: callback.orderId,
+    refno: callback.refno,
+    hash: callback.hash,
+  });
+  if (!hashCheck.ok) return hashCheck;
 
   const params = new URLSearchParams({
     userSecretKey: process.env.TOYYIBPAY_SECRET_KEY as string,
@@ -268,7 +325,10 @@ export async function verifyToyyibCallback(
 
   const match = rows.find(
     (row) =>
-      String(row.billExternalReferenceNo ?? "") === callback.refno &&
+      // The vendor echoes our `billExternalReferenceNo` as `order_id` on the
+      // callback but as `billExternalReferenceNo` in getBillTransactions —
+      // match THAT, not `refno` (ToyyibPay's own payment reference).
+      String(row.billExternalReferenceNo ?? "") === callback.orderId &&
       String(row.billpaymentStatus ?? "") === "1",
   );
   if (!match) return { ok: false, reason: "no matching paid transaction" };
