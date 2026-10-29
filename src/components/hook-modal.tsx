@@ -112,7 +112,7 @@ export function HookModal({
           type="button"
           onClick={onClose}
           aria-label={dict.hook.dismissLabel}
-          className="absolute top-4 right-4 rounded-md border border-line px-2 py-0.5 text-xs text-muted transition-colors hover:border-[#334155] hover:text-white"
+          className="absolute top-4 right-4 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-line text-xs text-muted transition-colors hover:border-[#334155] hover:text-white"
         >
           ✕
         </button>
@@ -149,7 +149,7 @@ export function HookModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-3 w-full rounded-md py-2 text-sm font-medium text-muted transition-colors hover:text-white"
+          className="mt-3 min-h-[44px] w-full rounded-md py-2 text-sm font-medium text-muted transition-colors hover:text-white"
         >
           {dict.hook.close}
         </button>

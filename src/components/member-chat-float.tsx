@@ -123,7 +123,7 @@ export function MemberChatFloat({ locale }: { locale: Locale }) {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Tutup chat"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-white/[0.06] hover:text-white"
             >
               <X className="size-4" />
             </button>
@@ -177,13 +177,13 @@ export function MemberChatFloat({ locale }: { locale: Locale }) {
                 placeholder="Tulis soalan bisnes…"
                 maxLength={2000}
                 autoComplete="off"
-                className="h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 text-[13px] text-white placeholder:text-muted/70 focus:border-brand/60 focus:outline-none"
+                className="h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 text-[13px] text-white placeholder:text-muted/70 focus:border-brand/60 focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={busy || input.trim().length < 2}
                 aria-label="Hantar mesej"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-strong text-white transition-colors hover:bg-brand-hover disabled:opacity-50"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-strong text-white transition-colors hover:bg-brand-hover disabled:opacity-50"
               >
                 <Send className="size-4" />
               </button>

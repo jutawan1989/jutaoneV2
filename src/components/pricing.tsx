@@ -140,7 +140,7 @@ export function Pricing({
                   {locale === "en" ? "$320+" : locale === "id" ? "Rp5 Jt+" : "RM1,500+"}
                 </s>
               </p>
-              <p className="mt-1 text-lg font-bold text-white">
+              <p className="mt-1 text-lg leading-snug font-bold break-words text-white">
                 {locale === "en" ? "Only $1" : locale === "id" ? "Hanya Rp18rb" : "Hanya RM4.70"}{" "}
                 <span className="text-[11px] font-semibold text-emerald-300">
                   · AI Writer + Store + Biz-Match + Metals

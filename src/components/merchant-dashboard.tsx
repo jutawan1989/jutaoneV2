@@ -247,7 +247,7 @@ export function MerchantDashboard({
               <button
                 type="button"
                 onClick={() => setModalOpen(true)}
-                className="btn-brand px-3.5 py-2 text-sm"
+                className="btn-brand min-h-[44px] px-3.5 py-2 text-sm"
               >
                 Buka Kedai
               </button>
@@ -270,7 +270,7 @@ export function MerchantDashboard({
               <button
                 type="button"
                 onClick={() => setModalOpen(true)}
-                className="btn-brand px-3.5 py-2 text-sm"
+                className="btn-brand min-h-[44px] px-3.5 py-2 text-sm"
               >
                 Aktifkan semula — $5.00/bulan
               </button>
@@ -370,13 +370,13 @@ export function MerchantDashboard({
                   }}
                   placeholder="https://shopee.com.my/…"
                   inputMode="url"
-                  className="min-h-[42px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="min-h-[44px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
                 <button
                   type="button"
                   onClick={scrapeFromLink}
                   disabled={scraping}
-                  className="inline-flex min-h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
+                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
                 >
                   {scraping ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden />

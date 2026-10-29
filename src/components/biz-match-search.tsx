@@ -219,7 +219,7 @@ export function BizMatchSearch({
 
             <div className="mt-3.5 flex flex-wrap items-center gap-2">
               {categories.length > 0 && (
-                <label className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-3 pl-3.5 text-xs text-muted">
+                <label className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-3 pl-3.5 text-xs text-muted">
                   Kategori
                   <select
                     id="bm-cat"
@@ -249,7 +249,7 @@ export function BizMatchSearch({
                     key={example}
                     type="button"
                     onClick={() => setQuery(example)}
-                    className="rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs text-silver transition-colors hover:border-brand/50 hover:text-white"
+                    className="min-h-[44px] rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-2 text-xs text-silver transition-colors hover:border-brand/50 hover:text-white"
                   >
                     {example}
                   </button>
@@ -361,7 +361,7 @@ export function BizMatchSearch({
                           target="_blank"
                           rel="noopener noreferrer nofollow"
                           className={cn(
-                            "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl text-xs font-semibold transition-colors",
+                            "inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-colors",
                             "border border-brand/40 bg-brand/10 text-brand-soft hover:bg-brand/20 hover:text-white",
                           )}
                         >
@@ -374,7 +374,7 @@ export function BizMatchSearch({
                           onClick={() => save(result)}
                           disabled={state === "saving" || state === "saved"}
                           className={cn(
-                            "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition-colors disabled:opacity-60",
+                            "inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-semibold transition-colors disabled:opacity-60",
                             state === "saved"
                               ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
                               : "border-white/10 bg-white/[0.03] text-silver hover:border-white/25 hover:text-white",

@@ -37,7 +37,7 @@ export default async function DirectoryPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-white"
+        className="inline-flex min-h-[44px] items-center gap-1.5 text-xs text-muted transition-colors hover:text-white"
       >
         <ArrowLeft className="size-3.5" aria-hidden /> Laman utama
       </Link>

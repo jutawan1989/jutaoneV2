@@ -74,6 +74,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Mobile-first guard (Boss spec): no horizontal scrolling on 375px phones.
+     `clip` (not `hidden`) avoids breaking position:sticky descendants. */
+  overflow-x: clip;
 }
 
 body {
@@ -83,6 +86,18 @@ body {
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
+  /* Long merchant-generated strings (URLs, referral codes) must wrap instead
+     of forcing a sideways scroll on narrow screens. */
+  overflow-wrap: break-word;
+}
+
+/* Media never forces a page wider than the viewport on phones. */
+img,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 /* A single soft ambient wash. No grid, no glow, no second light source. */

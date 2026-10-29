@@ -233,7 +233,7 @@ export function MemberMetals({ initialCurrency }: { initialCurrency: "MYR" | "ID
                 onClick={() => setCurrency(option)}
                 aria-pressed={currency === option}
                 className={cn(
-                  "rounded-full px-4 py-1.5 text-xs font-semibold transition-colors",
+                  "min-h-[44px] rounded-full px-4 text-xs font-semibold transition-colors",
                   currency === option ? "bg-brand-strong text-white" : "text-muted hover:text-white",
                 )}
               >

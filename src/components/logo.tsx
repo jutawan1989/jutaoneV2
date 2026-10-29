@@ -42,10 +42,17 @@ export function Logo({
   locale,
   size = "md",
   tone = "dark",
+  compact = false,
 }: {
   locale: Locale;
   size?: "sm" | "md";
   tone?: "dark" | "light";
+  /**
+   * Mobile-first: hide the wordmark on very narrow phones (<400px) so the
+   * navbar (logo + language switcher + CTA + hamburger) fits 375px without
+   * horizontal overflow. The mark alone still carries the brand.
+   */
+  compact?: boolean;
 }) {
   const markHeight = size === "sm" ? 26 : 32;
   const text = size === "sm" ? "text-[13px]" : "text-sm";
@@ -54,14 +61,14 @@ export function Logo({
   return (
     <Link
       href={localePath(locale)}
-      className="group inline-flex items-center gap-2"
+      className="group inline-flex min-h-[44px] items-center gap-2"
       aria-label="JutaOne.Biz"
     >
       <LogoMark
         size={markHeight}
         className="shrink-0"
       />
-      <span className={`${text} font-semibold tracking-[0.12em] ${wordmarkColor}`}>
+      <span className={`${text} font-semibold tracking-[0.12em] ${wordmarkColor} ${compact ? "hidden min-[400px]:inline" : ""}`}>
         JUTAONE<span className="text-brand">.BIZ</span>
       </span>
     </Link>

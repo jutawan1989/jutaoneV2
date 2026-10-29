@@ -128,14 +128,14 @@ export function MemberRegisterForm({ next, referredBy = null }: { next: string; 
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"}
-                className="absolute top-1/2 right-3.5 -translate-y-1/2 pt-1.5 text-slate-400 transition-colors hover:text-white"
+                className="absolute top-1/2 right-1 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-white"
               >
                 {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             </div>
           </div>
           <details className="rounded-xl border border-line/60 px-3.5 py-2.5">
-            <summary className="cursor-pointer text-[13px] font-medium text-muted transition-colors hover:text-white">
+            <summary className="flex min-h-[44px] cursor-pointer items-center text-[13px] font-medium text-muted transition-colors hover:text-white">
               Tambah nama? <span className="font-normal">(pilihan)</span>
             </summary>
             <label htmlFor="r-name" className="mt-2 block text-sm font-medium text-white">

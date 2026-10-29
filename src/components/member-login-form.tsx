@@ -107,7 +107,7 @@ export function MemberLoginForm({ next }: { next: string }) {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"}
-                className="absolute top-1/2 right-3 -translate-y-1/2 pt-1.5 text-slate-400 transition-colors hover:text-white"
+                className="absolute top-1/2 right-1 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 transition-colors hover:text-white"
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -131,7 +131,7 @@ export function MemberLoginForm({ next }: { next: string }) {
             setMode(mode === "login" ? "register" : "login");
             setError(null);
           }}
-          className="mt-4 w-full text-center text-sm text-muted transition-colors hover:text-white"
+          className="mt-4 flex min-h-[44px] w-full items-center justify-center text-center text-sm text-muted transition-colors hover:text-white"
         >
           {mode === "login" ? "Belum ada akaun? Daftar" : "Sudah ada akaun? Log masuk"}
         </button>

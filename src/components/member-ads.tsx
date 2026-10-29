@@ -164,7 +164,7 @@ export function MemberAds() {
                 onClick={() => setLocale(entry.id)}
                 aria-pressed={locale === entry.id}
                 className={cn(
-                  "rounded-full px-4 py-1.5 text-xs font-semibold transition-colors",
+                  "min-h-[44px] rounded-full px-4 text-xs font-semibold transition-colors",
                   locale === entry.id ? "bg-brand-strong text-white" : "text-muted hover:text-white",
                 )}
               >
@@ -236,7 +236,7 @@ export function MemberAds() {
               type="button"
               onClick={copyCaption}
               className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors",
+                "inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors",
                 copied
                   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
                   : "border-white/10 bg-white/[0.03] text-silver hover:border-white/25 hover:text-white",
@@ -266,7 +266,7 @@ export function MemberAds() {
                 key={target}
                 type="button"
                 onClick={() => shareTo(target)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
               >
                 <Icon className="size-3.5" aria-hidden />
                 {label}

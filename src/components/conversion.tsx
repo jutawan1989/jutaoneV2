@@ -173,7 +173,7 @@ export function LiveTelemetryCounter({ locale }: { locale: Locale }) {
   return (
     <p
       aria-live="polite"
-      className="inline-flex max-w-full items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[12px] font-bold text-red-200 tabular-nums"
+      className="inline-flex max-w-full min-w-0 items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11px] font-bold break-words text-red-200 tabular-nums sm:text-[12px]"
     >
       <span aria-hidden className="relative flex h-2 w-2">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
@@ -365,7 +365,7 @@ export function ValueStacking({ locale }: { locale: Locale }) {
             <span className="font-medium">{s.agencyLabel}</span>{" "}
             <s className="font-bold text-red-300/90 tabular-nums">{s.agencyPrice}</s>
           </p>
-          <p className="relative mt-1 text-5xl font-bold tracking-[-0.03em] text-white tabular-nums sm:text-6xl">
+          <p className="relative mt-1 text-4xl leading-tight font-bold tracking-[-0.03em] break-words text-white tabular-nums sm:text-6xl">
             {s.ourPrice}
           </p>
           <ul className="relative mx-auto mt-6 grid max-w-2xl gap-2.5 text-left sm:grid-cols-2">
@@ -454,7 +454,9 @@ export function LiveActivityToast({ locale }: { locale: Locale }) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-4 z-50 flex max-w-[calc(100vw-2rem)] items-start gap-2.5 rounded-2xl border border-white/10 bg-[#0B1220]/95 py-3 pr-3 pl-3.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur sm:bottom-6 sm:left-6 sm:max-w-sm"
+      // Mobile-first: lifted above the bottom nav / chat FAB and stretched
+      // full-width with side margins so it never covers CTAs on 375px phones.
+      className="fixed right-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] left-3 z-50 flex max-w-full items-start gap-2.5 rounded-2xl border border-white/10 bg-[#0B1220]/95 py-3 pr-2 pl-3.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur sm:right-auto sm:bottom-6 sm:left-6 sm:max-w-sm sm:pr-3"
     >
       <span aria-hidden className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-sm ring-1 ring-emerald-400/40 ring-inset">
         🟢
@@ -468,7 +470,7 @@ export function LiveActivityToast({ locale }: { locale: Locale }) {
         type="button"
         onClick={() => setVisible(false)}
         aria-label="Close"
-        className="shrink-0 rounded-md px-1.5 py-0.5 text-sm text-white/40 transition-colors hover:text-white"
+        className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md text-sm text-white/40 transition-colors hover:text-white"
       >
         ✕
       </button>

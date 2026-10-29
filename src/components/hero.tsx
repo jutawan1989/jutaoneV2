@@ -48,7 +48,7 @@ export function Hero({
               {dict.hero.ctaPrimary}
               <span aria-hidden className="text-lg leading-none">→</span>
             </Link>
-            <Link href="#pricing" className="min-h-[52px] w-full items-center justify-center px-6 py-3 text-center text-[15px] font-medium text-white/80 transition-colors hover:text-white sm:inline-flex sm:w-auto sm:py-0">
+            <Link href="#pricing" className="flex min-h-[52px] w-full items-center justify-center px-6 py-3 text-center text-[15px] font-medium text-white/80 transition-colors hover:text-white sm:inline-flex sm:w-auto sm:py-0">
               {dict.hero.ctaSecondary}
             </Link>
           </div>
@@ -67,7 +67,7 @@ export function Hero({
             </p>
           </div>
 
-          <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:mt-11 sm:gap-6">
+          <dl className="mt-8 grid grid-cols-3 gap-2 border-t border-white/10 pt-6 sm:mt-11 sm:gap-6">
             {dict.hero.stats.map((stat) => (
               <div key={stat.label} className="min-w-0 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-white/[0.06] ring-inset sm:bg-transparent sm:p-0 sm:ring-0">
                 <dt className="text-base font-semibold text-white tabular-nums sm:text-xl">

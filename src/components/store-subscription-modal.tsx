@@ -157,7 +157,7 @@ export function StoreSubscriptionModal({
           type="button"
           onClick={onClose}
           aria-label="Tutup"
-          className="absolute top-4 right-4 rounded-md border border-line px-2 py-0.5 text-xs text-muted transition-colors hover:border-[#334155] hover:text-white"
+          className="absolute top-4 right-4 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-line text-xs text-muted transition-colors hover:border-[#334155] hover:text-white"
         >
           ✕
         </button>

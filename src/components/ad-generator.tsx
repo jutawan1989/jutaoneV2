@@ -345,7 +345,7 @@ export function AdGenerator({
                 onClick={copyCaption}
                 aria-disabled={!copyAllowed}
                 title={copyAllowed ? undefined : dict.generator.copyLocked}
-                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                className={`min-h-[44px] rounded-md border px-3 text-xs font-medium transition-colors ${
                   copyAllowed
                     ? "border-white/10 text-silver hover:border-white/25 hover:text-white"
                     : "border-amber-500/40 bg-amber-500/10 text-amber-300"
@@ -395,7 +395,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("tiktok")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Music2 className="size-3.5" aria-hidden />
                   {dict.generator.postTiktok}
@@ -403,7 +403,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("facebook")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <ThumbsUp className="size-3.5" aria-hidden />
                   {dict.generator.postFacebook}
@@ -411,7 +411,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("instagram")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Camera className="size-3.5" aria-hidden />
                   {dict.generator.postInstagram}
@@ -419,7 +419,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("threads")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <AtSign className="size-3.5" aria-hidden />
                   {dict.generator.postThreads}
@@ -427,7 +427,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("twitter")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Send className="size-3.5" aria-hidden />
                   {dict.generator.postTwitter}
@@ -435,7 +435,7 @@ export function AdGenerator({
                 <button
                   type="button"
                   onClick={() => shareTo("linkedin")}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs font-medium text-silver transition-colors hover:border-white/25 hover:text-white"
                 >
                   <Briefcase className="size-3.5" aria-hidden />
                   {dict.generator.postLinkedin}
