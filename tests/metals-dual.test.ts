@@ -10,6 +10,7 @@ import {
   getPremiumMetalAnalysis,
   metalCurrencyForRegion,
   metalsConfigured,
+  signalFromRange,
 } from "@/lib/metals";
 import { METALS_COST_TOKENS } from "@/lib/tokens";
 
@@ -239,5 +240,69 @@ describe("Dual metals API (homepage free, dashboard premium)", () => {
 
   it("premium analysis throws without a key (route maps to 503, never charges)", async () => {
     await expect(getPremiumMetalAnalysis("MYR")).rejects.toThrow(/RAPIDAPI_KEY/);
+  });
+
+  it("premium analysis carries the position signal Ali needs (ai_signal + reason)", async () => {
+    process.env.RAPIDAPI_KEY = "test-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/gold-price")) {
+          return jsonResponse({
+            results: [
+              {
+                symbol: "AU",
+                currency: "MYR",
+                ask: 19001,
+                mid: 19000,
+                bid: 18999,
+                high: 19100,
+                low: 18900,
+                timestamp: 1793101620,
+                change: 120,
+                changePercentage: 0.63,
+                karat_prices: { "24k": 19000, "18k": 14250, "14k": 11083, "9k": 7125 },
+              },
+            ],
+          });
+        }
+        return jsonResponse({
+          results: [
+            {
+              symbol: "AG",
+              currency: "MYR",
+              mid: 250,
+              high: 285,
+              low: 245,
+              change: -2,
+              changePercentage: -0.8,
+              fineness_prices: { "999": 250, "958": 239, "925": 231, "900": 225, "800": 200 },
+            },
+          ],
+        });
+      }),
+    );
+
+    const analysis = await getPremiumMetalAnalysis("MYR");
+    // Gold mid 19000 sits mid-range (18900-19100): SIMPAN.
+    expect(analysis.gold?.ai_signal).toBe("SIMPAN");
+    expect(analysis.gold?.signal_reason).toContain("pertengahan");
+    // Silver mid 250 sits 12.5% up its range (245-285): bottom 15% -> BELI.
+    expect(analysis.silver?.ai_signal).toBe("BELI");
+    expect(analysis.silver?.signal_reason).toContain("sokongan terendah");
+  });
+
+  it("signal reads range position: near-low BELI, near-high JUAL, mid SIMPAN", () => {
+    expect(signalFromRange(100, 90, 190).ai_signal).toBe("BELI"); // 10% up the range
+    expect(signalFromRange(185, 90, 190).ai_signal).toBe("JUAL"); // 95% up the range
+    expect(signalFromRange(140, 90, 190).ai_signal).toBe("SIMPAN");
+    expect(signalFromRange(100, 90, 190).signal_reason).toContain("sokongan terendah");
+    expect(signalFromRange(185, 90, 190).signal_reason).toContain("rintangan tertinggi");
+  });
+
+  it("signal degrades to SIMPAN when the day range is missing", () => {
+    expect(signalFromRange(100, null, 190).ai_signal).toBe("SIMPAN");
+    expect(signalFromRange(null, 90, 190).ai_signal).toBe("SIMPAN");
+    expect(signalFromRange(100, 190, 190).ai_signal).toBe("SIMPAN"); // degenerate range
   });
 });

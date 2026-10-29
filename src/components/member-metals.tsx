@@ -24,6 +24,8 @@ type MetalQuote = {
   trend: "up" | "down" | "flat" | null;
   karatPrices: Record<string, number> | null;
   finenessPrices: Record<string, number> | null;
+  ai_signal?: "BELI" | "JUAL" | "SIMPAN" | null;
+  signal_reason?: string | null;
 };
 
 type MetalsResponse = {
@@ -55,6 +57,58 @@ function TrendIcon({ trend }: { trend: MetalQuote["trend"] }) {
   if (trend === "up") return <TrendingUp className="size-4 text-emerald-400" aria-label="Naik" />;
   if (trend === "down") return <TrendingDown className="size-4 text-red-400" aria-label="Turun" />;
   return <Minus className="size-4 text-muted" aria-label="Mendatar" />;
+}
+
+function AiSignalHero({ gold, silver }: { gold: MetalQuote | null | undefined; silver: MetalQuote | null | undefined }) {
+  // Hero utama ikut Emas (fokus peniaga). Fallback ke Perak jika Emas tiada.
+  const primary = gold ?? silver ?? null;
+  const primaryLabel = gold ? "Emas" : "Perak";
+  const signal = primary?.ai_signal ?? null;
+  const reason = primary?.signal_reason ?? null;
+  if (!primary || !signal) return null;
+
+  const config = {
+    BELI: {
+      text: "🟢 ISYARAT AI: BELI",
+      card: "border-emerald-500/50 bg-emerald-500/15 shadow-[0_0_60px_-10px_rgba(16,185,129,0.6)]",
+      heading: "text-emerald-300",
+    },
+    JUAL: {
+      text: "🔴 ISYARAT AI: JUAL",
+      card: "border-red-500/50 bg-red-500/15 shadow-[0_0_60px_-10px_rgba(239,68,68,0.6)]",
+      heading: "text-red-300",
+    },
+    SIMPAN: {
+      text: "🟡 ISYARAT AI: SIMPAN",
+      card: "border-yellow-400/50 bg-yellow-400/10 shadow-[0_0_60px_-12px_rgba(250,204,21,0.45)]",
+      heading: "text-yellow-200",
+    },
+  }[signal];
+
+  const secondary =
+    gold && silver && gold.ai_signal && silver.ai_signal && gold.ai_signal !== silver.ai_signal
+      ? `Emas: ${gold.ai_signal} · Perak: ${silver.ai_signal}`
+      : null;
+
+  return (
+    <section
+      aria-live="polite"
+      aria-label={`Isyarat AI ${signal}`}
+      className={cn("relative overflow-hidden rounded-2xl border p-6 text-center sm:p-8", config.card)}
+    >
+      <p className="text-[11px] font-semibold tracking-[0.22em] text-white/70 uppercase">
+        Isyarat AI · {primaryLabel}
+      </p>
+      <h2 className={cn("mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl", config.heading)}>
+        {config.text}
+      </h2>
+      {reason && <p className="mx-auto mt-2 max-w-xl text-sm text-white/80">{reason}</p>}
+      {secondary && <p className="mt-1 text-xs font-medium text-white/60">{secondary}</p>}
+      <p className="mx-auto mt-3 max-w-xl text-[11px] leading-relaxed text-white/55 italic">
+        Berdasarkan analisis data pasaran hari ini. Bukan nasihat pelaburan peribadi.
+      </p>
+    </section>
+  );
 }
 
 function QuoteCard({ title, quote }: { title: string; quote: MetalQuote | null }) {
@@ -213,10 +267,15 @@ export function MemberMetals({ initialCurrency }: { initialCurrency: "MYR" | "ID
       </div>
 
       {data && (
-        <div className="mt-4 grid gap-4 md:grid-cols-2" aria-live="polite">
-          <QuoteCard title="Emas" quote={data.gold ?? null} />
-          <QuoteCard title="Perak" quote={data.silver ?? null} />
-        </div>
+        <>
+          <div className="mt-4" aria-live="polite">
+            <AiSignalHero gold={data.gold} silver={data.silver} />
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2" aria-live="polite">
+            <QuoteCard title="Emas" quote={data.gold ?? null} />
+            <QuoteCard title="Perak" quote={data.silver ?? null} />
+          </div>
+        </>
       )}
 
       {data?.billing && (

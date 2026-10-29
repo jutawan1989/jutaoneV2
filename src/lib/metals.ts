@@ -29,6 +29,13 @@ export type MetalCurrency = "MYR" | "IDR";
 
 export type TrendSignal = "up" | "down" | "flat";
 
+/**
+ * Position-based market signal from the day range. NOT investment advice —
+ * a mechanical reading of where the spot sits inside today's range, so the
+ * UI can show a plain-language call without implying a prediction.
+ */
+export type AiSignal = "BELI" | "JUAL" | "SIMPAN";
+
 export type MetalQuote = {
   symbol: string;
   currency: MetalCurrency;
@@ -48,6 +55,10 @@ export type MetalQuote = {
   finenessPrices: Record<string, number> | null;
   /** Trend derived from change %: >= +0.5 up, <= -0.5 down, else flat. */
   trend: TrendSignal;
+  /** Where the spot sits in today's range: near-low BELI, near-high JUAL, else SIMPAN. */
+  ai_signal: AiSignal;
+  /** Plain-language reason for the signal, in Bahasa Melayu. */
+  signal_reason: string;
 };
 
 export type PremiumMetalAnalysis = {
@@ -105,6 +116,56 @@ function trendFrom(changePercentage: number | null): TrendSignal {
   return "flat";
 }
 
+/**
+ * Where the spot sits inside today's range, as a fraction 0 (at low) to 1
+ * (at high). Null when the range is missing or degenerate.
+ */
+function rangePosition(mid: number | null, low: number | null, high: number | null): number | null {
+  if (mid === null || low === null || high === null) return null;
+  if (!Number.isFinite(mid) || !Number.isFinite(low) || !Number.isFinite(high)) return null;
+  if (high <= low) return null;
+  const clamped = Math.min(high, Math.max(low, mid));
+  return (clamped - low) / (high - low);
+}
+
+/**
+ * Mechanical position signal from the day range.
+ *
+ * Within the bottom 15% of today's range the price is read as sitting on
+ * support (BELI); within the top 15% it is read as sitting on resistance
+ * (JUAL); anything between is SIMPAN. The 15% band keeps a mid-range price
+ * from flickering between calls on a normal trading day.
+ */
+export function signalFromRange(
+  mid: number | null,
+  low: number | null,
+  high: number | null,
+): { ai_signal: AiSignal; signal_reason: string } {
+  const position = rangePosition(mid, low, high);
+  if (position === null) {
+    return {
+      ai_signal: "SIMPAN",
+      signal_reason: "Julat harga hari ini tidak lengkap — tiada isyarat kedudukan.",
+    };
+  }
+  if (position <= 0.15) {
+    return {
+      ai_signal: "BELI",
+      signal_reason: "Harga menyentuh paras sokongan terendah hari ini.",
+    };
+  }
+  if (position >= 0.85) {
+    return {
+      ai_signal: "JUAL",
+      signal_reason: "Harga menyentuh paras rintangan tertinggi hari ini.",
+    };
+  }
+  return {
+    ai_signal: "SIMPAN",
+    signal_reason: "Harga berada di pertengahan julat hari ini — pantau dahulu.",
+  };
+}
+
 function normalizeQuote(
   symbol: string,
   currency: MetalCurrency,
@@ -112,20 +173,26 @@ function normalizeQuote(
 ): MetalQuote | null {
   if (!raw) return null;
   const changePercentage = toNumber(raw.changePercentage);
+  const mid = toNumber(raw.mid);
+  const high = toNumber(raw.high);
+  const low = toNumber(raw.low);
+  const { ai_signal, signal_reason } = signalFromRange(mid, low, high);
   return {
     symbol,
     currency,
-    mid: toNumber(raw.mid),
+    mid,
     bid: toNumber(raw.bid),
     ask: toNumber(raw.ask),
-    high: toNumber(raw.high),
-    low: toNumber(raw.low),
+    high,
+    low,
     change: toNumber(raw.change),
     changePercentage,
     timestamp: toNumber(raw.timestamp),
     karatPrices: toPriceMap(raw.karat_prices),
     finenessPrices: toPriceMap(raw.fineness_prices),
     trend: trendFrom(changePercentage),
+    ai_signal,
+    signal_reason,
   };
 }
 
