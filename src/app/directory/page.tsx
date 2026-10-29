@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { BizMatchSearch } from "@/components/biz-match-search";
 import { getSupabase } from "@/lib/db";
 import { exaConfigured } from "@/lib/exa";
@@ -32,20 +34,19 @@ export default async function DirectoryPage() {
   const list = await categories();
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-      <header className="border-b border-line pb-6">
-        <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">Biz-Match</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.025em] text-white">
-          Cari pembekal borong
-        </h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          Carian semantik merentas web, dengan direktori tempatan sebagai sandaran.
-          Data daripada daftar rasmi ditandakan{" "}
-          <span className="text-silver">Verified</span>; hasil carian web tidak.
-        </p>
-      </header>
-
-      <BizMatchSearch categories={list} liveSearch={exaConfigured()} />
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-white"
+      >
+        <ArrowLeft className="size-3.5" aria-hidden /> Laman utama
+      </Link>
+      <div className="mt-6">
+        <BizMatchSearch categories={list} liveSearch={exaConfigured()} />
+      </div>
+      <p className="mt-8 text-center text-[11px] leading-relaxed text-muted/70">
+        Carian yang berjaya ditolak 10,000 token. Carian gagal atau tiada hasil adalah percuma.
+      </p>
     </main>
   );
 }

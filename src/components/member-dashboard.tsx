@@ -52,6 +52,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LogoMark } from "@/components/logo";
+import { MemberChatFloat, OPEN_CHAT_EVENT } from "@/components/member-chat-float";
 import { PremiumArt } from "@/components/premium-art";
 import { cn } from "@/lib/utils";
 import type { MemberOverview, MemberPayout } from "@/lib/member-data";
@@ -65,6 +66,12 @@ type Tab = "overview" | "store" | "affiliate" | "tools";
  * the constant directly would drag the service-role SDK into this client bundle.
  */
 const SEARCH_COST_TOKENS = 10_000;
+/** Mirrored from `AD_COST_TOKENS` in `lib/tokens.ts` (same reason as above). */
+const AD_COST_TOKENS = 20_000;
+/** Mirrored from `CHAT_COST_TOKENS` in `lib/tokens.ts`. */
+const CHAT_COST_TOKENS = 5_000;
+/** Mirrored from `METALS_COST_TOKENS` in `lib/tokens.ts`. */
+const METALS_COST_TOKENS = 2_000;
 /** One USD buys one million tokens (`TOKENS_PER_USD` in `lib/pricing.ts`). */
 const TOKENS_PER_USD = 1_000_000;
 
@@ -147,8 +154,8 @@ const DASH_STR = {
     topLinks: "3 pautan paling kerap",
     topUp: "Top-up token",
     fromPrice: "Serendah $1",
-    writeAd: "Tulis iklan AI",
-    freeTry: "Percuma cuba",
+    qaBiz: "Cari Pembekal",
+    qaBizHint: `Tolak ${SEARCH_COST_TOKENS.toLocaleString("en-US")} token`,
     manageShop: "Urus kedai",
     productsOrders: "Produk & pesanan",
     tokenUsage: "Penggunaan token",
@@ -249,20 +256,20 @@ const DASH_STR = {
     toolsSub: "Buka alat yang anda perlukan, terus dari dashboard.",
     toolAdName: "Penjana Iklan AI",
     toolAdDesc: "Tukar satu ayat produk kepada kapsyen TikTok atau Facebook.",
-    toolAdTag: "Percuma cuba",
-    toolBizName: "Biz-Match",
+    toolAdTag: `Tolak ${AD_COST_TOKENS.toLocaleString("en-US")} Token`,
+    toolChatName: "Chat AI (Perunding Bisnes)",
+    toolChatDesc: "Tanya strategi bisnes, harga dan marketing — jawab dalam Bahasa.",
+    toolChatTag: `Tolak ${CHAT_COST_TOKENS.toLocaleString("en-US")} Token`,
+    toolMetalName: "Analisis Emas & Perak",
+    toolMetalDesc: "Harga spot, julat harian dan isyarat trend pasaran logam.",
+    toolMetalTag: `Tolak ${METALS_COST_TOKENS.toLocaleString("en-US")} Token`,
+    toolBizName: "Cari Pembekal (Biz-Match)",
     toolBizDesc: "Cari pembekal borong di Malaysia dan Indonesia.",
-    toolBizTag: "10,000 token",
-    toolShopName: "Kedai Saya",
-    toolShopDesc: "Urus produk, pesanan dan pautan kedai anda.",
-    toolShopTag: "Termasuk",
-    toolNetName: "Program Affiliate",
-    toolNetDesc: "Pantau komisen dan tarik keluar baki anda.",
-    toolNetTag: "Tunai",
+    toolBizTag: `Tolak ${SEARCH_COST_TOKENS.toLocaleString("en-US")} Token`,
     openAction: "Buka",
     needHelp: "Perlukan bantuan?",
-    teamHelp: "Team kami boleh tolong siapkan kedai anda. Tanya je!",
-    contactUs: "Chat kami",
+    teamHelp: "Tanya Perunding Bisnes AI kami — jawab serta-merta, 24/7.",
+    contactUs: "Buka Chat AI",
     referralTitle: "Pautan rujukan anda",
     referralSub: "Kongsi pautan ni kat kawan-kawan. Setiap pembelian masuk terus ke poket rangkaian anda.",
     copyLink: "Salin pautan ni",
@@ -341,8 +348,8 @@ const DASH_STR = {
     topLinks: "3 most-used links",
     topUp: "Top up tokens",
     fromPrice: "From $1",
-    writeAd: "Write AI ad",
-    freeTry: "Free trial",
+    qaBiz: "Find Suppliers",
+    qaBizHint: `${SEARCH_COST_TOKENS.toLocaleString("en-US")} tokens per search`,
     manageShop: "Manage shop",
     productsOrders: "Products & orders",
     tokenUsage: "Token usage",
@@ -443,20 +450,20 @@ const DASH_STR = {
     toolsSub: "Open the tool you need, right from the dashboard.",
     toolAdName: "AI Ad Generator",
     toolAdDesc: "Turn one product sentence into a TikTok or Facebook caption.",
-    toolAdTag: "Free trial",
-    toolBizName: "Biz-Match",
+    toolAdTag: `${AD_COST_TOKENS.toLocaleString("en-US")} tokens per use`,
+    toolChatName: "AI Chat (Business Advisor)",
+    toolChatDesc: "Ask about strategy, pricing and marketing — answered in your language.",
+    toolChatTag: `${CHAT_COST_TOKENS.toLocaleString("en-US")} tokens per answer`,
+    toolMetalName: "Gold & Silver Analysis",
+    toolMetalDesc: "Spot prices, daily ranges and metal-market trend signals.",
+    toolMetalTag: `${METALS_COST_TOKENS.toLocaleString("en-US")} tokens per analysis`,
+    toolBizName: "Find Suppliers (Biz-Match)",
     toolBizDesc: "Find wholesale suppliers in Malaysia and Indonesia.",
-    toolBizTag: "10,000 tokens",
-    toolShopName: "My Shop",
-    toolShopDesc: "Manage your products, orders and shop link.",
-    toolShopTag: "Included",
-    toolNetName: "Affiliate Program",
-    toolNetDesc: "Track commission and withdraw your balance.",
-    toolNetTag: "Cash",
+    toolBizTag: `${SEARCH_COST_TOKENS.toLocaleString("en-US")} tokens per search`,
     openAction: "Open",
     needHelp: "Need help?",
-    teamHelp: "Our team can help set up your shop.",
-    contactUs: "Contact us",
+    teamHelp: "Ask our AI Business Advisor — instant answers, 24/7.",
+    contactUs: "Open AI Chat",
     referralTitle: "Your referral link",
     referralSub: "Share this link. Every purchase is recorded straight into your network.",
     copyLink: "Copy link",
@@ -535,8 +542,8 @@ const DASH_STR = {
     topLinks: "3 tautan tersering",
     topUp: "Isi ulang token",
     fromPrice: "Dari $1",
-    writeAd: "Tulis iklan AI",
-    freeTry: "Coba gratis",
+    qaBiz: "Cari Pemasok",
+    qaBizHint: `Potong ${SEARCH_COST_TOKENS.toLocaleString("id-ID")} token`,
     manageShop: "Kelola toko",
     productsOrders: "Produk & pesanan",
     tokenUsage: "Penggunaan token",
@@ -637,20 +644,20 @@ const DASH_STR = {
     toolsSub: "Buka alat yang Anda butuhkan, langsung dari dasbor.",
     toolAdName: "Generator Iklan AI",
     toolAdDesc: "Ubah satu kalimat produk menjadi caption TikTok atau Facebook.",
-    toolAdTag: "Coba gratis",
-    toolBizName: "Biz-Match",
+    toolAdTag: `Potong ${AD_COST_TOKENS.toLocaleString("id-ID")} Token`,
+    toolChatName: "Chat AI (Konsultan Bisnis)",
+    toolChatDesc: "Tanya strategi bisnis, harga dan marketing — dijawab dalam Bahasa.",
+    toolChatTag: `Potong ${CHAT_COST_TOKENS.toLocaleString("id-ID")} Token`,
+    toolMetalName: "Analisis Emas & Perak",
+    toolMetalDesc: "Harga spot, rentang harian dan sinyal tren pasar logam.",
+    toolMetalTag: `Potong ${METALS_COST_TOKENS.toLocaleString("id-ID")} Token`,
+    toolBizName: "Cari Pemasok (Biz-Match)",
     toolBizDesc: "Cari pemasok grosir di Malaysia dan Indonesia.",
-    toolBizTag: "10.000 token",
-    toolShopName: "Toko Saya",
-    toolShopDesc: "Kelola produk, pesanan, dan tautan toko Anda.",
-    toolShopTag: "Termasuk",
-    toolNetName: "Program Afiliasi",
-    toolNetDesc: "Pantau komisi dan tarik saldo Anda.",
-    toolNetTag: "Tunai",
+    toolBizTag: `Potong ${SEARCH_COST_TOKENS.toLocaleString("id-ID")} Token`,
     openAction: "Buka",
     needHelp: "Butuh bantuan?",
-    teamHelp: "Tim kami dapat membantu menyiapkan toko Anda.",
-    contactUs: "Hubungi kami",
+    teamHelp: "Tanya Konsultan Bisnis AI kami — jawaban instan, 24/7.",
+    contactUs: "Buka Chat AI",
     referralTitle: "Tautan rujukan Anda",
     referralSub: "Bagikan tautan ini. Setiap pembelian tercatat langsung ke jaringan Anda.",
     copyLink: "Salin tautan",
@@ -1089,6 +1096,11 @@ export function MemberDashboard({
     window.location.href = "/login";
   }
 
+  /** Pops the floating member chatbot (Task 3) from any card or button. */
+  function openMemberChat() {
+    window.dispatchEvent(new CustomEvent(OPEN_CHAT_EVENT));
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="mx-auto flex w-full max-w-[1180px] gap-6 px-4 py-5 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:pb-8">
@@ -1376,7 +1388,7 @@ export function MemberDashboard({
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     {[
                       { label: t.topUp, hint: t.fromPrice, href: `/${lang}#pricing`, icon: Wallet },
-                      { label: t.writeAd, hint: t.freeTry, href: `/${lang}#demo`, icon: Sparkles },
+                      { label: t.qaBiz, hint: t.qaBizHint, href: "/dashboard/biz-match", icon: Bot },
                       { label: t.manageShop, hint: t.productsOrders, href: "/store", icon: Package },
                     ].map((action) => {
                       const Icon = action.icon;
@@ -2046,9 +2058,31 @@ export function MemberDashboard({
                     wash: "from-brand/20",
                   },
                   {
+                    name: t.toolChatName,
+                    desc: t.toolChatDesc,
+                    href: null as string | null,
+                    icon: MessageCircle,
+                    tone: "violet" as const,
+                    tag: t.toolChatTag,
+                    art: null as string | null,
+                    glow: "group-hover:border-violet-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(139,92,246,0.85)]",
+                    wash: "from-violet-500/20",
+                  },
+                  {
+                    name: t.toolMetalName,
+                    desc: t.toolMetalDesc,
+                    href: "/dashboard/metals",
+                    icon: Store,
+                    tone: "amber" as const,
+                    tag: t.toolMetalTag,
+                    art: "/assets/gold.jpg" as string | null,
+                    glow: "group-hover:border-amber-400/45 group-hover:shadow-[0_26px_60px_-38px_rgba(251,191,36,0.75)]",
+                    wash: "from-amber-400/20",
+                  },
+                  {
                     name: t.toolBizName,
                     desc: t.toolBizDesc,
-                    href: "/directory",
+                    href: "/dashboard/biz-match",
                     icon: Bot,
                     tone: "emerald" as const,
                     tag: t.toolBizTag,
@@ -2056,39 +2090,10 @@ export function MemberDashboard({
                     glow: "group-hover:border-emerald-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(16,185,129,0.9)]",
                     wash: "from-emerald-500/20",
                   },
-                  {
-                    name: t.toolShopName,
-                    desc: t.toolShopDesc,
-                    href: "/store",
-                    icon: Store,
-                    tone: "amber" as const,
-                    tag: t.toolShopTag,
-                    art: "/assets/gold.jpg" as string | null,
-                    glow: "group-hover:border-amber-400/45 group-hover:shadow-[0_26px_60px_-38px_rgba(251,191,36,0.75)]",
-                    wash: "from-amber-400/20",
-                  },
-                  {
-                    name: t.toolNetName,
-                    desc: t.toolNetDesc,
-                    href: affiliate.code ? `/dashboard/affiliate?ref=${affiliate.code}` : "/dashboard",
-                    icon: Network,
-                    tone: "violet" as const,
-                    tag: t.toolNetTag,
-                    art: "/assets/token.jpg" as string | null,
-                    glow: "group-hover:border-violet-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(139,92,246,0.85)]",
-                    wash: "from-violet-500/20",
-                  },
                 ].map((tool) => {
                   const Icon = tool.icon;
-                  return (
-                    <Link
-                      key={tool.name}
-                      href={tool.href}
-                      className={cn(
-                        "panel-lift group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm",
-                        tool.glow,
-                      )}
-                    >
+                  const cardInner = (
+                    <>
                       <div className="relative flex items-start justify-between">
                         {tool.art ? (
                           <PremiumArt
@@ -2121,6 +2126,24 @@ export function MemberDashboard({
                       <p className="relative mt-3 flex items-center gap-1 text-[10px] font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100">
                         {t.openAction} <ArrowRight className="size-3" />
                       </p>
+                    </>
+                  );
+                  const cardClass = cn(
+                    "panel-lift group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm",
+                    tool.glow,
+                  );
+                  // The Chat AI card has no page: it pops the floating member
+                  // chatbot (Task 3) instead of navigating anywhere.
+                  if (!tool.href) {
+                    return (
+                      <button key={tool.name} type="button" onClick={openMemberChat} className={cardClass}>
+                        {cardInner}
+                      </button>
+                    );
+                  }
+                  return (
+                    <Link key={tool.name} href={tool.href} className={cardClass}>
+                      {cardInner}
                     </Link>
                   );
                 })}
@@ -2136,13 +2159,12 @@ export function MemberDashboard({
                     </div>
                   </div>
                   <Button
-                    asChild
+                    type="button"
+                    onClick={openMemberChat}
                     variant="outline"
                     className="h-9 gap-1.5 rounded-xl border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:border-brand/40 hover:text-slate-900"
                   >
-                    <a href="https://wa.me/60123456789" target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="size-3.5" /> {t.contactUs}
-                    </a>
+                    <MessageCircle className="size-3.5" /> {t.contactUs}
                   </Button>
                 </CardContent>
               </Card>
@@ -2187,6 +2209,7 @@ export function MemberDashboard({
             })}
           </div>
         </nav>
+        <MemberChatFloat locale={lang} />
       </div>
     </TooltipProvider>
   );

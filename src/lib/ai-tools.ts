@@ -1,6 +1,6 @@
 /**
- * Shared contract for the two member-paid AI tools Ali is wiring into the
- * dashboard tools tab (Chat AI + Cari Pembekal Live).
+ * Shared contract for the four member-paid AI tools in the dashboard
+ * tools tab (Penjana Iklan AI + Chat AI + Analisis Emas & Perak + Biz-Match).
  *
  * One module, one source of truth: URL, method, request shape, cost and the
  * 402 copy all live here. The components import these constants instead of
@@ -23,6 +23,24 @@ export const BIZ_SEARCH_API = {
   costTokens: 10_000,
   /** Query keys the route reads. */
   queryKeys: ["q", "country", "rid"] as const,
+} as const;
+
+/** POST { text, locale } — member price 20,000 tokens per generation. */
+export const AD_API = {
+  url: "/api/demo",
+  method: "POST" as const,
+  costTokens: 20_000,
+  /** Body keys the route reads. */
+  bodyKeys: ["text", "locale"] as const,
+} as const;
+
+/** GET ?currency=&rid= — 2,000 tokens per successful premium analysis. */
+export const METALS_API = {
+  url: "/api/metals",
+  method: "GET" as const,
+  costTokens: 2_000,
+  /** Query keys the route reads. */
+  queryKeys: ["currency", "locale", "rid"] as const,
 } as const;
 
 export type InsufficientResponse = {

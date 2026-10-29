@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * The "open your store" premium modal.
@@ -9,6 +10,19 @@ import { useEffect, useRef, useState } from "react";
  * it is what converts a curious merchant, and paying is the secondary. The price
  * is shown in USD with the local approximation beneath it, matching how tokens
  * are priced, so the two products read consistently.
+ *
+ * Stability notes (Boss Task 4 — the "Aktifkan Kedai" glitch):
+ *   - Rendered with `createPortal` into `document.body`, never inline. The
+ *     merchant dashboard lives under a `<main>` with a page-in animation; a
+ *     transformed/filtered ancestor turns `position: fixed` into
+ *     position-relative-to-that-ancestor, which is what made the overlay jump
+ *     and misplace on open.
+ *   - The focus trap measures visibility with `getClientRects()`, not
+ *     `offsetParent` (which is `null` for fixed-position elements, collapsing
+ *     the trap to zero items and letting Tab escape the dialog).
+ *   - Mount state is explicit: the component stays mounted while closed and
+ *     only portals the overlay when `open`, so rapid open/close clicks cannot
+ *     strand a half-removed overlay or a locked `body` scroll.
  */
 export function StoreSubscriptionModal({
   open,
@@ -21,15 +35,22 @@ export function StoreSubscriptionModal({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState<"trial" | "pay" | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
+    // The dialog portals in on the same frame — focus on the next frame so
+    // the node is in the DOM when focus lands.
+    const frame = requestAnimationFrame(() => closeRef.current?.focus());
 
     function focusable(): HTMLElement[] {
       const root = dialogRef.current;
@@ -38,7 +59,7 @@ export function StoreSubscriptionModal({
         root.querySelectorAll<HTMLElement>(
           'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
         ),
-      ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+      ).filter((el) => el.getClientRects().length > 0 || el === document.activeElement);
     }
 
     function onKeyDown(event: KeyboardEvent) {
@@ -64,13 +85,14 @@ export function StoreSubscriptionModal({
 
     document.addEventListener("keydown", onKeyDown);
     return () => {
+      cancelAnimationFrame(frame);
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = overflow;
       previouslyFocused?.focus?.();
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   async function startTrial() {
     setBusy("trial");
@@ -116,7 +138,7 @@ export function StoreSubscriptionModal({
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-ink/80 p-4 backdrop-blur-sm sm:items-center"
       onMouseDown={(event) => {
@@ -212,6 +234,7 @@ export function StoreSubscriptionModal({
           Tiada kontrak. Boleh batal bila-bila masa. Bayaran diproses oleh Chip.Asia.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

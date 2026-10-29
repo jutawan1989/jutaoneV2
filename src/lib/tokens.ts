@@ -15,6 +15,13 @@ export const SEARCH_COST_TOKENS = 10_000;
 /** Cost of one Smart Assistant answer, in tokens. */
 export const CHAT_COST_TOKENS = 5_000;
 
+/**
+ * Member price of one AI Ad generation, in tokens (Boss spec: "Tolak 20,000
+ * Token"). Displayed on the dashboard Alat AI card; the charge itself is
+ * enforced server-side in `/api/demo` member mode.
+ */
+export const AD_COST_TOKENS = 20_000;
+
 /** Cost of one live Metals (gold/silver) quote, in tokens. */
 export const METALS_COST_TOKENS = 2_000;
 
