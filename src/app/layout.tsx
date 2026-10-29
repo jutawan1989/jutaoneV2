@@ -1,3 +1,4 @@
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -19,6 +20,21 @@ const inter = Inter({
   display: "swap",
   variable: "--font-inter",
 });
+
+/**
+ * Mobile-first (Boss spec: 90% merchants on phones). Without an explicit
+ * viewport the layout viewport stays at ~980px on phones, which is what
+ * produces horizontal scrolling and tiny text on real devices.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+export const metadata: Metadata = {
+  title: "JutaOne.Biz",
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
