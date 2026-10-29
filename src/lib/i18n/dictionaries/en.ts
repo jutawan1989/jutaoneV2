@@ -222,9 +222,15 @@ export const en = {
     status: "Status",
     statusPending: "Waiting for provider confirmation",
     statusMock: "Payment provider not configured yet",
+    statusChecking: "Verifying payment status…",
+    statusProcessing:
+      "Payment is being processed… Tokens will appear automatically once the provider confirms. Please refresh in a moment.",
+    statusPaid: "Payment verified — {tokens} tokens credited.",
+    recheck: "Check again",
+    viewDashboard: "View dashboard",
     back: "Back to the test",
     finish: "Simulate successful payment",
-    finished: "Sandbox payment recorded. Thanks — your balance would now be {tokenName}.",
+    finished: "Payment verified. Thank you — your token balance is being updated.",
   },
   compliance: {
     disclaimer:

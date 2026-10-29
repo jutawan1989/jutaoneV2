@@ -223,9 +223,15 @@ export const id: Dictionary = {
     status: "Status",
     statusPending: "Menunggu konfirmasi penyedia",
     statusMock: "Penyedia pembayaran belum dikonfigurasi",
+    statusChecking: "Memeriksa status pembayaran…",
+    statusProcessing:
+      "Pembayaran sedang diproses… Token akan masuk otomatis setelah konfirmasi penyedia. Silakan muat ulang sebentar lagi.",
+    statusPaid: "Pembayaran terverifikasi — {tokens} token telah dikreditkan.",
+    recheck: "Periksa lagi",
+    viewDashboard: "Lihat dashboard",
     back: "Kembali ke uji",
     finish: "Simulasikan pembayaran berhasil",
-    finished: "Pembayaran sandbox dicatat. Terima kasih — saldo Anda kini {tokenName}.",
+    finished: "Pembayaran terverifikasi. Terima kasih — saldo token Anda sedang diperbarui.",
   },
   compliance: {
     disclaimer:

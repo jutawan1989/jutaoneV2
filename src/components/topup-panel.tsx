@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import type { Locale } from "@/lib/i18n/config";
 import { format } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
@@ -19,9 +20,18 @@ type TopUpPanelProps = {
   showSimulator: boolean;
 };
 
+type VerifyState = "idle" | "checking" | "processing" | "done" | "error";
+
+const MAX_POLLS = 8;
+const POLL_MS = 4000;
+
 /**
- * Sandbox top-up screen. When Chip.Asia credentials are configured the visitor
- * is sent to Chip's hosted checkout instead of landing here.
+ * Top-up return screen. NEVER trusts `?status=success` on its own — that
+ * query param is set by the gateway return URL, which fires before the
+ * server webhook credits anything. Every success claim is verified against
+ * `/api/topup/status` (real `topups` row with `status = 'paid'`). While the
+ * webhook is still in flight the user sees "processing", never a fake
+ * token balance.
  */
 export function TopUpPanel({
   locale,
@@ -35,23 +45,114 @@ export function TopUpPanel({
   status,
   showSimulator,
 }: TopUpPanelProps) {
-  const [state, setState] = useState<"idle" | "busy" | "done" | "error">(
-    status === "success" ? "done" : "idle",
+  const [ref, setRef] = useState<string | null>(reference);
+  const [state, setState] = useState<VerifyState>(
+    status === "success" ? (reference ? "checking" : "processing") : "idle",
+  );
+  const [busy, setBusy] = useState(false);
+  const [creditedTokens, setCreditedTokens] = useState(0);
+  const [simError, setSimError] = useState(false);
+  // Bumps to (re)start the verify loop. True on mount for gateway returns.
+  const [verifying, setVerifying] = useState(status === "success" && Boolean(reference));
+
+  const verify = useCallback(
+    async (currentRef: string): Promise<boolean> => {
+      try {
+        const response = await fetch(
+          `/api/topup/status?ref=${encodeURIComponent(currentRef)}`,
+          { cache: "no-store" },
+        );
+        const data = (await response.json().catch(() => null)) as {
+          ok?: boolean;
+          paid?: boolean;
+          tokens?: number;
+        } | null;
+        if (response.ok && data?.ok && data.paid) {
+          setCreditedTokens(Number(data.tokens ?? 0));
+          setState("done");
+          setVerifying(false);
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+    [],
   );
 
+  // Verify the gateway return, then keep polling while the webhook may
+  // still be in flight. Stops after MAX_POLLS — the user stays on an
+  // honest "processing" message with a manual re-check button.
+  useEffect(() => {
+    if (!verifying || !ref) return;
+    let cancelled = false;
+
+    (async () => {
+      for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+        if (cancelled) return;
+        if (attempt > 0) {
+          setState("processing");
+          await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+          if (cancelled) return;
+        }
+        const paid = await verify(ref);
+        if (cancelled) return;
+        if (paid) return;
+      }
+      setState("processing");
+      setVerifying(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [verifying, ref, verify]);
+
+  async function recheck() {
+    if (!ref || verifying) return;
+    setState("checking");
+    setVerifying(true);
+  }
+
   async function simulatePayment() {
-    setState("busy");
+    if (busy) return;
+    setBusy(true);
+    setSimError(false);
     try {
       const response = await fetch("/api/topup/simulate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale, variant, reference }),
+        body: JSON.stringify({ locale, variant, reference: ref }),
       });
-      setState(response.ok ? "done" : "error");
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        reference?: string;
+      } | null;
+      if (response.ok && data?.ok) {
+        if (typeof data.reference === "string" && data.reference) setRef(data.reference);
+        setState("checking");
+        setVerifying(true);
+      } else {
+        setSimError(true);
+      }
     } catch {
-      setState("error");
+      setSimError(true);
+    } finally {
+      setBusy(false);
     }
   }
+
+  const statusLine =
+    state === "done"
+      ? creditedTokens > 0
+        ? format(dict.topup.statusPaid, { tokens: creditedTokens.toLocaleString("en-US") })
+        : format(dict.topup.finished, { tokenName })
+      : state === "checking"
+        ? dict.topup.statusChecking
+        : state === "processing"
+          ? dict.topup.statusProcessing
+          : dict.topup.statusMock;
 
   return (
     <div className="card mx-auto w-full max-w-lg p-6 sm:p-8">
@@ -76,33 +177,52 @@ export function TopUpPanel({
         </div>
         <div className="flex items-center justify-between border-b border-line pb-3">
           <dt className="text-muted">{dict.topup.status}</dt>
-          <dd className="text-right text-silver">
-            {state === "done" ? format(dict.topup.finished, { tokenName }) : dict.topup.statusMock}
+          <dd className="text-right text-silver" aria-live="polite">
+            {statusLine}
           </dd>
         </div>
-        {reference && (
+        {ref && (
           <div className="flex items-center justify-between">
             <dt className="text-muted">ref</dt>
-            <dd className="font-mono text-xs text-muted">{reference}</dd>
+            <dd className="font-mono text-xs text-muted">{ref}</dd>
           </div>
         )}
       </dl>
 
-      {showSimulator && state !== "done" && (
+      {state === "processing" && ref && (
+        <button
+          type="button"
+          onClick={recheck}
+          className="btn-brand mt-6 w-full"
+        >
+          {dict.topup.recheck}
+        </button>
+      )}
+
+      {showSimulator && (state === "idle" || state === "error") && (
         <button
           type="button"
           onClick={simulatePayment}
-          disabled={state === "busy"}
+          disabled={busy}
           className="btn-brand mt-6 w-full"
         >
           {dict.topup.finish}
         </button>
       )}
 
-      {state === "error" && (
+      {(state === "error" || simError) && (
         <p role="alert" className="mt-3 text-sm text-red-300">
           {dict.generator.errorGeneric}
         </p>
+      )}
+
+      {state === "processing" && (
+        <Link
+          href="/dashboard"
+          className="mt-4 block text-center text-sm font-medium text-muted transition-colors hover:text-white"
+        >
+          {dict.topup.viewDashboard}
+        </Link>
       )}
 
       <a
