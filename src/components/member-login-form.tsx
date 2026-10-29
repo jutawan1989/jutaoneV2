@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 /**
  * Email + password sign-in and registration.
@@ -15,6 +16,7 @@ export function MemberLoginForm({ next }: { next: string }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,17 +91,27 @@ export function MemberLoginForm({ next }: { next: string }) {
             <label htmlFor="m-pass" className="block text-sm font-medium text-white">
               Kata laluan
             </label>
-            <input
-              id="m-pass"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              minLength={8}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-brand focus:outline-none"
-              placeholder="Sekurang-kurangnya 8 aksara"
-            />
+            <div className="relative">
+              <input
+                id="m-pass"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                minLength={8}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                className="mt-1.5 w-full rounded-lg border border-line bg-ink-2/70 px-3.5 py-2.5 pr-11 text-sm text-white placeholder:text-muted/70 focus:border-brand focus:outline-none"
+                placeholder="Sekurang-kurangnya 8 aksara"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"}
+                className="absolute top-1/2 right-3 -translate-y-1/2 pt-1.5 text-slate-400 transition-colors hover:text-white"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" disabled={busy} className="btn-brand w-full">

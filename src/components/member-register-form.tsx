@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -16,6 +17,7 @@ export function MemberRegisterForm({ next, referredBy = null }: { next: string; 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,17 +112,27 @@ export function MemberRegisterForm({ next, referredBy = null }: { next: string; 
             <label htmlFor="r-pass" className="block text-sm font-medium text-white">
               Kata laluan
             </label>
-            <input
-              id="r-pass"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className={inputClass}
-              placeholder="Min. 8 aksara"
-            />
+            <div className="relative">
+              <input
+                id="r-pass"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                className={`${inputClass} pr-12`}
+                placeholder="Min. 8 aksara"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"}
+                className="absolute top-1/2 right-3.5 -translate-y-1/2 pt-1.5 text-slate-400 transition-colors hover:text-white"
+              >
+                {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+              </button>
+            </div>
           </div>
           <details className="rounded-xl border border-line/60 px-3.5 py-2.5">
             <summary className="cursor-pointer text-[13px] font-medium text-muted transition-colors hover:text-white">

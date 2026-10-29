@@ -8,6 +8,8 @@ import {
   Clock3,
   Coins,
   CreditCard,
+  Eye,
+  EyeOff,
   Search,
   ShieldCheck,
   Store,
@@ -100,6 +102,7 @@ export function AdminPanel({
   const [topupError, setTopupError] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState("");
   const [resetPassword, setResetPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const [resetNote, setResetNote] = useState<string | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
@@ -705,17 +708,27 @@ export function AdminPanel({
                     <label htmlFor="reset-password" className="mb-1.5 block text-[11px] font-medium text-silver">
                       Password baharu (minimum 8 aksara)
                     </label>
-                    <Input
-                      id="reset-password"
-                      type="password"
-                      required
-                      minLength={8}
-                      value={resetPassword}
-                      onChange={(event) => setResetPassword(event.target.value)}
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                      className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 text-xs text-silver placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="reset-password"
+                        type={showResetPassword ? "text" : "password"}
+                        required
+                        minLength={8}
+                        value={resetPassword}
+                        onChange={(event) => setResetPassword(event.target.value)}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        className="h-10 rounded-xl border-white/10 bg-white/[0.03] px-3 pr-10 text-xs text-silver placeholder:text-muted/70 focus-visible:border-brand/40 focus-visible:ring-brand/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowResetPassword((v) => !v)}
+                        aria-label={showResetPassword ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"}
+                        className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-1 text-slate-400 transition-colors hover:text-white"
+                      >
+                        {showResetPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                      </button>
+                    </div>
                   </div>
                   <Button
                     type="submit"
