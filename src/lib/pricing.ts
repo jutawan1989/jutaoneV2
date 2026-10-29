@@ -16,7 +16,7 @@ export type Price = {
   /** ISO code shown beside the headline. */
   baseCode: "MYR";
   /**
-   * Secondary estimate under the RM headline. Rupiah (`≈ Rp16,000`) when the
+   * Secondary estimate under the RM headline. Rupiah (`≈ Rp18,000`) when the
    * billing region is Indonesia or the visitor chose Bahasa Indonesia; the
    * USD charged-equivalent (`≈ $1.00`) elsewhere outside Malaysia; null in
    * Malaysia where the headline already is the charge.
@@ -144,7 +144,7 @@ export function withUsdAmount(base: Price, usd: number, locale: Locale = "ms"): 
  * Checkout price for Indonesia: RM-anchored via `getExchangeRate()`.
  *
  * Flow: USD amount -> RM base (MYR_PER_USD) -> IDR at the live/ops RM->IDR
- * rate, clamped by `applyIdrFloor` (never below Rp16,000 per $1) then rounded
+ * rate, clamped by `applyIdrFloor` (never below Rp18,000 per $1) then rounded
  * with `roundIdr` so Chip receives a "cantik" whole-rupiah amount. The RM
  * base is kept on the returned `Price.rmBase` so the callback can record it
  * in Supabase. Non-IDR currencies pass through `withUsdAmount` unchanged.

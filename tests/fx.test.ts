@@ -55,21 +55,21 @@ describe("RM-anchored FX (Boss spec)", () => {
   it("checkout derives IDR from the RM base and rounds cantik", async () => {
     process.env.FX_RM_TO_IDR = "3600";
     const price = await priceForCheckout("IDR", 1, "id");
-    // RM base 4.70 x 3600 = 16,920 -> rounded to 17,000.
+    // RM base 4.70 x 3600 = 16,920 -> below the Rp18,000 floor, so floored to 18,000.
     expect(price.rmBase).toBeCloseTo(4.7, 10);
-    expect(price.amount).toBe(17_000);
-    expect(price.localDisplay).toBe("≈ Rp17,000");
+    expect(price.amount).toBe(18_000);
+    expect(price.localDisplay).toBe("≈ Rp18,000");
     expect(price.display).toBe("RM4.70");
     expect(price.fxRate).toBe(3600);
   });
 
-  it("checkout enforces the Rp16,000 floor when MYR strengthens", async () => {
-    // Rate 3,000 would give 4.70 x 3,000 = 14,100 -> floored to 16,000.
+  it("checkout enforces the Rp18,000 floor when MYR strengthens", async () => {
+    // Rate 3,000 would give 4.70 x 3,000 = 14,100 -> floored to 18,000.
     process.env.FX_RM_TO_IDR = "3000";
     const price = await priceForCheckout("IDR", 1, "id");
     expect(price.rmBase).toBeCloseTo(4.7, 10);
-    expect(price.amount).toBe(16_000);
-    expect(price.localDisplay).toBe("≈ Rp16,000");
+    expect(price.amount).toBe(18_000);
+    expect(price.localDisplay).toBe("≈ Rp18,000");
     expect(price.display).toBe("RM4.70");
     expect(price.fxRate).toBe(3000);
   });

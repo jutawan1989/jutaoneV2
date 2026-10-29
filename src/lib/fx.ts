@@ -12,7 +12,7 @@
  *      ops-set rate is never silently replaced by a drifting feed.
  *   2. Free live feed `https://open.er-api.com/v6/latest/MYR` (no key,
  *      ~daily refresh). `rates.IDR` is IDR-per-MYR, `rates.USD` is USD-per-MYR.
- *   3. Built-in fallback (RM 1 = Rp 3,600 ≈ IDR_PER_USD 16,000 at 4.70):
+ *   3. Built-in fallback (RM 1 = Rp 3,600 ≈ IDR_PER_USD 16,920 at 4.70):
  *      guarantees checkout still prices when the feed is down.
  *
  * Cached in memory for 6 hours — FX moves slowly and the free feed is
@@ -100,11 +100,12 @@ export function roundIdr(amount: number): number {
 }
 
 /**
- * CMO margin floor (Linda): the Indonesian checkout charge never drops below
- * Rp16,000 for the $1 base, even when MYR strengthens and the raw conversion
- * (RM base × rate) would land lower. Scales linearly for larger USD amounts.
+ * CMO margin floor (Linda + Boss Rp18,000 decision): the Indonesian checkout
+ * charge never drops below Rp18,000 for the $1 base, even when MYR strengthens
+ * and the raw conversion (RM base × rate) would land lower. Scales linearly
+ * for larger USD amounts.
  */
-export const IDR_FLOOR_PER_USD = 16_000;
+export const IDR_FLOOR_PER_USD = 18_000;
 
 /** Applies the floor, then `roundIdr`, so Chip always gets a cantik amount. */
 export function applyIdrFloor(rawIdr: number, usd: number): number {
