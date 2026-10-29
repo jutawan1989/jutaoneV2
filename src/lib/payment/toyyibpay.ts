@@ -280,7 +280,7 @@ export function verifyToyyibHash(callback: {
  * callback dies here without a vendor round trip.
  *
  * Layer 2 (authoritative): getBillTransactions with our secret must confirm
- * this billcode is paid for this refno + amount. The hash proves the POST
+ * this billcode is paid for this order_id + amount. The hash proves the POST
  * came from the vendor; only the server-to-server check proves money moved.
  */
 export async function verifyToyyibCallback(
@@ -335,9 +335,12 @@ export async function verifyToyyibCallback(
 
   // Amount cross-check when the vendor returns it: a tampered callback that
   // inflates `amount` must not credit more tokens than the bill paid.
-  if (callback.amount && match.billAmount != null) {
+  // The vendor names the paid amount `billpaymentAmount` (docs sample) —
+  // fall back to `billAmount` for forward-compat.
+  const paidAmount = match.billpaymentAmount ?? match.billAmount;
+  if (callback.amount && paidAmount != null) {
     const claimed = Number(String(callback.amount).replace(/[^0-9.]/g, ""));
-    const actual = Number(String(match.billAmount).replace(/[^0-9.]/g, ""));
+    const actual = Number(String(paidAmount).replace(/[^0-9.]/g, ""));
     if (Number.isFinite(claimed) && Number.isFinite(actual) && claimed !== actual) {
       return { ok: false, reason: "amount mismatch" };
     }
