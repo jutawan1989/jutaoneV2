@@ -1,0 +1,10 @@
+# JutaOne Cloud — Kit Migrasi Codespaces (Projek RM50K Sehari) + ENJIN ROZIE
+# Dijana: 2026-10-30 | Oleh: Goses | Mandat tambahan: Rozie (CMO) pindah ke awan, sifar-latensi dengan Interpreter
+# Baris 1-5: mandat asal (Interpreter + Playwright). Baris 6-9: otak Rozie (API pantas, tiada Ollama).
+
+open-interpreter
+playwright
+python-dotenv
+requests
+fastapi
+uvicorn[standard]

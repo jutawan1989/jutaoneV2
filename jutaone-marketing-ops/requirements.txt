@@ -1,0 +1,8 @@
+# Pakej TERKUNCI dalam jutaone-marketing-ops/venv sahaja (mandat pengasingan Ayah)
+# JANGAN pasang di venv lain / global laptop / folder projek web Ali.
+open-interpreter
+playwright
+python-dotenv
+requests
+fastapi
+uvicorn[standard]
