@@ -6,8 +6,8 @@
  * Used when the user clicks "Analisis Pasaran AI Mendalam" in the dashboard.
  *
  * Endpoints on `metal-sentinel.p.rapidapi.com`:
- *   GET /api/v1/gold-price?currency=MYR     — spot + karat prices (24k/18k/14k/9k)
- *   GET /api/v1/silver-price?currency=MYR   — spot + fineness (999/958/925/900/800)
+ *   GET /gold-price?currency=MYR     — spot + karat prices (24k/18k/14k/9k)
+ *   GET /silver-price?currency=MYR   — spot + fineness (999/958/925/900/800)
  *
  * Auth: `X-RapidAPI-Key: RAPIDAPI_KEY` + `X-RapidAPI-Host: metal-sentinel.p.rapidapi.com`.
  * Key lives in Cloudflare Secrets (RAPIDAPI_KEY), never in the client bundle.
@@ -60,7 +60,7 @@ export type PremiumMetalAnalysis = {
 export type MetalPrices = PremiumMetalAnalysis;
 
 const HOST = "metal-sentinel.p.rapidapi.com";
-const BASE_URL = `https://${HOST}/api/v1`;
+const BASE_URL = `https://${HOST}`;
 
 export function metalsConfigured(): boolean {
   return Boolean(process.env.RAPIDAPI_KEY);
