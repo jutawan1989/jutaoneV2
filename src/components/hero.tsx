@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PremiumArt } from "@/components/premium-art";
+import { HeroTryBox, LiveTelemetryCounter } from "@/components/conversion";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { Price } from "@/lib/pricing";
@@ -25,7 +26,8 @@ export function Hero({
     <section className="relative bg-gradient-to-b from-[#0a1f4d] via-[#0b2557] to-[#0a1730] text-white">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 pt-12 pb-10 sm:gap-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-14">
         <div className="min-w-0">
-          <p className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tracking-[0.12em] text-white/90 uppercase">
+          <LiveTelemetryCounter locale={locale} />
+          <p className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tracking-[0.12em] text-white/90 uppercase">
             <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
             <span className="truncate">{dict.hero.eyebrow}</span>
           </p>
@@ -50,6 +52,8 @@ export function Hero({
               {dict.hero.ctaSecondary}
             </Link>
           </div>
+
+          <HeroTryBox locale={locale} />
 
           {/* Trust signals: social proof + safety — bank-grade reassurance row. */}
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">

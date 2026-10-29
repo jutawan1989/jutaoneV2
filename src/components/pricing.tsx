@@ -132,6 +132,22 @@ export function Pricing({
 
             <div className="my-6 h-px bg-white/[0.06]" aria-hidden />
 
+            {/* Value-stack: agency anchor vs RM4.70 bundle (conversion spec). */}
+            <div className="mb-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] px-4 py-3 text-center">
+              <p className="text-[11px] font-medium tracking-[0.12em] text-white/60 uppercase">
+                {locale === "en" ? "Agency cost:" : locale === "id" ? "Biaya agensi:" : "Kos agensi:"}{" "}
+                <s className="font-bold text-red-300/90 tabular-nums">
+                  {locale === "en" ? "$320+" : locale === "id" ? "Rp5 Jt+" : "RM1,500+"}
+                </s>
+              </p>
+              <p className="mt-1 text-lg font-bold text-white">
+                {locale === "en" ? "Only $1" : locale === "id" ? "Hanya Rp18rb" : "Hanya RM4.70"}{" "}
+                <span className="text-[11px] font-semibold text-emerald-300">
+                  · AI Writer + Store + Biz-Match + Metals
+                </span>
+              </p>
+            </div>
+
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-5 py-5 text-center">
               <div className="flex justify-center">
                 <PremiumArt src="/assets/token.jpg" alt={dict.pricing.tokensFor} size={64} glow="cyan" />

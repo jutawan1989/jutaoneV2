@@ -3,6 +3,12 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { AdGenerator } from "@/components/ad-generator";
 import { Billboard } from "@/components/billboard";
+import {
+  BeforeAfter,
+  CaseStudies,
+  LiveActivityToast,
+  ValueStacking,
+} from "@/components/conversion";
 import { Footer } from "@/components/footer";
 import { GoldWidget } from "@/components/gold-widget";
 import { BizMatchSection } from "@/components/earn-sections";
@@ -64,6 +70,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
       <main id="main">
         <Hero dict={dict} price={price} locale={locale} />
         <div className="bg-[#0A0F1D] text-slate-100">
+          <BeforeAfter locale={locale} />
           <Billboard dict={dict} />
           <AdGenerator
             locale={locale}
@@ -79,11 +86,14 @@ export default async function HomePage({ params, searchParams }: PageProps) {
             demoDisabled={killSwitch.disabled}
           />
           <GoldWidget dict={dict} locale={locale} />
+          <CaseStudies locale={locale} />
           <BizMatchSection dict={dict} />
           <WhySection dict={dict} />
+          <ValueStacking locale={locale} />
           <Pricing locale={locale} dict={dict} price={price} variant={variant} />
         </div>
       </main>
+      <LiveActivityToast locale={locale} />
       <Footer locale={locale} dict={dict} />
     </>
   );

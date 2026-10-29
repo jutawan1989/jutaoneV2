@@ -75,7 +75,15 @@ export function AdGenerator({
 
   useEffect(() => {
     captureUtm();
+    const prefill = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (typeof detail === "string" && detail.trim()) {
+        setText(detail.slice(0, MAX_CHARS));
+      }
+    };
+    window.addEventListener("jutaone:try-demo", prefill);
     return () => {
+      window.removeEventListener("jutaone:try-demo", prefill);
       if (hookTimer.current) clearTimeout(hookTimer.current);
     };
   }, []);
