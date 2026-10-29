@@ -54,6 +54,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { LogoMark } from "@/components/logo";
 import { MemberChatFloat, OPEN_CHAT_EVENT } from "@/components/member-chat-float";
 import { AFFILIATE_ENSURE_API } from "@/lib/ai-tools";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import { PremiumArt } from "@/components/premium-art";
 import { cn } from "@/lib/utils";
 import type { MemberOverview, MemberPayout } from "@/lib/member-data";
@@ -731,6 +732,21 @@ function compact(value: number): string {
   return value.toLocaleString("en-US");
 }
 
+/**
+ * Payout request date for render. The `timeZone: "UTC"` is load-bearing for
+ * hydration: the server renders in UTC while members browse in MY/ID timezones,
+ * and without it a request stamped near midnight renders a different calendar
+ * day on the client — a hydration mismatch console error. DB timestamps are
+ * UTC ISO strings, so UTC display is both stable and correct.
+ */
+function formatPayoutDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", { timeZone: "UTC" });
+  } catch {
+    return iso;
+  }
+}
+
 function initials(name: string): string {
   const parts = name.replace(/[^a-zA-Z0-9 ]/g, " ").trim().split(/\s+/);
   if (parts.length === 0 || !parts[0]) return "JO";
@@ -755,25 +771,7 @@ function useClipboard(value: string) {
 
   async function copy() {
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(value);
-        mark("copied");
-        return;
-      }
-    } catch {
-      // fall through to the legacy path
-    }
-
-    try {
-      const area = document.createElement("textarea");
-      area.value = value;
-      area.setAttribute("readonly", "");
-      area.style.position = "fixed";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(area);
+      const ok = await copyTextToClipboard(value);
       mark(ok ? "copied" : "failed");
     } catch {
       mark("failed");
@@ -886,6 +884,8 @@ function CopyField({
           value={value}
           aria-label={`${linkWord} ${label}`}
           onFocus={(event) => event.currentTarget.select()}
+          onClick={(event) => event.currentTarget.select()}
+          style={{ WebkitUserSelect: "text", userSelect: "text" }}
           className="h-9 min-w-0 flex-1 border-0 bg-transparent px-2 font-mono text-xs text-slate-700 shadow-none focus-visible:ring-0"
         />
         {onOpen && (
@@ -1487,7 +1487,7 @@ export function MemberDashboard({
                                 {money(payout.amountMinor, payout.currency)}
                               </p>
                               <p className="text-[10px] text-slate-500">
-                                {new Date(payout.requestedAt).toLocaleDateString("en-GB")}
+                                {formatPayoutDate(payout.requestedAt)}
                               </p>
                             </div>
                             <Pill tone={payout.status === "paid" ? "emerald" : "amber"} className="shrink-0">
@@ -1946,7 +1946,7 @@ export function MemberDashboard({
                             className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
                           >
                             <span className="text-[11px] text-slate-500 tabular-nums">
-                              {new Date(payout.requestedAt).toLocaleDateString("en-GB")}
+                              {formatPayoutDate(payout.requestedAt)}
                             </span>
                             <span className="flex items-center gap-2">
                               <span className="text-[11px] font-medium text-slate-700 tabular-nums">
@@ -2054,6 +2054,7 @@ export function MemberDashboard({
                     icon: Sparkles,
                     tone: "brand" as const,
                     tag: t.toolAdTag,
+                    tagTone: "amber" as const,
                     art: "/assets/ai-robot.jpg" as string | null,
                     glow: "group-hover:border-brand/45 group-hover:shadow-[0_26px_60px_-38px_rgba(59,130,246,0.9)]",
                     wash: "from-brand/20",
@@ -2065,6 +2066,7 @@ export function MemberDashboard({
                     icon: MessageCircle,
                     tone: "violet" as const,
                     tag: t.toolChatTag,
+                    tagTone: "amber" as const,
                     art: null as string | null,
                     glow: "group-hover:border-violet-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(139,92,246,0.85)]",
                     wash: "from-violet-500/20",
@@ -2076,6 +2078,7 @@ export function MemberDashboard({
                     icon: Store,
                     tone: "amber" as const,
                     tag: t.toolMetalTag,
+                    tagTone: "amber" as const,
                     art: "/assets/gold.jpg" as string | null,
                     glow: "group-hover:border-amber-400/45 group-hover:shadow-[0_26px_60px_-38px_rgba(251,191,36,0.75)]",
                     wash: "from-amber-400/20",
@@ -2087,6 +2090,7 @@ export function MemberDashboard({
                     icon: Bot,
                     tone: "emerald" as const,
                     tag: t.toolBizTag,
+                    tagTone: "amber" as const,
                     art: "/assets/biz-match.jpg" as string | null,
                     glow: "group-hover:border-emerald-500/45 group-hover:shadow-[0_26px_60px_-38px_rgba(16,185,129,0.9)]",
                     wash: "from-emerald-500/20",
@@ -2118,7 +2122,7 @@ export function MemberDashboard({
                         </span>
                         )}
                         <span className="flex items-center gap-2">
-                          <Pill tone="slate">{tool.tag}</Pill>
+                          <Pill tone={tool.tagTone}>{tool.tag}</Pill>
                           <ArrowUpRight className="size-4 text-slate-400 transition-colors group-hover:text-brand" />
                         </span>
                       </div>

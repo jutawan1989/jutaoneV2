@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { AtSign, Briefcase, Camera, Music2, Send, ThumbsUp } from "lucide-react";
 import { captureUtm } from "@/lib/analytics/client";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import type { Dictionary } from "@/lib/i18n";
 import { format, type Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
@@ -154,27 +155,7 @@ export function AdGenerator({
   );
 
   async function copyText(value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      return true;
-    } catch {
-      // Clipboard API can fail (non-secure context / denied permission).
-      // Fallback to a hidden textarea + execCommand so the flow still works.
-      try {
-        const area = document.createElement("textarea");
-        area.value = value;
-        area.setAttribute("readonly", "");
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-        document.body.appendChild(area);
-        area.select();
-        const ok = document.execCommand("copy");
-        document.body.removeChild(area);
-        return ok;
-      } catch {
-        return false;
-      }
-    }
+    return copyTextToClipboard(value);
   }
 
   function shareText(): string {
@@ -374,7 +355,8 @@ export function AdGenerator({
           {caption ? (
             <p
               aria-live="polite"
-              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-700"
+              className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 select-text"
+              style={{ WebkitUserSelect: "text", userSelect: "text" }}
             >
               {withWatermarkChoice(caption, locale, includeWatermark)}
             </p>
