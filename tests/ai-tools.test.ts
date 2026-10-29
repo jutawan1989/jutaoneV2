@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  AD_API,
   AFFILIATE_ENSURE_API,
   BIZ_SEARCH_API,
   CHAT_API,
@@ -28,6 +29,13 @@ describe("ai-tools contract (Ali's dashboard buttons)", () => {
     expect(AFFILIATE_ENSURE_API.url).toBe("/api/affiliate/ensure");
     expect(AFFILIATE_ENSURE_API.method).toBe("POST");
     expect([...AFFILIATE_ENSURE_API.bodyKeys]).toEqual([]);
+  });
+
+  it("pins the paid ads endpoint Ali must call for /dashboard/ads", () => {
+    expect(AD_API.url).toBe("/api/ads/generate");
+    expect(AD_API.method).toBe("POST");
+    expect(AD_API.costTokens).toBe(20_000);
+    expect([...AD_API.bodyKeys]).toEqual(["text", "product", "locale", "rid"]);
   });
 
   it("detects the shared 402 paywall both tools return", () => {

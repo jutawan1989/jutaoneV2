@@ -18,7 +18,7 @@ export const CHAT_COST_TOKENS = 5_000;
 /**
  * Member price of one AI Ad generation, in tokens (Boss spec: "Tolak 20,000
  * Token"). Displayed on the dashboard Alat AI card; the charge itself is
- * enforced server-side in `/api/demo` member mode.
+ * enforced server-side in `/api/ads/generate` (paid members route).
  */
 export const AD_COST_TOKENS = 20_000;
 

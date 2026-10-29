@@ -2050,7 +2050,7 @@ export function MemberDashboard({
                   {
                     name: t.toolAdName,
                     desc: t.toolAdDesc,
-                    href: `/${lang}#demo`,
+                    href: "/dashboard/ads",
                     icon: Sparkles,
                     tone: "brand" as const,
                     tag: t.toolAdTag,

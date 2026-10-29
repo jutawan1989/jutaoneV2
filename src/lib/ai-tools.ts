@@ -34,13 +34,13 @@ export const BIZ_SEARCH_API = {
   queryKeys: ["q", "country", "rid"] as const,
 } as const;
 
-/** POST { text, locale } — member price 20,000 tokens per generation. */
+/** POST { text, product?, locale?, rid? } — 20,000 tokens per generation (members page /dashboard/ads). */
 export const AD_API = {
-  url: "/api/demo",
+  url: "/api/ads/generate",
   method: "POST" as const,
   costTokens: 20_000,
-  /** Body keys the route reads. */
-  bodyKeys: ["text", "locale"] as const,
+  /** Body keys the route reads. `product` is an alias for `text`; `rid` is optional idempotency. */
+  bodyKeys: ["text", "product", "locale", "rid"] as const,
 } as const;
 
 /** GET ?currency=&rid= — 2,000 tokens per successful premium analysis. */
