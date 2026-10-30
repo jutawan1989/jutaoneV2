@@ -22,6 +22,7 @@ export function TopUpButton({
   disabled = false,
   amountUsd,
   collectEmail = false,
+  gateway = "toyyibpay",
 }: {
   locale: Locale;
   variant: Variant;
@@ -38,6 +39,8 @@ export function TopUpButton({
   amountUsd?: number;
   /** When true, render an email field and send it as the Chip OTP destination. */
   collectEmail?: boolean;
+  /** Explicit gateway override — "stripe" sends `gateway: "stripe"` to `/api/topup`. */
+  gateway?: "toyyibpay" | "stripe";
 }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -63,7 +66,13 @@ export function TopUpButton({
       const response = await fetch("/api/topup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ locale, variant, amountUsd, email: trimmedEmail }),
+        body: JSON.stringify({
+          locale,
+          variant,
+          amountUsd,
+          email: trimmedEmail,
+          ...(gateway === "stripe" ? { gateway: "stripe" } : {}),
+        }),
       });
       const data = (await response.json()) as { checkoutUrl?: string | null };
       if (data.checkoutUrl) {

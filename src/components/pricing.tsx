@@ -1,10 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Coins, Lock, ShieldCheck, Zap } from "lucide-react";
+import { Check, Coins, CreditCard, Landmark, Lock, ShieldCheck, Zap } from "lucide-react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n/config";
+import { format, type Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 import {
   MIN_TOPUP_USD,
@@ -20,8 +20,9 @@ import { TopUpButton } from "@/components/topup-button";
 
 /**
  * Premium fintech checkout card: amount picker on top, then the centered
- * order summary (tokens → price → email → CTA → trust badge). The card stays
- * a single column so it is clean on a 390px phone.
+ * order summary (tokens → price → payment method → email → CTA → trust).
+ * Dual gateway: ToyyibPay (FPX, default) beside Stripe card (corporate
+ * blue). Selecting Stripe sends `gateway: "stripe"` via `/api/topup`.
  */
 export function Pricing({
   locale,
@@ -36,11 +37,14 @@ export function Pricing({
 }) {
   const [picked, setPicked] = useState<number | "custom">(1);
   const [custom, setCustom] = useState("");
+  const [gateway, setGateway] = useState<"toyyibpay" | "stripe">("toyyibpay");
   const customId = useId();
+  const customErrorId = `${customId}-error`;
 
   const usd = picked === "custom" ? parseTopUpAmount(custom) : picked;
   const valid = usd !== null;
   const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD, locale);
+  const feeTotal = valid ? formatRm((usd as number) + TOYYIBPAY_FEE_RM / 4.7) : null;
 
   return (
     <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 bg-[#0A0F1D] px-5 py-12 sm:px-6 sm:py-20">
@@ -49,13 +53,16 @@ export function Pricing({
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl">
             {dict.pricing.title}
           </h2>
-          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">{dict.pricing.subtitle}</p>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-300">{dict.pricing.subtitle}</p>
 
           <ul className="mt-7 space-y-3">
             {dict.pricing.bullets.map((bullet) => (
               <li key={bullet} className="flex items-start gap-3 text-sm text-silver">
-                <span aria-hidden className="mt-0.5 text-xs font-semibold text-brand">
-                  ✓
+                <span
+                  aria-hidden
+                  className="mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-400/10 ring-1 ring-emerald-400/30 ring-inset"
+                >
+                  <Check className="size-3 text-emerald-300" strokeWidth={3} />
                 </span>
                 {bullet}
               </li>
@@ -65,7 +72,7 @@ export function Pricing({
 
         <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0B1220] p-6 shadow-sm sm:p-7">
           <div className="relative">
-            <p className="flex items-center gap-2 text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
+            <p className="flex items-center gap-2 text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
               <Zap className="size-3.5 text-brand-soft" aria-hidden />
               {dict.pricing.amountTitle}
             </p>
@@ -79,7 +86,7 @@ export function Pricing({
                     type="button"
                     onClick={() => setPicked(amount)}
                     aria-pressed={active}
-                    className={`min-h-[44px] rounded-xl border px-2 py-2.5 text-sm font-semibold tabular-nums transition-colors ${
+                    className={`min-h-[44px] rounded-xl border px-2 py-2.5 text-sm font-semibold tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1220] focus-visible:outline-none ${
                       active
                         ? "border-brand bg-brand/10 text-white shadow-[0_0_0_1px_var(--color-brand)]"
                         : "border-white/10 bg-white/[0.03] text-silver hover:border-white/25 hover:text-white"
@@ -94,23 +101,23 @@ export function Pricing({
             <div className="mt-3">
               <label
                 htmlFor={customId}
-                className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase"
+                className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase"
               >
                 {dict.pricing.customLabel}
               </label>
               <div className="relative mt-1.5">
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-semibold text-muted"
+                  className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-semibold text-slate-300"
                 >
                   $
                 </span>
                 <input
                   id={customId}
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  min={MIN_TOPUP_USD}
-                  step="0.01"
+                  pattern="^[0-9]*[.]?[0-9]*$"
+                  autoComplete="off"
                   value={picked === "custom" ? custom : ""}
                   placeholder={dict.pricing.customPlaceholder}
                   onChange={(event) => {
@@ -119,13 +126,14 @@ export function Pricing({
                   }}
                   onFocus={() => setPicked("custom")}
                   aria-invalid={picked === "custom" && custom !== "" && !valid}
-                  className="min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pr-3 pl-8 text-sm font-semibold text-white tabular-nums placeholder:font-normal placeholder:text-muted/60 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                  aria-describedby={picked === "custom" && custom !== "" && !valid ? customErrorId : undefined}
+                  className="min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pr-3 pl-8 text-sm font-semibold text-white tabular-nums placeholder:font-normal placeholder:text-slate-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
                 />
               </div>
             </div>
 
             {!valid && picked === "custom" && custom !== "" && (
-              <p role="alert" className="mt-2 text-xs text-red-300">
+              <p id={customErrorId} role="alert" className="mt-2 text-xs font-medium text-red-300">
                 {dict.pricing.invalidAmount}
               </p>
             )}
@@ -134,16 +142,14 @@ export function Pricing({
 
             {/* Value-stack: agency anchor vs RM4.70 bundle (conversion spec). */}
             <div className="mb-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] px-4 py-3 text-center">
-              <p className="text-[11px] font-medium tracking-[0.12em] text-white/60 uppercase">
-                {locale === "en" ? "Agency cost:" : locale === "id" ? "Biaya agensi:" : "Kos agensi:"}{" "}
-                <s className="font-bold text-red-300/90 tabular-nums">
-                  {locale === "en" ? "$320+" : locale === "id" ? "Rp5 Jt+" : "RM1,500+"}
-                </s>
+              <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
+                {dict.pricing.agencyLabel}{" "}
+                <s className="font-bold text-red-300 tabular-nums">{dict.pricing.agencyWas}</s>
               </p>
               <p className="mt-1 text-lg leading-snug font-bold break-words text-white">
-                {locale === "en" ? "Only $1" : locale === "id" ? "Hanya Rp18rb" : "Hanya RM4.70"}{" "}
-                <span className="text-[11px] font-semibold text-emerald-300">
-                  · AI Writer + Store + Biz-Match + Metals
+                {dict.pricing.agencyNow}{" "}
+                <span className="text-xs font-semibold text-emerald-300">
+                  · {dict.pricing.agencyIncludes}
                 </span>
               </p>
             </div>
@@ -152,7 +158,7 @@ export function Pricing({
               <div className="flex justify-center">
                 <PremiumArt src="/assets/token.jpg" alt={dict.pricing.tokensFor} size={64} glow="cyan" />
               </div>
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-xs font-medium tracking-[0.14em] text-slate-300 uppercase">
                 <Coins className="size-3.5 text-brand-soft" aria-hidden />
                 {dict.pricing.tokensFor}
               </p>
@@ -162,25 +168,92 @@ export function Pricing({
 
               <p className="mt-4 text-[44px] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums">
                 {preview.display}
-                <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-muted uppercase">
+                <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">
                   {preview.baseCode}
                 </span>
               </p>
               {preview.localDisplay && (
-                <p className="mt-2 text-sm font-medium text-muted tabular-nums">
+                <p className="mt-2 text-sm font-medium text-slate-300 tabular-nums">
                   {preview.localDisplay}
                 </p>
               )}
-              {preview.currency === "MYR" && valid && (
-                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-800 tabular-nums ring-1 ring-amber-200 ring-inset">
-                  {dict.pricing.feeLine
-                    .replace("{base}", formatRm(usd as number))
-                    .replace("{fee}", `RM${TOYYIBPAY_FEE_RM.toFixed(2)}`)
-                    .replace("{total}", formatRm((usd as number) + TOYYIBPAY_FEE_RM / 4.7))}
+              {preview.currency === "MYR" && valid && feeTotal && (
+                <p
+                  aria-live="polite"
+                  className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 tabular-nums ring-1 ring-amber-200 ring-inset"
+                >
+                  {format(dict.pricing.feeLine, {
+                    base: formatRm(usd as number),
+                    fee: formatRm(TOYYIBPAY_FEE_RM / 4.7),
+                    total: feeTotal,
+                  })}
                 </p>
               )}
-              <p className="mt-1.5 text-xs text-muted">{dict.pricing.priceLabel}</p>
+              <p className="mt-1.5 text-xs text-slate-300">{dict.pricing.priceLabel}</p>
             </div>
+
+            {/* Payment method: FPX (ToyyibPay) beside Stripe card (corporate blue). */}
+            <fieldset className="mt-5">
+              <legend className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
+                {dict.pricing.paymentMethodTitle}
+              </legend>
+              <div className="mt-2.5 space-y-2" role="radiogroup" aria-label={dict.pricing.paymentMethodTitle}>
+                <label
+                  className={`flex min-h-[52px] cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-3 transition-colors sm:gap-3 sm:px-4 ${
+                    gateway === "toyyibpay"
+                      ? "border-emerald-400/60 bg-emerald-400/[0.08] shadow-[0_0_0_1px_rgba(52,211,153,0.35)]"
+                      : "border-white/10 bg-white/[0.03] hover:border-white/25"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="toyyibpay"
+                    checked={gateway === "toyyibpay"}
+                    onChange={() => setGateway("toyyibpay")}
+                    className="size-4 shrink-0 accent-emerald-400"
+                  />
+                  <Landmark className="size-5 shrink-0 text-emerald-300" aria-hidden />
+                  <span className="min-w-0 flex-1 text-left">
+                    <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                      {dict.pricing.fpxTitle}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-emerald-400/15 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-emerald-300 uppercase ring-1 ring-emerald-400/30 ring-inset sm:text-[11px]">
+                    {dict.pricing.fpxBadge}
+                  </span>
+                </label>
+
+                <label
+                  className={`flex min-h-[52px] cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-3 transition-colors sm:gap-3 sm:px-4 ${
+                    gateway === "stripe"
+                      ? "border-[#2E6BFF] bg-[#1D4ED8]/15 shadow-[0_0_0_1px_#2E6BFF,0_8px_24px_-8px_rgba(46,107,255,0.55)]"
+                      : "border-[#2E6BFF]/40 bg-[#1D4ED8]/[0.07] hover:border-[#2E6BFF]/70 hover:bg-[#1D4ED8]/[0.12]"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="stripe"
+                    checked={gateway === "stripe"}
+                    onChange={() => setGateway("stripe")}
+                    className="size-4 shrink-0 accent-[#2E6BFF]"
+                  />
+                  <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
+                  <span className="min-w-0 flex-1 text-left">
+                    <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                      {dict.pricing.stripeTitle}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
+                      {dict.pricing.stripeNote}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#1D4ED8]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2E6BFF]/50 ring-inset sm:text-[11px]">
+                    {dict.pricing.comingSoon}
+                  </span>
+                </label>
+              </div>
+            </fieldset>
 
             <div className="mt-5">
               <TopUpButton
@@ -195,24 +268,23 @@ export function Pricing({
                 amountUsd={valid ? (usd as number) : undefined}
                 disabled={!valid}
                 collectEmail
+                gateway={gateway}
               >
                 {dict.pricing.proceed}
               </TopUpButton>
             </div>
 
-            <div className="mt-3 space-y-1.5 text-center text-[11px] leading-relaxed text-muted">
+            <div className="mt-3 space-y-1.5 text-center text-xs leading-relaxed text-slate-300">
               <p className="flex items-center justify-center gap-1.5">
                 <ShieldCheck className="size-3.5 shrink-0 text-emerald-400" aria-hidden />
-                {dict.pricing.topupNote.replace("{currency}", preview.currency)}
+                {format(dict.pricing.topupNote, { currency: preview.currency })}
               </p>
               <p className="font-medium">
-                🇲🇾 {dict.pricing.toyyibpayNote} · 🌍 {dict.pricing.chipNote}
+                <span aria-hidden>🇲🇾 </span>
+                {dict.pricing.toyyibpayNote} · <span aria-hidden>🌍 </span>
+                {dict.pricing.chipNote}
               </p>
             </div>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-muted/70">
-              <Lock className="size-3 shrink-0" aria-hidden />
-              {dict.pricing.trustBadge}
-            </p>
           </div>
         </div>
       </div>
