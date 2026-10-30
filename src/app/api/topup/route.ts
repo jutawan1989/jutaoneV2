@@ -8,6 +8,7 @@ import {
   createToyyibBill,
   InvalidToyyibEmailError,
 } from "@/lib/payment/toyyibpay";
+import { sessionOwnerFromHeaders } from "@/lib/auth/member";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
@@ -36,7 +37,13 @@ export async function POST(request: NextRequest) {
   const requested = typeof body?.locale === "string" ? body.locale : null;
   const locale = isLocale(requested) ? requested : detectLocale(headers);
   const region = detectRegion(headers);
+  // Ledger identity: a signed-in member's `owner_ref` (the same key the
+  // dashboard sums) wins; anonymous buyers fall back to the visitor hash.
+  // Sending the visitor hash for a logged-in member credits a stranger's
+  // key — the REAL bug behind the approved-but-uncredited ToyyibPay sandbox
+  // payment (TP2610302248159272, owner=ef4c35cba).
   const visitor = identifyVisitor(headers);
+  const ownerRef = sessionOwnerFromHeaders(headers) ?? visitor.visitorKey;
 
   const variant = isVariant(body?.variant)
     ? body.variant
@@ -51,7 +58,7 @@ export async function POST(request: NextRequest) {
         variant,
         origin: request.nextUrl.origin,
         amountUsd: body?.amountUsd,
-        ownerRef: visitor.visitorKey,
+        ownerRef,
         customerEmail: body?.email,
         customerName: body?.name,
       });
@@ -93,7 +100,7 @@ export async function POST(request: NextRequest) {
       variant,
       origin: request.nextUrl.origin,
       amountUsd: body?.amountUsd,
-      ownerRef: visitor.visitorKey,
+      ownerRef,
       customerEmail: body?.email,
     });
 

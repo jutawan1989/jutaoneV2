@@ -125,7 +125,12 @@ export async function createToyyibBill(req: ToyyibRequest): Promise<ToyyibBill> 
   const baseSen = Math.round(price.amount * 100);
   const feeSen = TOYYIBPAY_FEE_SEN;
   const totalSen = baseSen + feeSen;
-  const reference = `JO-${req.locale.toUpperCase()}-${Date.now().toString(36).toUpperCase()}-TP`;
+  // ONE identity for the whole round trip: the UI reference handed to the
+  // return page (`?ref=`) IS the vendor's `billExternalReferenceNo`, so the
+  // callback and `/api/topup/status` read the same row. A second, different
+  // ID (the old `JO-...-TP` vs `JO-...` split) stranded the success screen
+  // on "processing" forever — the status lookup never found the row.
+  const reference = `JO-${Date.now().toString(36).toUpperCase()}`;
   const localePath = `/${req.locale}/topup`;
 
   if (!toyyibConfigured()) {
@@ -149,7 +154,7 @@ export async function createToyyibBill(req: ToyyibRequest): Promise<ToyyibBill> 
       : "JutaOne Customer";
 
   const externalRef =
-    `JO-${Date.now().toString(36).toUpperCase()}` +
+    `${reference}` +
     `;rm=${baseSen};fee=${feeSen};usd=${Math.round(usd * 100)}` +
     (req.ownerRef ? `;owner=${req.ownerRef}` : "") +
     `;variant=${req.variant};region=${req.region}`;
@@ -351,7 +356,13 @@ export async function verifyToyyibCallback(
 
 /**
  * Parses the external reference the bill was created with:
- * `JO-XXX;rm={baseSen};fee={feeSen};usd={usdCents};owner={hash};...`
+ * `JO-XXX;rm={baseSen};fee={feeSen};usd={usdCents};owner={hash|uuid};...`
+ *
+ * The owner rides back verbatim from `billExternalReferenceNo` — a signed-in
+ * member's `owner_ref` (UUID or legacy hex), an anonymous buyer (visitor
+ * hash). Accept any sane token, not a fixed shape: the old 64-hex-only
+ * pattern silently dropped UUID owners and the real sandbox bill
+ * (owner=ef4c35cba) credited to nowhere.
  */
 export function parseToyyibReference(refno: string | null): {
   baseSen: number | null;
@@ -362,7 +373,7 @@ export function parseToyyibReference(refno: string | null): {
   const rm = refno?.match(/rm=(\d+)(?:;|$)/);
   const fee = refno?.match(/fee=(\d+)(?:;|$)/);
   const usd = refno?.match(/usd=(\d+)(?:;|$)/);
-  const owner = refno?.match(/owner=([a-f0-9]{64})(?:;|$)/);
+  const owner = refno?.match(/owner=([^;]+)(?:;|$)/);
   const baseSen = rm ? Number(rm[1]) : null;
   const feeSen = fee ? Number(fee[1]) : null;
   const usdCents = usd ? Number(usd[1]) : null;
@@ -370,6 +381,6 @@ export function parseToyyibReference(refno: string | null): {
     baseSen: Number.isFinite(baseSen) && (baseSen as number) > 0 ? (baseSen as number) : null,
     feeSen: Number.isFinite(feeSen) && (feeSen as number) >= 0 ? (feeSen as number) : null,
     usdCents: Number.isFinite(usdCents) && (usdCents as number) > 0 ? (usdCents as number) : null,
-    ownerRef: owner ? owner[1] : null,
+    ownerRef: owner && owner[1].length >= 8 ? owner[1] : null,
   };
 }

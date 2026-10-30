@@ -37,6 +37,16 @@ describe("toyyibpay adapter", () => {
     expect(ref).toEqual({ baseSen: 470, feeSen: 100, usdCents: 100, ownerRef: owner });
   });
 
+  it("accepts UUID and short member owners (real sandbox bill shape)", () => {
+    const uuid = "550e8400-e29b-41d4-a716-446655440000";
+    expect(
+      parseToyyibReference(`JO-MIVU6E5N;rm=470;fee=100;usd=100;owner=${uuid};variant=A;region=MY`).ownerRef,
+    ).toBe(uuid);
+    expect(
+      parseToyyibReference("JO-MIVU6E5N;rm=470;fee=100;usd=100;owner=ef4c35cba").ownerRef,
+    ).toBe("ef4c35cba");
+  });
+
   it("rejects malformed references", () => {
     expect(parseToyyibReference(null)).toEqual({
       baseSen: null,
