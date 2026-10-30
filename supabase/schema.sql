@@ -79,3 +79,31 @@ $$;
 alter table public.topups add column if not exists base_amount numeric;
 alter table public.topups add column if not exists base_currency text;
 alter table public.topups add column if not exists fx_rate numeric;
+
+-- Cleanup (idempotent): drop the rogue `token_ledger` guard that rejects
+-- gateway top-up credits ("a topup credit must reference a top-up"). No file
+-- in this repo ever created it — it was added directly on the live database,
+-- and it blocks every `reason = 'topup'` credit from both gateways (Chip and
+-- ToyyibPay share the same insert shape: visitor_key, delta, reason,
+-- spend_ref, tokens). Only triggers whose function definition contains that
+-- phrase are dropped; the balance / overdraw guard, the spend_ref uniqueness
+-- index and all constraints are left untouched.
+do $$
+declare
+  r record;
+  fndef text;
+begin
+  for r in
+    select t.tgname as tgname, t.tgfoid as fnoid
+      from pg_trigger t
+     where t.tgrelid = 'public.token_ledger'::regclass
+       and not t.tgisinternal
+  loop
+    select pg_get_functiondef(r.fnoid) into fndef;
+    if fndef ilike '%must reference a top-up%'
+       or fndef ilike '%must reference a topup%' then
+      execute format('drop trigger if exists %I on public.token_ledger', r.tgname);
+      execute format('drop function if exists %s', r.fnoid::regprocedure);
+    end if;
+  end loop;
+end $$;
