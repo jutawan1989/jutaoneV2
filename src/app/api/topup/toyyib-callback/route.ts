@@ -94,7 +94,7 @@ async function recordToyyibTopUp(
       status: "paid",
       amount: amountSen,
       currency: "MYR",
-      base_amount: ref.baseSen !== null ? ref.baseSen / 100 : null,
+      base_amount: ref.baseSen,
       base_currency: "MYR",
       fx_rate: null,
     },

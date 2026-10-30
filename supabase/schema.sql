@@ -53,8 +53,8 @@ create table if not exists public.topups (
   amount bigint,
   currency text,
   -- RM-anchored FX (Boss spec): Chip settles `amount`/`currency` (e.g. IDR),
-  -- while `base_amount`/`base_currency` record the RM value the price was
-  -- derived from, and `fx_rate` the RM->IDR rate used at checkout.
+  -- while `base_amount` records the RM value in SEN (integer minor units,
+  -- matching `amount`) and `fx_rate` the RM->IDR rate used at checkout.
   base_amount numeric,
   base_currency text,
   fx_rate numeric,

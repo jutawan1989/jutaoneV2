@@ -72,6 +72,9 @@ describe("toyyibpay adapter", () => {
     expect(resolveToyyibAmountSen("RM5.70", ref)).toBe(570);
     expect(resolveToyyibAmountSen("5.70", { baseSen: null, feeSen: null })).toBe(570);
     expect(resolveToyyibAmountSen(null, { baseSen: null, feeSen: null })).toBeNull();
+    // base_amount rides as integer sen too: the live column rejects "4.7".
+    // (Worker log: invalid input syntax for type bigint: "4.7".)
+    expect(ref.baseSen).toBe(470);
   });
 
   it("defaults to live host, sandbox on opt-in", () => {

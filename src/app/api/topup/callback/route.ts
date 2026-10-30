@@ -72,7 +72,7 @@ async function activateRent(db: Db, payload: ChipCallback, purchase: ClassifiedP
 }
 
 async function recordTopUp(db: Db, payload: ChipCallback, purchase: ClassifiedPurchase): Promise<Record<string, unknown>> {
-  const { error } = await db.from("topups").upsert({ provider: "chip", provider_id: payload.id, reference: payload.reference ?? null, status: payload.status, amount: payload.purchase?.total ?? null, currency: payload.purchase?.currency ?? null, base_amount: purchase.rmCents !== null ? purchase.rmCents / 100 : null, base_currency: purchase.rmCents !== null ? "MYR" : null, fx_rate: purchase.fxRate }, { onConflict: "provider_id" });
+  const { error } = await db.from("topups").upsert({ provider: "chip", provider_id: payload.id, reference: payload.reference ?? null, status: payload.status, amount: payload.purchase?.total ?? null, currency: payload.purchase?.currency ?? null, base_amount: purchase.rmCents, base_currency: purchase.rmCents !== null ? "MYR" : null, fx_rate: purchase.fxRate }, { onConflict: "provider_id" });
   if (error || !payload.id) return { recorded: false };
   if (!purchase.ownerRef) return { recorded: true, credited: false, reason: "missing_owner" };
 
