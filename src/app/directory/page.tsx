@@ -34,17 +34,17 @@ export default async function DirectoryPage() {
   const list = await categories();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+    <main className="mx-auto w-full max-w-5xl min-w-0 px-4 py-10 sm:px-6 sm:py-14">
       <Link
         href="/"
-        className="inline-flex min-h-[44px] items-center gap-1.5 text-xs text-muted transition-colors hover:text-white"
+        className="inline-flex max-w-full min-h-[44px] min-w-0 items-center gap-1.5 text-xs break-words whitespace-normal text-muted transition-colors hover:text-white"
       >
-        <ArrowLeft className="size-3.5" aria-hidden /> Laman utama
+        <ArrowLeft className="size-3.5 shrink-0" aria-hidden /> Laman utama
       </Link>
-      <div className="mt-6">
+      <div className="mt-6 w-full max-w-full min-w-0">
         <BizMatchSearch categories={list} liveSearch={exaConfigured()} />
       </div>
-      <p className="mt-8 text-center text-[11px] leading-relaxed text-muted/70">
+      <p className="mt-8 max-w-full text-center text-[11px] leading-relaxed break-words whitespace-normal text-muted/70">
         Carian yang berjaya ditolak 10,000 token. Carian gagal atau tiada hasil adalah percuma.
       </p>
     </main>

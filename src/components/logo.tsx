@@ -25,8 +25,8 @@ export function LogoMark({ size = 34, className, label }: LogoMarkProps) {
       alt={label ?? "JutaOne.Biz"}
       width={Math.round(size * 2.4)}
       height={size}
-      style={{ height: size, width: "auto" }}
-      className={`h-9 w-auto shrink-0 object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.35)] ${className ?? ""}`}
+      style={{ height: size, width: "auto", maxWidth: "100%" }}
+      className={`h-9 w-auto max-w-full shrink-0 object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.35)] ${className ?? ""}`}
       unoptimized
       priority
     />
@@ -61,14 +61,14 @@ export function Logo({
   return (
     <Link
       href={localePath(locale)}
-      className="group inline-flex min-h-[44px] items-center gap-2"
+      className="group inline-flex max-w-full min-h-[44px] min-w-0 shrink-0 items-center gap-2 pl-0"
       aria-label="JutaOne.Biz"
     >
       <LogoMark
         size={markHeight}
         className="shrink-0"
       />
-      <span className={`${text} font-semibold tracking-[0.12em] ${wordmarkColor} ${compact ? "hidden min-[400px]:inline" : ""}`}>
+      <span className={`${text} font-semibold tracking-[0.12em] whitespace-nowrap ${wordmarkColor} ${compact ? "hidden min-[400px]:inline" : ""}`}>
         JUTAONE<span className="text-brand">.BIZ</span>
       </span>
     </Link>

@@ -17,7 +17,7 @@ export function LanguageSwitcher({
   return (
     <nav
       aria-label={label}
-      className="flex items-center gap-0.5 rounded-md border border-line bg-white/[0.02] p-0.5"
+      className="flex min-w-0 max-w-full items-center gap-0.5 rounded-md border border-line bg-white/[0.02] p-0.5"
     >
       {/* Boss spec: order BM | ID | EN (LOCALES is ["ms","id","en"]), active pill is solid brand. */}
       {LOCALES.map((candidate) => {
@@ -30,7 +30,7 @@ export function LanguageSwitcher({
             aria-current={active ? "true" : undefined}
             aria-label={LOCALE_META[candidate].label}
             title={LOCALE_META[candidate].label}
-            className={`flex min-h-[44px] items-center rounded-[5px] px-2.5 text-xs font-semibold transition-colors ${
+            className={`flex min-h-[44px] items-center rounded-[5px] px-1.5 text-[11px] font-semibold whitespace-nowrap transition-colors sm:px-2.5 sm:text-xs ${
               active
                 ? "bg-brand text-white shadow-[0_2px_10px_-2px_rgba(37,99,235,0.8)]"
                 : "text-muted hover:bg-white/[0.06] hover:text-white"
@@ -58,9 +58,9 @@ export function Navbar({
   signedIn?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ink/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 max-w-full overflow-x-clip border-b border-line bg-ink/85 backdrop-blur-md">
       {/* Mobile-first: tight padding/gaps so logo + switcher + CTA + menu fit 375px. */}
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
+      <div className="mx-auto flex h-16 w-full max-w-6xl min-w-0 items-center justify-between gap-1.5 px-4 sm:gap-4 sm:px-6">
         <Logo locale={locale} compact />
 
         <nav className="hidden items-center gap-8 text-sm text-muted md:flex">
@@ -89,7 +89,7 @@ export function Navbar({
           </Link>
         </nav>
 
-        <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+        <div className="flex min-w-0 max-w-full shrink items-center gap-1.5 sm:gap-3">
           <LanguageSwitcher locale={locale} pathSuffix={pathSuffix} label={dict.nav.languageLabel} />
           {signedIn ? (
             <Link href="/dashboard" className="btn-brand min-h-[44px] px-3.5 py-2 sm:inline-flex">
@@ -99,11 +99,11 @@ export function Navbar({
             <>
               <Link
                 href="/login"
-                className="hidden min-h-[44px] items-center px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-white sm:inline-flex"
+                className="hidden min-h-[44px] items-center px-3.5 py-2 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:text-white sm:inline-flex"
               >
                 {dict.nav.login}
               </Link>
-              <Link href="/register" className="btn-brand btn-glow inline-flex min-h-[44px] items-center px-3 py-2 text-sm font-semibold sm:hidden sm:px-3.5">
+              <Link href="/register" className="btn-brand btn-glow inline-flex min-h-[44px] items-center px-2.5 py-2 text-[13px] font-semibold whitespace-nowrap sm:hidden sm:px-3.5 sm:text-sm">
                 {dict.nav.register}
               </Link>
               <Link href="/register" className="btn-brand hidden min-h-[44px] items-center px-3.5 py-2 sm:inline-flex">

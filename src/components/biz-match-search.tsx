@@ -165,31 +165,31 @@ export function BizMatchSearch({
   );
 
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-full min-w-0">
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-b from-[#0d1b3d] via-[#0a1226] to-[#060c18] p-6 sm:p-10">
-        <div className="aurora -top-24 left-1/4 h-56 w-96 bg-brand/25" aria-hidden />
-        <div className="aurora top-10 -right-16 h-48 w-64 bg-emerald-500/15" aria-hidden />
-        <div className="relative">
-          <p className="inline-flex items-center gap-1.5 rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-brand-soft uppercase">
-            <Sparkles className="size-3" /> Biz-Match · Carian AI Live
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-b from-[#0d1b3d] via-[#0a1226] to-[#060c18] p-6 sm:p-10">
+        <div className="aurora -top-24 left-1/4 h-56 w-96 max-w-full bg-brand/25" aria-hidden />
+        <div className="aurora top-10 -right-16 h-48 w-64 max-w-full bg-emerald-500/15" aria-hidden />
+        <div className="relative w-full max-w-full min-w-0">
+          <p className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand/40 bg-brand/10 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] break-words whitespace-normal text-brand-soft uppercase">
+            <Sparkles className="size-3 shrink-0" /> <span className="min-w-0 break-words">Biz-Match · Carian AI Live</span>
           </p>
-          <h2 className="mt-4 max-w-xl text-3xl leading-tight font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+          <h2 className="mt-4 max-w-xl text-3xl leading-tight font-semibold tracking-[-0.03em] break-words whitespace-normal text-white sm:text-4xl">
             Cari pembekal borong dalam beberapa saat
           </h2>
-          <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-muted">
+          <p className="mt-2.5 max-w-xl text-sm leading-relaxed break-words whitespace-normal text-muted">
             Carian semantik merentas web Malaysia &amp; Indonesia, dengan direktori
             tempatan sebagai sandaran. Data daftar rasmi ditanda{" "}
             <span className="font-medium text-emerald-300">Verified</span>.
           </p>
 
           {/* ── Big glowing search ── */}
-          <form onSubmit={run} className="mt-6">
+          <form onSubmit={run} className="mt-6 w-full max-w-full min-w-0">
             <label htmlFor="bm-q" className="sr-only">
               Cari pembekal
             </label>
-            <div className="group flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 shadow-[0_0_0_1px_rgba(59,130,246,0.15),0_0_44px_-8px_rgba(59,130,246,0.45)] transition-shadow focus-within:shadow-[0_0_0_1px_rgba(59,130,246,0.5),0_0_64px_-8px_rgba(59,130,246,0.7)] sm:flex-row">
-              <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3">
+            <div className="group flex w-full max-w-full min-w-0 flex-col gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 shadow-[0_0_0_1px_rgba(59,130,246,0.15),0_0_44px_-8px_rgba(59,130,246,0.45)] transition-shadow focus-within:shadow-[0_0_0_1px_rgba(59,130,246,0.5),0_0_64px_-8px_rgba(59,130,246,0.7)] sm:flex-row">
+              <div className="flex w-full max-w-full min-w-0 flex-1 items-center gap-2.5 px-3">
                 <Search className="size-5 shrink-0 text-brand-soft" aria-hidden />
                 <input
                   id="bm-q"
@@ -197,13 +197,13 @@ export function BizMatchSearch({
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Cari pembekal borong (cth: pembekal kain di Kelantan)"
-                  className="h-12 w-full bg-transparent text-[15px] text-white placeholder:text-muted/60 focus:outline-none"
+                  className="h-12 w-full max-w-full min-w-0 flex-1 bg-transparent text-[15px] break-words text-white placeholder:text-muted/60 focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={busy || query.trim().length < 3}
-                className="btn-brand cta-glow inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl px-7 text-sm font-semibold disabled:opacity-60"
+                className="btn-brand cta-glow inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl px-7 text-sm font-semibold whitespace-nowrap disabled:opacity-60 sm:w-auto"
               >
                 {busy ? (
                   <>
@@ -217,9 +217,9 @@ export function BizMatchSearch({
               </button>
             </div>
 
-            <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <div className="mt-3.5 flex w-full max-w-full min-w-0 flex-wrap items-center gap-2">
               {categories.length > 0 && (
-                <label className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-3 pl-3.5 text-xs text-muted">
+                <label className="inline-flex max-w-full min-h-[44px] min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1.5 pr-3 pl-3.5 text-xs break-words whitespace-normal text-muted">
                   Kategori
                   <select
                     id="bm-cat"
@@ -236,20 +236,20 @@ export function BizMatchSearch({
                   </select>
                 </label>
               )}
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-200">
+              <span className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium break-words whitespace-normal text-amber-200">
                 <Zap className="size-3" aria-hidden />
                 {BIZ_SEARCH_API.costTokens.toLocaleString("en-US")} Token ditolak hanya jika carian berjaya
               </span>
             </div>
 
             {!results && (
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex w-full max-w-full min-w-0 flex-wrap gap-2">
                 {EXAMPLES.map((example) => (
                   <button
                     key={example}
                     type="button"
                     onClick={() => setQuery(example)}
-                    className="min-h-[44px] rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-2 text-xs text-silver transition-colors hover:border-brand/50 hover:text-white"
+                    className="min-h-[44px] max-w-full rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-2 text-xs break-words whitespace-normal text-silver transition-colors hover:border-brand/50 hover:text-white"
                   >
                     {example}
                   </button>
@@ -258,15 +258,15 @@ export function BizMatchSearch({
             )}
 
             {error && (
-              <p role="alert" className="mt-3 text-sm text-red-300">
+              <p role="alert" className="mt-3 max-w-full text-sm break-words whitespace-normal text-red-300">
                 {error}
               </p>
             )}
 
             {insufficient && (
-              <div role="alert" className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-                <p className="text-sm font-medium text-amber-200">Token tidak mencukupi</p>
-                <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+              <div role="alert" className="mt-3 w-full max-w-full min-w-0 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+                <p className="text-sm font-medium break-words whitespace-normal text-amber-200">Token tidak mencukupi</p>
+                <p className="mt-1 text-xs leading-relaxed break-words whitespace-normal text-amber-100/80">
                   Carian ini memerlukan {insufficient.required.toLocaleString("en-US")} token.
                   Baki anda: {insufficient.balance.toLocaleString("en-US")} token. Top-up untuk sambung.
                 </p>
@@ -278,9 +278,9 @@ export function BizMatchSearch({
 
       {/* ── Results ── */}
       {results && (
-        <section aria-live="polite" className="mt-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-sm text-silver">
+        <section aria-live="polite" className="mt-6 w-full max-w-full min-w-0">
+          <div className="flex w-full max-w-full min-w-0 flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm break-words whitespace-normal text-silver">
               <span className="font-semibold text-white tabular-nums">{filtered.length}</span>{" "}
               <span className="text-muted">pembekal</span>
               <span className="text-muted">
@@ -313,16 +313,16 @@ export function BizMatchSearch({
               </p>
             </div>
           ) : (
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-4 grid w-full max-w-full min-w-0 gap-3 sm:grid-cols-2">
               {filtered.map((result) => {
                 const state = saved[result.id];
                 return (
                   <li
                     key={result.id}
-                    className="panel panel-lift group relative flex flex-col p-5"
+                    className="panel panel-lift group relative flex w-full max-w-full min-w-0 flex-col p-5"
                   >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="min-w-0 flex-1 text-[15px] font-semibold break-words text-white">
+                    <div className="flex w-full max-w-full min-w-0 flex-wrap items-center gap-2">
+                      <h2 className="min-w-0 flex-1 text-[15px] font-semibold break-words whitespace-normal text-white">
                         {result.companyName}
                       </h2>
                       {result.verified ? (
@@ -337,12 +337,12 @@ export function BizMatchSearch({
                     </div>
 
                     {result.description && (
-                      <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-muted">
+                      <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed break-words whitespace-normal text-muted">
                         {result.description}
                       </p>
                     )}
 
-                    <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted/90">
+                    <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs break-words whitespace-normal text-muted/90">
                       {result.category && (
                         <span className="rounded-md bg-white/[0.05] px-1.5 py-0.5">{result.category}</span>
                       )}

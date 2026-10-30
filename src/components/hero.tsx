@@ -23,20 +23,20 @@ export function Hero({
   locale: Locale;
 }) {
   return (
-    <section className="relative bg-gradient-to-b from-[#0a1f4d] via-[#0b2557] to-[#0a1730] text-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 pt-12 pb-10 sm:gap-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-14">
-        <div className="min-w-0">
+    <section className="relative w-full max-w-full min-w-0 overflow-x-clip bg-gradient-to-b from-[#0a1f4d] via-[#0b2557] to-[#0a1730] text-white">
+      <div className="mx-auto grid w-full max-w-6xl min-w-0 gap-10 px-4 pt-12 pb-10 sm:gap-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-14">
+        <div className="w-full max-w-full min-w-0">
           <LiveTelemetryCounter locale={locale} />
-          <p className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tracking-[0.12em] text-white/90 uppercase">
+          <p className="mt-3 inline-flex max-w-full min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tracking-[0.12em] break-words whitespace-normal text-white/90 uppercase">
             <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
-            <span className="truncate">{dict.hero.eyebrow}</span>
+            <span className="min-w-0 break-words"> {dict.hero.eyebrow}</span>
           </p>
 
-          <h1 className="mt-5 text-[2rem] leading-[1.12] font-semibold tracking-[-0.025em] text-balance text-white sm:text-5xl sm:leading-[1.08]">
-            {dict.hero.title} <span className="text-brand-soft sm:text-brand">{dict.hero.titleAccent}</span>
+          <h1 className="mt-5 max-w-full text-[2rem] leading-[1.12] font-semibold tracking-[-0.025em] break-words whitespace-normal text-balance text-white sm:text-5xl sm:leading-[1.08]">
+            {dict.hero.title} <span className="text-brand-soft break-words sm:text-brand">{dict.hero.titleAccent}</span>
           </h1>
 
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 sm:text-base">
+          <p className="mt-4 max-w-xl text-[15px] leading-relaxed break-words whitespace-normal text-white/75 sm:text-base">
             {dict.hero.subtitle}
           </p>
 

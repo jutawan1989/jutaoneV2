@@ -77,6 +77,7 @@ html {
   /* Mobile-first guard (Boss spec): no horizontal scrolling on 375px phones.
      `clip` (not `hidden`) avoids breaking position:sticky descendants. */
   overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
@@ -87,9 +88,31 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
+  max-width: 100%;
+  width: 100%;
   /* Long merchant-generated strings (URLs, referral codes) must wrap instead
      of forcing a sideways scroll on narrow screens. */
   overflow-wrap: break-word;
+}
+
+/*
+ * URGENT mobile overflow fix (375px): headings + paragraphs must wrap,
+ * media/inputs must never exceed the viewport width.
+ */
+h1,
+h2,
+h3,
+p,
+li {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
 }
 
 /* Media never forces a page wider than the viewport on phones. */
