@@ -5,11 +5,10 @@ import { detectLocale, detectRegion } from "@/lib/geo";
 import { getSupabase } from "@/lib/db";
 import {
   parseToyyibReference,
-  resolveToyyibAmountSen,
   verifyToyyibCallback,
   type ToyyibCallback,
 } from "@/lib/payment/toyyibpay";
-import { TOKENS_PER_USD } from "@/lib/pricing";
+import { recordToyyibTopUp, type ToyyibCreditDb } from "@/lib/payment/toyyib-credit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +61,9 @@ export async function POST(request: NextRequest) {
   let outcome: Record<string, unknown> = {};
 
   if (db && callback.billcode) {
-    outcome = await recordToyyibTopUp(db, callback, ref);
+    // The Supabase client's builders resolve to `{ error }`, matching the
+    // narrow `ToyyibCreditDb` surface; cast at the boundary, not inside it.
+    outcome = await recordToyyibTopUp(db as unknown as ToyyibCreditDb, callback, ref);
   }
 
   await logEvent({
@@ -74,66 +75,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ ok: true, ...outcome });
-}
-
-type Db = NonNullable<ReturnType<typeof getSupabase>>;
-type ParsedRef = ReturnType<typeof parseToyyibReference>;
-
-async function recordToyyibTopUp(
-  db: Db,
-  callback: ToyyibCallback,
-  ref: ParsedRef,
-): Promise<Record<string, unknown>> {
-  const providerId = `toyyib:${callback.billcode}`;
-  const amountSen = resolveToyyibAmountSen(callback.amount, ref);
-  const { error } = await db.from("topups").upsert(
-    {
-      provider: "toyyibpay",
-      provider_id: providerId,
-      reference: callback.orderId ?? callback.refno,
-      status: "paid",
-      amount: amountSen,
-      currency: "MYR",
-      base_amount: ref.baseSen,
-      base_currency: "MYR",
-      fx_rate: null,
-    },
-    { onConflict: "provider_id" },
-  );
-  if (error || !callback.billcode) {
-    console.error("[jutaone] toyyib topup record failed", error?.message ?? "missing billcode", {
-      providerId,
-      amount: callback.amount,
-    });
-    return { recorded: false };
-  }
-  if (!ref.ownerRef) return { recorded: true, credited: false, reason: "missing_owner" };
-
-  // Tokens credit on the BASE only: the RM1.00 fee is ToyyibPay's cut, not
-  // tokens. usdCents in the ref is exact, so no FX re-derivation is needed.
-  const usdCents = ref.usdCents ?? 100;
-  const tokens = Math.round((usdCents / 100) * TOKENS_PER_USD);
-  if (!Number.isFinite(tokens) || tokens <= 0) {
-    return { recorded: true, credited: false, reason: "invalid_amount" };
-  }
-
-  const { error: ledgerError } = await db.from("token_ledger").insert({
-    visitor_key: ref.ownerRef,
-    delta: tokens,
-    reason: "topup",
-    spend_ref: providerId,
-    tokens,
-  });
-  if (ledgerError) {
-    if (ledgerError.code === "23505" || /duplicate key/i.test(ledgerError.message)) {
-      return { recorded: true, credited: true, tokens, replayed: true };
-    }
-    console.error("[jutaone] toyyib ledger credit failed", ledgerError.message, {
-      providerId,
-      ownerRef: ref.ownerRef,
-      tokens,
-    });
-    return { recorded: true, credited: false, reason: "credit_failed" };
-  }
-  return { recorded: true, credited: true, tokens, replayed: false, feeSen: ref.feeSen ?? 100 };
 }

@@ -370,19 +370,49 @@ export function parseToyyibReference(refno: string | null): {
   usdCents: number | null;
   ownerRef: string | null;
 } {
+  // The reference carries integer sen/cents by contract (`rm=470`, not
+  // `rm=4.70`): the regex only accepts digits so a decimal can never slip a
+  // float into a bigint column. Each value is still validated as a safe
+  // integer before it is returned.
+  const toRefInt = (match: RegExpMatchArray | null | undefined, min: number): number | null => {
+    if (!match) return null;
+    const n = Number(match[1]);
+    return Number.isSafeInteger(n) && n >= min ? n : null;
+  };
   const rm = refno?.match(/rm=(\d+)(?:;|$)/);
   const fee = refno?.match(/fee=(\d+)(?:;|$)/);
   const usd = refno?.match(/usd=(\d+)(?:;|$)/);
   const owner = refno?.match(/owner=([^;]+)(?:;|$)/);
-  const baseSen = rm ? Number(rm[1]) : null;
-  const feeSen = fee ? Number(fee[1]) : null;
-  const usdCents = usd ? Number(usd[1]) : null;
+  const baseSen = toRefInt(rm, 1);
+  const feeSen = toRefInt(fee, 0);
+  const usdCents = toRefInt(usd, 1);
   return {
-    baseSen: Number.isFinite(baseSen) && (baseSen as number) > 0 ? (baseSen as number) : null,
-    feeSen: Number.isFinite(feeSen) && (feeSen as number) >= 0 ? (feeSen as number) : null,
-    usdCents: Number.isFinite(usdCents) && (usdCents as number) > 0 ? (usdCents as number) : null,
+    baseSen,
+    feeSen,
+    usdCents,
     ownerRef: owner && owner[1].length >= 8 ? owner[1] : null,
   };
+}
+
+/**
+ * Coerces any supplied amount to integer sen for bigint columns.
+ *
+ * The vendor posts RM ("5.70", sometimes "RM5.70"); the `topups.amount`
+ * column is bigint minor units and rejects floats outright
+ * (`invalid input syntax for type bigint: "5.70"`). Every path here ends in
+ * `Math.round`, so the return is always an integer or null — never a float.
+ */
+export function toIntegerSen(value: unknown): number | null {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0) return null;
+    const sen = Math.round(value * 100);
+    return Number.isSafeInteger(sen) && sen > 0 ? sen : null;
+  }
+  if (typeof value !== "string") return null;
+  const rm = Number(value.replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(rm) || rm <= 0) return null;
+  const sen = Math.round(rm * 100);
+  return Number.isSafeInteger(sen) && sen > 0 ? sen : null;
 }
 
 /**
@@ -399,9 +429,12 @@ export function resolveToyyibAmountSen(
   amount: string | null,
   ref: { baseSen: number | null; feeSen: number | null },
 ): number | null {
-  if (ref.baseSen !== null) return ref.baseSen + (ref.feeSen ?? 0);
-  if (amount == null) return null;
-  const rm = Number(String(amount).replace(/[^0-9.]/g, ""));
-  if (!Number.isFinite(rm) || rm <= 0) return null;
-  return Math.round(rm * 100);
+  if (ref.baseSen !== null) {
+    // Both halves are already validated safe integers in
+    // `parseToyyibReference`; the sum is re-checked anyway — a float must
+    // never reach the bigint upsert.
+    const total = ref.baseSen + (ref.feeSen ?? 0);
+    return Number.isSafeInteger(total) && total > 0 ? total : null;
+  }
+  return toIntegerSen(amount);
 }
