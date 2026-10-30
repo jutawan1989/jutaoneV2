@@ -3,15 +3,10 @@ import { logEvent, parseUtm } from "@/lib/analytics/events";
 import { isVariant, resolveVariant } from "@/lib/analytics/variant";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
-import { createTopUpSession, InvalidCustomerEmailError } from "@/lib/payment/chip";
 import {
   createStripeCheckoutSession,
   InvalidStripeEmailError,
 } from "@/lib/payment/stripe";
-import {
-  createToyyibBill,
-  InvalidToyyibEmailError,
-} from "@/lib/payment/toyyibpay";
 import { sessionOwnerFromHeaders } from "@/lib/auth/member";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
@@ -24,21 +19,17 @@ type TopUpBody = {
   amountUsd?: unknown;
   email?: unknown;
   name?: unknown;
-  /** Explicit gateway override: "stripe" forces Stripe; anything else (or absent) keeps smart routing. */
+  /** Gateway field kept for backward compatibility — always resolves to Stripe. */
   gateway?: unknown;
 };
 
 /**
- * Dual-gateway top-up entry point.
+ * Stripe-only top-up entry point (ToyyibPay CLOSED, Chip CLOSED).
  *
- * Smart routing (Boss + Linda): Malaysia pays via ToyyibPay (FPX +
- * DuitNow QR, RM1.00 fee inside the bill); Indonesia and the rest of the
- * world stay on Chip.Asia (cards + cross-border QR). An explicit
- * `gateway: "stripe"` in the body (or `?gateway=stripe`) bypasses routing
- * and opens a Stripe Checkout Session (Test Mode while STRIPE_SECRET_KEY is
- * a sk_test_ key): card payments for any region. The response names
- * the gateway and carries the fee breakdown so the UI can show
- * "RM4.70 + RM1.00 = RM5.70" only for ToyyibPay.
+ * Every checkout opens a Stripe Checkout Session (Test Mode while
+ * STRIPE_SECRET_KEY is a sk_test_ key): card payments for every region,
+ * including Malaysia and Indonesia. The response names the gateway so the
+ * UI can label it.
  */
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as TopUpBody | null;
@@ -60,93 +51,12 @@ export async function POST(request: NextRequest) {
   const utm = parseUtm(request.nextUrl.search);
 
   try {
-    const gatewayOverride =
-      (typeof body?.gateway === "string" ? body.gateway : null) ??
-      request.nextUrl.searchParams.get("gateway");
-    if (gatewayOverride === "stripe") {
-      const session = await createStripeCheckoutSession(body?.amountUsd, ownerRef, body?.email, {
-        origin: request.nextUrl.origin,
-        locale,
-      });
-
-      await logEvent({
-        event: "topup_click",
-        locale,
-        region,
-        variant,
-        utm,
-        visitorKey: visitor.visitorKey,
-        props: {
-          mode: session.mode,
-          provider: "stripe",
-          reference: session.reference,
-          amount: session.usd,
-        },
-      });
-
-      return NextResponse.json({
-        mode: session.mode,
-        provider: "stripe",
-        checkoutUrl: session.checkoutUrl,
-        reference: session.reference,
-        amount: session.display,
-        usd: session.usd,
-        tokens: session.tokens,
-        paymentLabel: "Credit / Debit Card (Stripe)",
-      });
-    }
-
-    if (region === "MY") {
-      const bill = await createToyyibBill({
-        locale,
-        region,
-        variant,
-        origin: request.nextUrl.origin,
-        amountUsd: body?.amountUsd,
-        ownerRef,
-        customerEmail: body?.email,
-        customerName: body?.name,
-      });
-
-      await logEvent({
-        event: "topup_click",
-        locale,
-        region,
-        variant,
-        utm,
-        visitorKey: visitor.visitorKey,
-        props: {
-          mode: bill.mode,
-          provider: "toyyibpay",
-          reference: bill.reference,
-          amount: bill.totalSen / 100,
-        },
-      });
-
-      return NextResponse.json({
-        mode: bill.mode,
-        provider: "toyyibpay",
-        checkoutUrl: bill.checkoutUrl,
-        reference: bill.reference,
-        amount: bill.price.display,
-        usd: bill.price.usd,
-        tokens: bill.price.tokens,
-        // Fee breakdown for the "RM4.70 + RM1.00 = RM5.70" line.
-        baseSen: bill.baseSen,
-        feeSen: bill.feeSen,
-        totalSen: bill.totalSen,
-        paymentLabel: "FPX / DuitNow QR (ToyyibPay)",
-      });
-    }
-
-    const session = await createTopUpSession({
-      locale,
-      region,
-      variant,
+    // ToyyibPay CLOSED, Chip CLOSED: every checkout resolves to Stripe.
+    // The `gateway` field is accepted but ignored — kept so old clients
+    // that still send `gateway: "stripe"` keep working.
+    const session = await createStripeCheckoutSession(body?.amountUsd, ownerRef, body?.email, {
       origin: request.nextUrl.origin,
-      amountUsd: body?.amountUsd,
-      ownerRef,
-      customerEmail: body?.email,
+      locale,
     });
 
     await logEvent({
@@ -158,28 +68,24 @@ export async function POST(request: NextRequest) {
       visitorKey: visitor.visitorKey,
       props: {
         mode: session.mode,
-        provider: "chip",
+        provider: "stripe",
         reference: session.reference,
-        amount: session.price.amount,
+        amount: session.usd,
       },
     });
 
     return NextResponse.json({
       mode: session.mode,
-      provider: "chip",
+      provider: "stripe",
       checkoutUrl: session.checkoutUrl,
       reference: session.reference,
-      amount: session.price.display,
-      usd: session.price.usd,
-      tokens: session.price.tokens,
-      paymentLabel: "Credit Card / DuitNow QR (Chip.Asia)",
+      amount: session.display,
+      usd: session.usd,
+      tokens: session.tokens,
+      paymentLabel: "Credit / Debit Card (Stripe)",
     });
   } catch (error) {
-    if (
-      error instanceof InvalidCustomerEmailError ||
-      error instanceof InvalidToyyibEmailError ||
-      error instanceof InvalidStripeEmailError
-    ) {
+    if (error instanceof InvalidStripeEmailError) {
       return NextResponse.json({ code: "invalid_email" }, { status: 400 });
     }
     console.error("[jutaone] top-up session failed", error);

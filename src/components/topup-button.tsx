@@ -6,8 +6,9 @@ import type { Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 
 /**
- * Starts the Chip.Asia top-up: the API logs `topup_click` and returns the
- * hosted checkout URL (or the sandbox page when Chip is not configured yet).
+ * Starts the Stripe top-up: the API logs `topup_click` and returns the
+ * Stripe Checkout URL (or the sandbox page when Stripe is not configured).
+ * ToyyibPay is CLOSED — every checkout sends `gateway: "stripe"`.
  */
 export function TopUpButton({
   locale,
@@ -22,7 +23,6 @@ export function TopUpButton({
   disabled = false,
   amountUsd,
   collectEmail = false,
-  gateway = "toyyibpay",
 }: {
   locale: Locale;
   variant: Variant;
@@ -32,14 +32,14 @@ export function TopUpButton({
   emailErrorText?: string;
   emailLabel?: string;
   emailPlaceholder?: string;
-  /** Small trust line rendered under the CTA (e.g. "Secure payment by Chip.Asia"). */
+  /** Small trust line rendered under the CTA (e.g. "Secure payment by Stripe"). */
   trustBadge?: string;
   disabled?: boolean;
   /** Top-up size in USD. Defaults to $1 when omitted. */
   amountUsd?: number;
-  /** When true, render an email field and send it as the Chip OTP destination. */
+  /** When true, render an email field and send it as the receipt destination. */
   collectEmail?: boolean;
-  /** Explicit gateway override — "stripe" sends `gateway: "stripe"` to `/api/topup`. */
+  /** Gateway override — always `"stripe"` (ToyyibPay closed). Kept as a prop for tests. */
   gateway?: "toyyibpay" | "stripe";
 }) {
   const [busy, setBusy] = useState(false);
@@ -71,7 +71,8 @@ export function TopUpButton({
           variant,
           amountUsd,
           email: trimmedEmail,
-          ...(gateway === "stripe" ? { gateway: "stripe" } : {}),
+          // ToyyibPay closed: always route via Stripe.
+          gateway: "stripe",
         }),
       });
       const data = (await response.json()) as { checkoutUrl?: string | null };

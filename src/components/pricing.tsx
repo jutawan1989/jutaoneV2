@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Check, Coins, CreditCard, Landmark, Lock, ShieldCheck, Zap } from "lucide-react";
+import { Check, Coins, CreditCard, ShieldCheck, Zap } from "lucide-react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 import { format, type Locale } from "@/lib/i18n/config";
@@ -9,8 +9,6 @@ import type { Variant } from "@/lib/analytics/variant";
 import {
   MIN_TOPUP_USD,
   QUICK_TOPUP_AMOUNTS,
-  TOYYIBPAY_FEE_RM,
-  formatRm,
   formatTokenCount,
   parseTopUpAmount,
   withUsdAmount,
@@ -21,8 +19,8 @@ import { TopUpButton } from "@/components/topup-button";
 /**
  * Premium fintech checkout card: amount picker on top, then the centered
  * order summary (tokens → price → payment method → email → CTA → trust).
- * Dual gateway: ToyyibPay (FPX, default) beside Stripe card (corporate
- * blue). Selecting Stripe sends `gateway: "stripe"` via `/api/topup`.
+ * ToyyibPay (FPX) is CLOSED — Stripe card is the single payment method.
+ * `gateway: "stripe"` is always sent via `/api/topup`.
  */
 export function Pricing({
   locale,
@@ -37,14 +35,12 @@ export function Pricing({
 }) {
   const [picked, setPicked] = useState<number | "custom">(1);
   const [custom, setCustom] = useState("");
-  const [gateway, setGateway] = useState<"toyyibpay" | "stripe">("toyyibpay");
   const customId = useId();
   const customErrorId = `${customId}-error`;
 
   const usd = picked === "custom" ? parseTopUpAmount(custom) : picked;
   const valid = usd !== null;
   const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD, locale);
-  const feeTotal = valid ? formatRm((usd as number) + TOYYIBPAY_FEE_RM / 4.7) : null;
 
   return (
     <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 bg-[#0A0F1D] px-5 py-12 sm:px-6 sm:py-20">
@@ -177,83 +173,29 @@ export function Pricing({
                   {preview.localDisplay}
                 </p>
               )}
-              {preview.currency === "MYR" && valid && feeTotal && (
-                <p
-                  aria-live="polite"
-                  className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 tabular-nums ring-1 ring-amber-200 ring-inset"
-                >
-                  {format(dict.pricing.feeLine, {
-                    base: formatRm(usd as number),
-                    fee: formatRm(TOYYIBPAY_FEE_RM / 4.7),
-                    total: feeTotal,
-                  })}
-                </p>
-              )}
               <p className="mt-1.5 text-xs text-slate-300">{dict.pricing.priceLabel}</p>
             </div>
 
-            {/* Payment method: FPX (ToyyibPay) beside Stripe card (corporate blue). */}
-            <fieldset className="mt-5">
-              <legend className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
+            {/* Payment method: ToyyibPay CLOSED — Stripe card only. */}
+            <div className="mt-5">
+              <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
                 {dict.pricing.paymentMethodTitle}
-              </legend>
-              <div className="mt-2.5 space-y-2" role="radiogroup" aria-label={dict.pricing.paymentMethodTitle}>
-                <label
-                  className={`flex min-h-[52px] cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-3 transition-colors sm:gap-3 sm:px-4 ${
-                    gateway === "toyyibpay"
-                      ? "border-emerald-400/60 bg-emerald-400/[0.08] shadow-[0_0_0_1px_rgba(52,211,153,0.35)]"
-                      : "border-white/10 bg-white/[0.03] hover:border-white/25"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    value="toyyibpay"
-                    checked={gateway === "toyyibpay"}
-                    onChange={() => setGateway("toyyibpay")}
-                    className="size-4 shrink-0 accent-emerald-400"
-                  />
-                  <Landmark className="size-5 shrink-0 text-emerald-300" aria-hidden />
-                  <span className="min-w-0 flex-1 text-left">
-                    <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
-                      {dict.pricing.fpxTitle}
-                    </span>
+              </p>
+              <div className="mt-2.5 flex min-h-[52px] items-center gap-2.5 rounded-xl border border-[#2E6BFF] bg-[#1D4ED8]/15 px-3 py-3 shadow-[0_0_0_1px_#2E6BFF,0_8px_24px_-8px_rgba(46,107,255,0.55)] sm:gap-3 sm:px-4">
+                <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                    {dict.pricing.stripeTitle}
                   </span>
-                  <span className="shrink-0 rounded-full bg-emerald-400/15 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-emerald-300 uppercase ring-1 ring-emerald-400/30 ring-inset sm:text-[11px]">
-                    {dict.pricing.fpxBadge}
+                  <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
+                    {dict.pricing.stripeNote}
                   </span>
-                </label>
-
-                <label
-                  className={`flex min-h-[52px] cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-3 transition-colors sm:gap-3 sm:px-4 ${
-                    gateway === "stripe"
-                      ? "border-[#2E6BFF] bg-[#1D4ED8]/15 shadow-[0_0_0_1px_#2E6BFF,0_8px_24px_-8px_rgba(46,107,255,0.55)]"
-                      : "border-[#2E6BFF]/40 bg-[#1D4ED8]/[0.07] hover:border-[#2E6BFF]/70 hover:bg-[#1D4ED8]/[0.12]"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    value="stripe"
-                    checked={gateway === "stripe"}
-                    onChange={() => setGateway("stripe")}
-                    className="size-4 shrink-0 accent-[#2E6BFF]"
-                  />
-                  <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
-                  <span className="min-w-0 flex-1 text-left">
-                    <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
-                      {dict.pricing.stripeTitle}
-                    </span>
-                    <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
-                      {dict.pricing.stripeNote}
-                    </span>
-                  </span>
-                  <span className="shrink-0 rounded-full bg-[#1D4ED8]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2E6BFF]/50 ring-inset sm:text-[11px]">
-                    {dict.pricing.comingSoon}
-                  </span>
-                </label>
+                </span>
+                <span className="shrink-0 rounded-full bg-[#1D4ED8]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2E6BFF]/50 ring-inset sm:text-[11px]">
+                  {dict.pricing.comingSoon}
+                </span>
               </div>
-            </fieldset>
+            </div>
 
             <div className="mt-5">
               <TopUpButton
@@ -268,7 +210,7 @@ export function Pricing({
                 amountUsd={valid ? (usd as number) : undefined}
                 disabled={!valid}
                 collectEmail
-                gateway={gateway}
+                gateway="stripe"
               >
                 {dict.pricing.proceed}
               </TopUpButton>
@@ -280,9 +222,8 @@ export function Pricing({
                 {format(dict.pricing.topupNote, { currency: preview.currency })}
               </p>
               <p className="font-medium">
-                <span aria-hidden>🇲🇾 </span>
-                {dict.pricing.toyyibpayNote} · <span aria-hidden>🌍 </span>
-                {dict.pricing.chipNote}
+                <span aria-hidden>💳 </span>
+                {dict.pricing.stripeTitle} · {dict.pricing.stripeNote}
               </p>
             </div>
           </div>
