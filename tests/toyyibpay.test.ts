@@ -6,6 +6,7 @@ import {
   createToyyibBill,
   parseCreateBillResponse,
   parseToyyibReference,
+  resolveToyyibAmountSen,
   toyyibBaseUrl,
   verifyToyyibCallback,
   verifyToyyibHash,
@@ -60,6 +61,17 @@ describe("toyyibpay adapter", () => {
       usdCents: null,
       ownerRef: null,
     });
+  });
+
+  it("resolves integer sen for the bigint amount column (Boss live bill)", () => {
+    const ref = parseToyyibReference("JO-MVUC9UAL;rm=470;fee=100;usd=100;owner=3a8574f1d");
+    expect(ref.ownerRef).toBe("3a8574f1d");
+    // The vendor posts RM ("5.70"); the column wants sen (570). A float here
+    // failed the upsert and the callback answered 200 {recorded:false}.
+    expect(resolveToyyibAmountSen("5.70", ref)).toBe(570);
+    expect(resolveToyyibAmountSen("RM5.70", ref)).toBe(570);
+    expect(resolveToyyibAmountSen("5.70", { baseSen: null, feeSen: null })).toBe(570);
+    expect(resolveToyyibAmountSen(null, { baseSen: null, feeSen: null })).toBeNull();
   });
 
   it("defaults to live host, sandbox on opt-in", () => {

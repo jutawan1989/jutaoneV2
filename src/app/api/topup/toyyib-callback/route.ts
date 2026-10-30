@@ -5,6 +5,7 @@ import { detectLocale, detectRegion } from "@/lib/geo";
 import { getSupabase } from "@/lib/db";
 import {
   parseToyyibReference,
+  resolveToyyibAmountSen,
   verifyToyyibCallback,
   type ToyyibCallback,
 } from "@/lib/payment/toyyibpay";
@@ -84,13 +85,14 @@ async function recordToyyibTopUp(
   ref: ParsedRef,
 ): Promise<Record<string, unknown>> {
   const providerId = `toyyib:${callback.billcode}`;
+  const amountSen = resolveToyyibAmountSen(callback.amount, ref);
   const { error } = await db.from("topups").upsert(
     {
       provider: "toyyibpay",
       provider_id: providerId,
       reference: callback.orderId ?? callback.refno,
       status: "paid",
-      amount: callback.amount ? Number(String(callback.amount).replace(/[^0-9.]/g, "")) : null,
+      amount: amountSen,
       currency: "MYR",
       base_amount: ref.baseSen !== null ? ref.baseSen / 100 : null,
       base_currency: "MYR",
@@ -98,7 +100,13 @@ async function recordToyyibTopUp(
     },
     { onConflict: "provider_id" },
   );
-  if (error || !callback.billcode) return { recorded: false };
+  if (error || !callback.billcode) {
+    console.error("[jutaone] toyyib topup record failed", error?.message ?? "missing billcode", {
+      providerId,
+      amount: callback.amount,
+    });
+    return { recorded: false };
+  }
   if (!ref.ownerRef) return { recorded: true, credited: false, reason: "missing_owner" };
 
   // Tokens credit on the BASE only: the RM1.00 fee is ToyyibPay's cut, not
@@ -120,6 +128,11 @@ async function recordToyyibTopUp(
     if (ledgerError.code === "23505" || /duplicate key/i.test(ledgerError.message)) {
       return { recorded: true, credited: true, tokens, replayed: true };
     }
+    console.error("[jutaone] toyyib ledger credit failed", ledgerError.message, {
+      providerId,
+      ownerRef: ref.ownerRef,
+      tokens,
+    });
     return { recorded: true, credited: false, reason: "credit_failed" };
   }
   return { recorded: true, credited: true, tokens, replayed: false, feeSen: ref.feeSen ?? 100 };

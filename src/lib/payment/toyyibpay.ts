@@ -384,3 +384,24 @@ export function parseToyyibReference(refno: string | null): {
     ownerRef: owner && owner[1].length >= 8 ? owner[1] : null,
   };
 }
+
+/**
+ * Resolves the `topups.amount` value (integer sen) for a ToyyibPay callback.
+ *
+ * The live `topups.amount` column is bigint minor units — every other writer
+ * (Chip, sandbox simulator) stores sen. The vendor posts RM ("5.70"), and
+ * sending that float straight to a bigint column fails the upsert, so the
+ * callback answered 200 `{recorded:false}` while crediting nothing. Prefer
+ * the bill's own `rm=` + `fee=` total; fall back to converting the vendor
+ * amount from RM to sen.
+ */
+export function resolveToyyibAmountSen(
+  amount: string | null,
+  ref: { baseSen: number | null; feeSen: number | null },
+): number | null {
+  if (ref.baseSen !== null) return ref.baseSen + (ref.feeSen ?? 0);
+  if (amount == null) return null;
+  const rm = Number(String(amount).replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(rm) || rm <= 0) return null;
+  return Math.round(rm * 100);
+}
