@@ -5,6 +5,10 @@ import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
 import { createTopUpSession, InvalidCustomerEmailError } from "@/lib/payment/chip";
 import {
+  createStripeCheckoutSession,
+  InvalidStripeEmailError,
+} from "@/lib/payment/stripe";
+import {
   createToyyibBill,
   InvalidToyyibEmailError,
 } from "@/lib/payment/toyyibpay";
@@ -20,6 +24,8 @@ type TopUpBody = {
   amountUsd?: unknown;
   email?: unknown;
   name?: unknown;
+  /** Explicit gateway override: "stripe" forces Stripe; anything else (or absent) keeps smart routing. */
+  gateway?: unknown;
 };
 
 /**
@@ -27,7 +33,10 @@ type TopUpBody = {
  *
  * Smart routing (Boss + Linda): Malaysia pays via ToyyibPay (FPX +
  * DuitNow QR, RM1.00 fee inside the bill); Indonesia and the rest of the
- * world stay on Chip.Asia (cards + cross-border QR). The response names
+ * world stay on Chip.Asia (cards + cross-border QR). An explicit
+ * `gateway: "stripe"` in the body (or `?gateway=stripe`) bypasses routing
+ * and opens a Stripe Checkout Session (Test Mode while STRIPE_SECRET_KEY is
+ * a sk_test_ key): card payments for any region. The response names
  * the gateway and carries the fee breakdown so the UI can show
  * "RM4.70 + RM1.00 = RM5.70" only for ToyyibPay.
  */
@@ -51,6 +60,42 @@ export async function POST(request: NextRequest) {
   const utm = parseUtm(request.nextUrl.search);
 
   try {
+    const gatewayOverride =
+      (typeof body?.gateway === "string" ? body.gateway : null) ??
+      request.nextUrl.searchParams.get("gateway");
+    if (gatewayOverride === "stripe") {
+      const session = await createStripeCheckoutSession(body?.amountUsd, ownerRef, body?.email, {
+        origin: request.nextUrl.origin,
+        locale,
+      });
+
+      await logEvent({
+        event: "topup_click",
+        locale,
+        region,
+        variant,
+        utm,
+        visitorKey: visitor.visitorKey,
+        props: {
+          mode: session.mode,
+          provider: "stripe",
+          reference: session.reference,
+          amount: session.usd,
+        },
+      });
+
+      return NextResponse.json({
+        mode: session.mode,
+        provider: "stripe",
+        checkoutUrl: session.checkoutUrl,
+        reference: session.reference,
+        amount: session.display,
+        usd: session.usd,
+        tokens: session.tokens,
+        paymentLabel: "Credit / Debit Card (Stripe)",
+      });
+    }
+
     if (region === "MY") {
       const bill = await createToyyibBill({
         locale,
@@ -130,7 +175,11 @@ export async function POST(request: NextRequest) {
       paymentLabel: "Credit Card / DuitNow QR (Chip.Asia)",
     });
   } catch (error) {
-    if (error instanceof InvalidCustomerEmailError || error instanceof InvalidToyyibEmailError) {
+    if (
+      error instanceof InvalidCustomerEmailError ||
+      error instanceof InvalidToyyibEmailError ||
+      error instanceof InvalidStripeEmailError
+    ) {
       return NextResponse.json({ code: "invalid_email" }, { status: 400 });
     }
     console.error("[jutaone] top-up session failed", error);
