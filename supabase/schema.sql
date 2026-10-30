@@ -53,9 +53,11 @@ create table if not exists public.topups (
   amount bigint,
   currency text,
   -- RM-anchored FX (Boss spec): Chip settles `amount`/`currency` (e.g. IDR),
-  -- while `base_amount` records the RM value in SEN (integer minor units,
-  -- matching `amount`) and `fx_rate` the RM->IDR rate used at checkout.
-  base_amount numeric,
+  -- while `base_amount` records the RM value in SEN as bigint integer minor
+  -- units (matching `amount`) and `fx_rate` the RM->IDR rate used at checkout.
+  -- bigint, never numeric: the vendor posts RM floats ("5.70") and a float
+  -- reaching this column fails the upsert outright.
+  base_amount bigint,
   base_currency text,
   fx_rate numeric,
   created_at timestamptz not null default now()
@@ -76,18 +78,36 @@ as $$
 $$;
 
 -- Migration (idempotent): RM-anchored FX columns for existing `topups` tables.
+-- `base_amount` is bigint integer sen: older checkouts created it as numeric,
+-- which let RM floats through to a column family the webhook treats as minor
+-- units. Convert first, then enforce the type, so a re-run is a no-op.
 alter table public.topups add column if not exists base_amount numeric;
+do $$
+begin
+  -- Round any legacy RM decimals to whole sen, then lock the type. `USING`
+  -- keeps existing integer values untouched.
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'topups'
+      and column_name = 'base_amount' and data_type = 'numeric'
+  ) then
+    update public.topups set base_amount = round(base_amount) where base_amount is not null;
+    alter table public.topups alter column base_amount type bigint using base_amount::bigint;
+  end if;
+end $$;
 alter table public.topups add column if not exists base_currency text;
 alter table public.topups add column if not exists fx_rate numeric;
 
 -- Cleanup (idempotent): drop the rogue `token_ledger` guard that rejects
--- gateway top-up credits ("a topup credit must reference a top-up"). No file
--- in this repo ever created it — it was added directly on the live database,
--- and it blocks every `reason = 'topup'` credit from both gateways (Chip and
--- ToyyibPay share the same insert shape: visitor_key, delta, reason,
--- spend_ref, tokens). Only triggers whose function definition contains that
--- phrase are dropped; the balance / overdraw guard, the spend_ref uniqueness
--- index and all constraints are left untouched.
+-- gateway top-up credits ("a topup credit must reference a top-up"). It was
+-- NEVER created by any file in this repo — it was added directly on the live
+-- database, and it blocks every `reason = 'topup'` credit from both gateways
+-- (Chip and ToyyibPay share the same insert shape: visitor_key, delta,
+-- reason, spend_ref, tokens). The matcher covers both spellings ("top-up"
+-- and "topup") so a re-worded variant cannot survive a future migration.
+-- Only triggers whose function definition contains that phrase are dropped;
+-- the balance / overdraw guard, the spend_ref uniqueness index and all
+-- constraints are left untouched.
 do $$
 declare
   r record;

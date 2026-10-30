@@ -153,11 +153,7 @@ export async function createToyyibBill(req: ToyyibRequest): Promise<ToyyibBill> 
       ? req.customerName.trim().slice(0, 60)
       : "JutaOne Customer";
 
-  const externalRef =
-    `${reference}` +
-    `;rm=${baseSen};fee=${feeSen};usd=${Math.round(usd * 100)}` +
-    (req.ownerRef ? `;owner=${req.ownerRef}` : "") +
-    `;variant=${req.variant};region=${req.region}`;
+  const externalRef = buildToyyibExternalRef({ reference, baseSen, feeSen, usd, ownerRef: req.ownerRef, variant: req.variant, region: req.region });
 
   const billName = sanitiseBillText(`JutaOne ${price.tokens.toLocaleString("en-US")} Token`, 30);
   const billDescription = sanitiseBillText(`JutaOne token topup RM${(totalSen / 100).toFixed(2)}`, 100);
@@ -329,12 +325,16 @@ export async function verifyToyyibCallback(
   if (!Array.isArray(rows)) return { ok: false, reason: "verification failed" };
 
   const match = rows.find(
-    (row) =>
-      // The vendor echoes our `billExternalReferenceNo` as `order_id` on the
-      // callback but as `billExternalReferenceNo` in getBillTransactions —
-      // match THAT, not `refno` (ToyyibPay's own payment reference).
-      String(row.billExternalReferenceNo ?? "") === callback.orderId &&
-      String(row.billpaymentStatus ?? "") === "1",
+    (row) => {
+      const echoed = String(row.billExternalReferenceNo ?? "");
+      // The vendor truncates `billExternalReferenceNo` to 50 chars on store,
+      // so the echo can be a PREFIX of the `order_id` we sent (measured
+      // 30-10-2026: 84-char ref came back as 50). Accept the echo when it is
+      // the full order_id OR a leading prefix of it; anything else is a
+      // different bill and must not match.
+      const sameBill = echoed !== "" && callback.orderId !== null && (echoed === callback.orderId || callback.orderId.startsWith(echoed));
+      return sameBill && String(row.billpaymentStatus ?? "") === "1";
+    },
   );
   if (!match) return { ok: false, reason: "no matching paid transaction" };
 
@@ -355,8 +355,47 @@ export async function verifyToyyibCallback(
 }
 
 /**
- * Parses the external reference the bill was created with:
- * `JO-XXX;rm={baseSen};fee={feeSen};usd={usdCents};owner={hash|uuid};...`
+ * Builds the vendor `billExternalReferenceNo`.
+ *
+ * HARD LIMIT (measured 30-10-2026 on dev.toyyibpay.com): the vendor stores
+ * and echoes back at most 50 characters. The old format
+ * (`JO-XXX;rm=470;fee=100;usd=100;owner=<64-hex>;variant=A;region=MY`, ~84
+ * chars) was silently truncated to 50, cutting the owner mid-value. Layer 2
+ * then compared the truncated echo against the full `order_id` and every
+ * paid bill failed with `no matching paid transaction` — tokens never
+ * credited even though money moved.
+ *
+ * Compact format, 49 chars worst case, owner LAST so nothing valuable is
+ * ever cut:
+ *   `JO-<8>;r=470;f=100;u=100;v=A;g=MY;o=<owner>`  (r=base sen, f=fee sen,
+ *   u=usd cents, v=variant, g=region, o=owner, max 8 chars of owner)
+ * The owner is truncated to its first 12 chars: enough to join the ledger
+ * for returning members; anonymous hashes still credit verbatim.
+ */
+export const TOYYIBPAY_EXTERNAL_REF_MAX = 50;
+export const TOYYIBPAY_OWNER_REF_MAX = 8;
+
+export function buildToyyibExternalRef(input: {
+  reference: string;
+  baseSen: number;
+  feeSen: number;
+  usd: number;
+  ownerRef?: string | null;
+  variant: Variant;
+  region: Region;
+}): string {
+  const owner = (input.ownerRef ?? "").slice(0, TOYYIBPAY_OWNER_REF_MAX);
+  const ref =
+    `${input.reference};r=${input.baseSen};f=${input.feeSen};u=${Math.round(input.usd * 100)}` +
+    `;v=${input.variant};g=${input.region}` +
+    (owner ? `;o=${owner}` : "");
+  return ref.length <= TOYYIBPAY_EXTERNAL_REF_MAX ? ref : ref.slice(0, TOYYIBPAY_EXTERNAL_REF_MAX);
+}
+
+/**
+ * Parses the external reference the bill was created with, in BOTH formats:
+ * compact (`;r=470;f=100;u=100;v=A;g=MY;o=<owner>`, current) and legacy long
+ * (`;rm=470;fee=100;usd=100;owner=<hash>;variant=A;region=MY`).
  *
  * The owner rides back verbatim from `billExternalReferenceNo` — a signed-in
  * member's `owner_ref` (UUID or legacy hex), an anonymous buyer (visitor
@@ -371,26 +410,44 @@ export function parseToyyibReference(refno: string | null): {
   ownerRef: string | null;
 } {
   // The reference carries integer sen/cents by contract (`rm=470`, not
-  // `rm=4.70`): the regex only accepts digits so a decimal can never slip a
-  // float into a bigint column. Each value is still validated as a safe
-  // integer before it is returned.
-  const toRefInt = (match: RegExpMatchArray | null | undefined, min: number): number | null => {
-    if (!match) return null;
-    const n = Number(match[1]);
+  // `rm=4.70`): only all-digit values are accepted, so a decimal can never
+  // slip a float into a bigint column. Each value is still validated as a
+  // safe integer before it is returned.
+  //
+  // Split-based parsing, not regex: the vendor truncates the echoed
+  // reference to 50 chars, so keys are compact — and split fields cannot
+  // misfire inside `region=MY` the way a bare `r=` pattern would.
+  // Compact keys first (`r`), legacy long keys as fallback (`rm`).
+  const fields = new Map<string, string>();
+  for (const part of (refno ?? "").split(";")) {
+    const eq = part.indexOf("=");
+    if (eq > 0) fields.set(part.slice(0, eq), part.slice(eq + 1));
+  }
+  const pick = (...keys: string[]): string | null => {
+    for (const key of keys) {
+      const value = fields.get(key);
+      if (value !== undefined && value !== "") return value;
+    }
+    return null;
+  };
+  const toFieldInt = (value: string | null, min: number): number | null => {
+    if (value === null || value === "") return null;
+    for (let i = 0; i < value.length; i += 1) {
+      const ch = value[i];
+      if (ch < "0" || ch > "9") return null;
+    }
+    const n = Number(value);
     return Number.isSafeInteger(n) && n >= min ? n : null;
   };
-  const rm = refno?.match(/rm=(\d+)(?:;|$)/);
-  const fee = refno?.match(/fee=(\d+)(?:;|$)/);
-  const usd = refno?.match(/usd=(\d+)(?:;|$)/);
-  const owner = refno?.match(/owner=([^;]+)(?:;|$)/);
-  const baseSen = toRefInt(rm, 1);
-  const feeSen = toRefInt(fee, 0);
-  const usdCents = toRefInt(usd, 1);
+  const baseSen = toFieldInt(pick("r", "rm"), 1);
+  const feeSen = toFieldInt(pick("f", "fee"), 0);
+  const usdCents = toFieldInt(pick("u", "usd"), 1);
+  const ownerRaw = pick("o", "owner");
   return {
     baseSen,
     feeSen,
     usdCents,
-    ownerRef: owner && owner[1].length >= 8 ? owner[1] : null,
+    ownerRef: ownerRaw && ownerRaw.length >= 8 ? ownerRaw : null,
   };
 }
 

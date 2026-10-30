@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   TOYYIBPAY_CALLBACK_URL,
   TOYYIBPAY_FEE_SEN,
+  buildToyyibExternalRef,
   createToyyibBill,
   parseCreateBillResponse,
   parseToyyibReference,
@@ -60,6 +61,34 @@ describe("toyyibpay adapter", () => {
       feeSen: null,
       usdCents: null,
       ownerRef: null,
+    });
+  });
+
+  it("builds a compact external ref that survives the vendor 50-char limit", () => {
+    const owner = "a".repeat(64);
+    const ref = buildToyyibExternalRef({
+      reference: "JO-ABCDEFGH",
+      baseSen: 470,
+      feeSen: 100,
+      usd: 1,
+      ownerRef: owner,
+      variant: "A",
+      region: "MY",
+    });
+    // Worst case with a long owner must still fit the 50-char vendor field,
+    // and the vendor must echo it back verbatim for Layer 2 to match.
+    expect(ref.length).toBeLessThanOrEqual(50);
+    expect(ref).toBe("JO-ABCDEFGH;r=470;f=100;u=100;v=A;g=MY;o=aaaaaaaa");
+    const parsed = parseToyyibReference(ref);
+    expect(parsed).toEqual({ baseSen: 470, feeSen: 100, usdCents: 100, ownerRef: "a".repeat(8) });
+  });
+
+  it("parses the compact ref format (measured vendor echo shape)", () => {
+    expect(parseToyyibReference("JO-E2E-MVUM901D;r=470;f=100;u=100;v=A;g=MY;o=e2eprobe")).toEqual({
+      baseSen: 470,
+      feeSen: 100,
+      usdCents: 100,
+      ownerRef: "e2eprobe",
     });
   });
 
@@ -196,6 +225,40 @@ describe("toyyibpay adapter", () => {
         hash,
         status: "1",
         billcode: "bill1",
+        amount: "5.70",
+        reason: null,
+      });
+      expect(result).toEqual({ ok: true });
+    } finally {
+      vi.unstubAllGlobals();
+      delete process.env.TOYYIBPAY_SECRET_KEY;
+      delete process.env.TOYYIBPAY_CATEGORY_CODE;
+    }
+  });
+
+  it("accepts the vendor 50-char truncated echo as the same bill", async () => {
+    const secret = "s3cr3t";
+    process.env.TOYYIBPAY_SECRET_KEY = secret;
+    process.env.TOYYIBPAY_CATEGORY_CODE = "test-cat";
+    // Measured 30-10-2026: an 84-char order_id came back as its first 50.
+    const orderId = "JO-E2E-MVUM901D;rm=470;fee=100;usd=100;owner=e2eprobemvum901d;variant=A;region=MY";
+    const echoed = orderId.slice(0, 50);
+    expect(echoed).toBe("JO-E2E-MVUM901D;rm=470;fee=100;usd=100;owner=e2epr");
+    const hash = createHash("md5").update(secret + "1" + orderId + "TP2610301266157347" + "ok").digest("hex");
+    vi.stubGlobal(
+      "fetch",
+      (async () =>
+        new Response(JSON.stringify([{ billExternalReferenceNo: echoed, billpaymentStatus: "1", billpaymentAmount: "5.70" }]), {
+          status: 200,
+        })) as typeof fetch,
+    );
+    try {
+      const result = await verifyToyyibCallback({
+        refno: "TP2610301266157347",
+        orderId,
+        hash,
+        status: "1",
+        billcode: "fp0jznct",
         amount: "5.70",
         reason: null,
       });
