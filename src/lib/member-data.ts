@@ -38,7 +38,7 @@ export async function loadMemberOverview(ownerRef: string): Promise<MemberOvervi
       passiveMinor: 0,
       availableMinor: 0,
       networkSize: 0,
-      currency: "MYR",
+      currency: "USD",
     },
     store: {
       slug: null,
@@ -86,7 +86,7 @@ export async function loadMemberOverview(ownerRef: string): Promise<MemberOvervi
   let directMinor = 0;
   let passiveMinor = 0;
   let availableMinor = 0;
-  let currency = "MYR";
+  let currency = "USD";
   let code: string | null = null;
 
   if (codeRow) {
@@ -111,7 +111,7 @@ export async function loadMemberOverview(ownerRef: string): Promise<MemberOvervi
       else passiveMinor += earned;
     }
     availableMinor = Number(balance?.[0]?.available_minor ?? 0);
-    currency = (balance?.[0]?.currency as string | undefined) ?? "MYR";
+    currency = (balance?.[0]?.currency as string | undefined) ?? "USD";
   }
 
   return {

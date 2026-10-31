@@ -200,6 +200,12 @@ export const en = {
       "Pay only when you are ready",
     ],
     topupNote: "Payments are handled by Stripe. You pay in {currency}.",
+    whatsappNote: "Questions before paying?",
+  },
+  contact: {
+    buttonLabel: "Chat with us on WhatsApp",
+    linkLabel: "WhatsApp us:",
+    prefill: "Hi JutaOne.Biz, I'd like to know more about the AI tokens.",
   },
   savings: {
     eyebrow: "Time savings calculator",
@@ -255,6 +261,7 @@ export const en = {
     recheck: "Check again",
     viewDashboard: "View dashboard",
     back: "Back to the test",
+    whatsappNote: "Questions before paying?",
     finish: "Simulate successful payment",
     finished: "Payment verified. Thank you — your token balance is being updated.",
   },

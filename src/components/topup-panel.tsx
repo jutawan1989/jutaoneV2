@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { WHATSAPP_NUMBER_SHORT, whatsappUrl } from "@/lib/contact";
 import type { Locale } from "@/lib/i18n/config";
 import { format } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
@@ -231,6 +232,18 @@ export function TopUpPanel({
       >
         {dict.topup.back}
       </a>
+
+      <p className="mt-3 text-center text-xs leading-relaxed text-muted">
+        {dict.topup.whatsappNote}{" "}
+        <a
+          href={whatsappUrl(dict.contact.prefill)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-emerald-400 underline-offset-2 hover:underline"
+        >
+          {dict.contact.linkLabel} {WHATSAPP_NUMBER_SHORT}
+        </a>
+      </p>
     </div>
   );
 }

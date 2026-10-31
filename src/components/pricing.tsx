@@ -136,7 +136,7 @@ export function Pricing({
 
             <div className="my-6 h-px bg-white/[0.06]" aria-hidden />
 
-            {/* Value-stack: agency anchor vs RM4.70 bundle (conversion spec). */}
+            {/* Value-stack: agency anchor vs $1 bundle (conversion spec). */}
             <div className="mb-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] px-4 py-3 text-center">
               <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
                 {dict.pricing.agencyLabel}{" "}
@@ -181,7 +181,7 @@ export function Pricing({
               <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
                 {dict.pricing.paymentMethodTitle}
               </p>
-              <div className="mt-2.5 flex min-h-[52px] items-center gap-2.5 rounded-xl border border-[#2E6BFF] bg-[#1D4ED8]/15 px-3 py-3 shadow-[0_0_0_1px_#2E6BFF,0_8px_24px_-8px_rgba(46,107,255,0.55)] sm:gap-3 sm:px-4">
+              <div className="mt-2.5 flex min-h-[52px] items-center gap-2.5 rounded-xl border border-[#2563EB] bg-[#1E40AF]/15 px-3 py-3 shadow-[0_0_0_1px_#2563EB,0_8px_24px_-8px_rgba(37,99,235,0.55)] sm:gap-3 sm:px-4">
                 <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
                 <span className="min-w-0 flex-1 text-left">
                   <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
@@ -191,7 +191,7 @@ export function Pricing({
                     {dict.pricing.stripeNote}
                   </span>
                 </span>
-                <span className="shrink-0 rounded-full bg-[#1D4ED8]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2E6BFF]/50 ring-inset sm:text-[11px]">
+                <span className="shrink-0 rounded-full bg-[#1E40AF]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2563EB]/50 ring-inset sm:text-[11px]">
                   {dict.pricing.comingSoon}
                 </span>
               </div>
@@ -206,6 +206,9 @@ export function Pricing({
                 emailLabel={dict.pricing.emailLabel}
                 emailPlaceholder={dict.pricing.emailPlaceholder}
                 trustBadge={dict.pricing.trustBadge}
+                whatsappNote={dict.pricing.whatsappNote}
+                whatsappLinkLabel={dict.contact.linkLabel}
+                whatsappPrefill={dict.contact.prefill}
                 className="btn-brand btn-glow cta-glow flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-bold"
                 amountUsd={valid ? (usd as number) : undefined}
                 disabled={!valid}

@@ -39,13 +39,13 @@ export function SavingsCalculator({ locale, dict }: { locale: Locale; dict: Dict
   }
 
   const sliderClass =
-    "w-full accent-[#2E6BFF] min-h-[44px] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#7AA5FF]";
+    "w-full accent-[#2563EB] min-h-[44px] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#7AA5FF]";
   const inputClass =
     "min-h-[44px] w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm font-semibold text-white tabular-nums focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none";
 
   return (
     <section id="savings" aria-labelledby="savings-title" className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-6 sm:py-20">
-      <div className="relative overflow-hidden rounded-2xl border border-[#2E6BFF]/40 bg-[#0B1220] p-6 shadow-[0_0_0_1px_#2E6BFF,0_8px_40px_-8px_rgba(46,107,255,0.45)] sm:p-10">
+      <div className="relative overflow-hidden rounded-2xl border border-[#2563EB]/40 bg-[#0B1220] p-6 shadow-[0_0_0_1px_#2563EB,0_8px_40px_-8px_rgba(37,99,235,0.45)] sm:p-10">
         <div className="mx-auto max-w-2xl text-center">
           <p className="flex items-center justify-center gap-2 text-xs font-medium tracking-[0.12em] text-[#7AA5FF] uppercase">
             <Calculator className="size-4" aria-hidden />
@@ -62,7 +62,7 @@ export function SavingsCalculator({ locale, dict }: { locale: Locale; dict: Dict
           <div
             role="group"
             aria-label={copy.currencyLabel}
-            className="grid w-full grid-cols-3 gap-1 rounded-xl border border-[#2E6BFF]/40 bg-[#1D4ED8]/15 p-1"
+            className="grid w-full grid-cols-3 gap-1 rounded-xl border border-[#2563EB]/40 bg-[#1E40AF]/15 p-1"
           >
             {SAVINGS_CURRENCIES.map((code) => {
               const active = currency === code;
@@ -73,7 +73,7 @@ export function SavingsCalculator({ locale, dict }: { locale: Locale; dict: Dict
                   onClick={() => switchCurrency(code)}
                   aria-pressed={active}
                   className={`min-h-[44px] rounded-lg px-2 text-sm font-bold tracking-wide transition-colors focus-visible:ring-2 focus-visible:ring-[#7AA5FF] focus-visible:outline-none ${
-                    active ? "bg-[#1D4ED8] text-white shadow" : "text-[#BFD2FF] hover:bg-white/5 hover:text-white"
+                    active ? "bg-[#1E40AF] text-white shadow" : "text-[#BFD2FF] hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {code}

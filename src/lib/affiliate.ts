@@ -51,6 +51,16 @@ export function percentFor(level: number): number {
   return 0;
 }
 
+/**
+ * Withdrawal rules (Boss spec, integer USD cents — same contract as the
+ * 100% USD migration): redeem $5.00, $2.00 admin fee, so the account must
+ * hold at least $7.00. Single source: the dashboard gate and the
+ * `/api/affiliate/payout` threshold both read these.
+ */
+export const REDEEM_MINOR = 500;
+export const ADMIN_FEE_MINOR = 200;
+export const MIN_PAYOUT_MINOR = REDEEM_MINOR + ADMIN_FEE_MINOR;
+
 /** Same shape as `referral_codes.code`; validated before it reaches a query. */
 const CODE_RE = /^[a-z0-9][a-z0-9_-]{2,31}$/;
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { getDictionary } from "@/lib/i18n";
 import { LOCALE_META, LOCALES, isLocale, type Locale } from "@/lib/i18n/config";
 
@@ -81,6 +82,7 @@ export default async function LocaleLayout({
           {dict.a11y.skipToContent}
         </a>
         {children}
+        <WhatsAppFloat dict={dict} />
       </div>
     </>
   );

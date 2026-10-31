@@ -1,7 +1,15 @@
 import { Logo } from "@/components/logo";
 import { LanguageSwitcher } from "@/components/navbar";
+import { WhatsAppIcon } from "@/components/whatsapp-float";
+import { Phone } from "lucide-react";
 import { format, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
+import {
+  WHATSAPP_NUMBER_INTL,
+  WHATSAPP_NUMBER_SHORT,
+  WHATSAPP_TEL_URL,
+  whatsappUrl,
+} from "@/lib/contact";
 
 export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const year = new Date().getFullYear();
@@ -19,6 +27,25 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
         </div>
 
         <div className="mt-10 space-y-2 border-t border-white/[0.06] pt-6">
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-silver">
+            <a
+              href={WHATSAPP_TEL_URL}
+              className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
+            >
+              <Phone className="size-4 shrink-0 text-emerald-400" aria-hidden />
+              <span className="font-semibold tabular-nums">{WHATSAPP_NUMBER_INTL}</span>
+            </a>
+            <a
+              href={whatsappUrl(dict.contact.prefill)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={dict.contact.buttonLabel}
+              className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
+            >
+              <WhatsAppIcon className="size-4 text-[#25D366]" />
+              <span className="font-semibold tabular-nums">{WHATSAPP_NUMBER_SHORT}</span>
+            </a>
+          </p>
           <p className="text-xs leading-relaxed text-muted/80">{dict.compliance.disclaimer}</p>
           <p className="text-xs leading-relaxed text-muted/80">{dict.compliance.noGuarantee}</p>
           <p className="pt-2 text-xs text-muted/60">{format(dict.footer.rights, { year })}</p>

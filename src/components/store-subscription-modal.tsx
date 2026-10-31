@@ -175,8 +175,7 @@ export function StoreSubscriptionModal({
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Aktifkan Kedai Anda Hari Ini. Dapatkan{" "}
           <span className="font-medium text-white">7 Hari Percubaan Percuma</span>. Selepas itu,
-          hanya <span className="font-medium text-white">$5.00/bulan</span>{" "}
-          <span className="text-silver">(≈ RM23.50)</span>.
+          hanya <span className="font-medium text-white">$5.00/bulan</span>.
         </p>
 
         <div className="mt-4 rounded-lg border border-line bg-ink/50 p-3.5">
@@ -184,9 +183,9 @@ export function StoreSubscriptionModal({
             Bandingkan
           </p>
           <p className="mt-1.5 text-xs leading-relaxed text-silver">
-            Shopify caj <span className="font-medium text-white">RM136/bulan</span> untuk kedai
+            Shopify caj <span className="font-medium text-white">$29/bulan</span> untuk kedai
             sahaja. JutaOne.Biz beri anda Kedai + AI Marketing + Pembekal hanya dengan{" "}
-            <span className="font-medium text-white">RM23.50</span>.
+            <span className="font-medium text-white">$5.00</span>.
           </p>
         </div>
 

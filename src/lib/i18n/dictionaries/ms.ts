@@ -23,7 +23,7 @@ export const ms: Dictionary = {
     title: "Bosan Guna AI Yang Tak Faham Bisnes Anda?",
     titleAccent: "JutaOne.Biz — Otak Perniagaan Anda.",
     subtitle:
-      "Platform AI Perniagaan Pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Kedai + Cari Pembekal + Simpan Emas' dalam satu tempat, dengan harga serendah RM4.70. Ini bukan sekadar AI.",
+      "Platform AI Perniagaan Pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Kedai + Cari Pembekal + Simpan Emas' dalam satu tempat, dengan harga serendah $1.00 USD. Ini bukan sekadar AI.",
     ctaPrimary: "Uji AI Sekarang",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercayai peniaga Malaysia & Indonesia",
@@ -125,7 +125,7 @@ export const ms: Dictionary = {
     bullets: [
       "Komisen tunai, bukan mata ganjaran",
       "Satu pautan je — track automatik",
-      "Boleh tarik duit bila cukup RM10",
+      "Boleh tarik duit bila cukup $7.00",
     ],
     cta: "Join Program Affiliate Sekarang",
   },
@@ -144,7 +144,7 @@ export const ms: Dictionary = {
   why: {
     eyebrow: "Mengapa JutaOne.Biz?",
     title: "AI Biasa Tulis Teks. Kami Gerakkan Bisnes.",
-    subtitle: "Perbandingan jujur — apa yang anda dapat dengan harga serendah RM4.70.",
+    subtitle: "Perbandingan jujur — apa yang anda dapat dengan harga serendah $1.",
     genericName: "AI Biasa",
     genericItems: [
       "Hanya tulis teks — tak sambung ke bisnes",
@@ -191,8 +191,8 @@ export const ms: Dictionary = {
     comingSoon: "Visa · Mastercard",
     stripeNote: "Bayaran kad selamat via Stripe.",
     agencyLabel: "Kos agensi:",
-    agencyWas: "RM1,500+",
-    agencyNow: "Hanya RM4.70",
+    agencyWas: "$320+",
+    agencyNow: "Hanya $1",
     agencyIncludes: "AI Writer + Store + Biz-Match + Metals",
     bullets: [
       "Tiga bahasa: Melayu, Indonesia, Inggeris",
@@ -201,6 +201,12 @@ export const ms: Dictionary = {
       "Bayar hanya apabila anda bersedia",
     ],
     topupNote: "Pembayaran dikendalikan oleh Stripe. Anda bayar dalam {currency}.",
+    whatsappNote: "Ada soalan sebelum bayar?",
+  },
+  contact: {
+    buttonLabel: "Hubungi kami di WhatsApp",
+    linkLabel: "WhatsApp kami:",
+    prefill: "Hai JutaOne.Biz, saya berminat untuk tahu lebih lanjut tentang token AI.",
   },
   savings: {
     eyebrow: "Kalkulator Penjimatan Masa",
@@ -256,6 +262,7 @@ export const ms: Dictionary = {
     recheck: "Semak semula",
     viewDashboard: "Lihat dashboard",
     back: "Kembali ke ujian",
+    whatsappNote: "Ada soalan sebelum bayar?",
     finish: "Simulasikan pembayaran berjaya",
     finished: "Pembayaran disahkan. Terima kasih — baki token anda sedang dikemas kini.",
   },

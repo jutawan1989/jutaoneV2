@@ -1,7 +1,7 @@
 /**
  * Kalkulator Penjimatan Masa — pure math + currency helpers.
  *
- * Anchor: USD. 1 USD = RM4.70 = Rp17,900 (same display anchors as
+ * Display-only FX for the currency toggle: USD 1 = MYR 4.70 = IDR 17,900.
  * `lib/pricing.ts`). Money is computed in USD, then converted for display —
  * Boss's USD-first direction, with a [USD][MYR][IDR] toggle on top.
  */

@@ -23,7 +23,7 @@ export const id: Dictionary = {
     title: "Bosan Pakai AI yang Tak Paham Bisnis Anda?",
     titleAccent: "JutaOne.Biz — Otak Bisnis Anda.",
     subtitle:
-      "Platform AI bisnis pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Toko + Cari Supplier + Simpan Emas' dalam satu tempat, mulai dari Rp18rb. Ini bukan sekadar AI.",
+      "Platform AI bisnis pertama di Asia. JutaOne.Biz menyatukan 'Tulis Iklan + Buka Toko + Cari Supplier + Simpan Emas' dalam satu tempat, mulai dari $1.00 USD. Ini bukan sekadar AI.",
     ctaPrimary: "Uji AI Sekarang",
     ctaSecondary: "Lihat harga token",
     trustBadge: "Dipercaya pedagang Indonesia & Malaysia",
@@ -144,7 +144,7 @@ export const id: Dictionary = {
   why: {
     eyebrow: "Kenapa JutaOne.Biz?",
     title: "AI Biasa Nulis Teks. Kami Menggerakkan Bisnis.",
-    subtitle: "Perbandingan jujur — apa yang Anda dapat mulai dari Rp18rb.",
+    subtitle: "Perbandingan jujur — apa yang Anda dapat mulai dari $1.",
     genericName: "AI Biasa",
     genericItems: [
       "Hanya nulis teks — tak nyambung ke bisnis",
@@ -191,8 +191,8 @@ export const id: Dictionary = {
     comingSoon: "Visa · Mastercard",
     stripeNote: "Pembayaran kartu aman via Stripe.",
     agencyLabel: "Biaya agensi:",
-    agencyWas: "Rp5 Jt+",
-    agencyNow: "Hanya Rp18rb",
+    agencyWas: "$320+",
+    agencyNow: "Hanya $1",
     agencyIncludes: "AI Writer + Store + Biz-Match + Metals",
     bullets: [
       "Tiga bahasa: Indonesia, Melayu, Inggris",
@@ -201,6 +201,12 @@ export const id: Dictionary = {
       "Bayar hanya saat Anda siap",
     ],
     topupNote: "Pembayaran ditangani oleh Stripe. Anda membayar dalam {currency}.",
+    whatsappNote: "Ada pertanyaan sebelum membayar?",
+  },
+  contact: {
+    buttonLabel: "Hubungi kami via WhatsApp",
+    linkLabel: "WhatsApp kami:",
+    prefill: "Hai JutaOne.Biz, saya tertarik untuk tahu lebih lanjut tentang token AI.",
   },
   savings: {
     eyebrow: "Kalkulator Penghematan Waktu",
@@ -256,6 +262,7 @@ export const id: Dictionary = {
     recheck: "Periksa lagi",
     viewDashboard: "Lihat dashboard",
     back: "Kembali ke uji",
+    whatsappNote: "Ada pertanyaan sebelum membayar?",
     finish: "Simulasikan pembayaran berhasil",
     finished: "Pembayaran terverifikasi. Terima kasih — saldo token Anda sedang diperbarui.",
   },

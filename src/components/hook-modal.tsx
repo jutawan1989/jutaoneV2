@@ -141,6 +141,9 @@ export function HookModal({
             emailPlaceholder={dict.pricing.emailPlaceholder}
             className="btn-brand btn-glow cta-glow min-h-[52px] w-full text-base font-bold"
             collectEmail
+            whatsappNote={dict.pricing.whatsappNote}
+            whatsappLinkLabel={dict.contact.linkLabel}
+            whatsappPrefill={dict.contact.prefill}
           >
             {format(copy.cta, values)}
           </TopUpButton>
