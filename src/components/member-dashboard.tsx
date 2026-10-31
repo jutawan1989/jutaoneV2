@@ -26,6 +26,7 @@ import {
   Package,
   Percent,
   Rocket,
+  Settings,
   Share2,
   Sparkles,
   Store,
@@ -117,6 +118,8 @@ const DASH_STR = {
       tools: "Alat AI",
       toolsHint: "Aplikasi bisnes",
     },
+    settingsLabel: "Tetapan Akaun",
+    settingsHint: "Profil & kata laluan",
     ranks: [
       { name: "Pemula", blurb: "Langkah pertama. Kongsi pautan pertama anda." },
       { name: "Pencetus", blurb: "Rangkaian mula bergerak." },
@@ -318,6 +321,8 @@ const DASH_STR = {
       tools: "AI Tools",
       toolsHint: "Business apps",
     },
+    settingsLabel: "Account Settings",
+    settingsHint: "Profile & password",
     ranks: [
       { name: "Starter", blurb: "First step. Share your first link." },
       { name: "Spark", blurb: "The network starts moving." },
@@ -519,6 +524,8 @@ const DASH_STR = {
       tools: "Alat AI",
       toolsHint: "Aplikasi bisnis",
     },
+    settingsLabel: "Pengaturan Akun",
+    settingsHint: "Profil & kata sandi",
     ranks: [
       { name: "Pemula", blurb: "Langkah pertama. Bagikan tautan pertama Anda." },
       { name: "Pemicu", blurb: "Jaringan mulai bergerak." },
@@ -1222,6 +1229,20 @@ export function MemberDashboard({
                 );
               })}
             </nav>
+
+            <Link
+              href="/dashboard/settings"
+              className="group relative mt-1 flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-all text-muted hover:bg-white/[0.04] hover:text-white"
+            >
+              <Settings className="size-[17px] shrink-0" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-medium">{t.settingsLabel}</span>
+                <span className="block truncate text-[10px] text-muted/70">
+                  {t.settingsHint}
+                </span>
+              </span>
+              <ChevronRight className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+            </Link>
 
             <div className="relative mt-auto space-y-2">
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
@@ -2330,6 +2351,15 @@ export function MemberDashboard({
                 </button>
               );
             })}
+            <Link
+              href="/dashboard/settings"
+              className="flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-[11px] leading-tight font-medium break-words transition-colors text-muted"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors">
+                <Settings className="size-[18px]" />
+              </span>
+              {t.settingsLabel}
+            </Link>
           </div>
         </nav>
         <MemberChatFloat locale={lang} />
