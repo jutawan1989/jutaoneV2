@@ -28,15 +28,43 @@ function normaliseOverride(value: string | undefined, fallback: string): string 
   return /^\d{8,16}$/.test(digits) ? digits : fallback;
 }
 
-function overrideMy(): string {
+/** Active Malaysia digits: env override wins, Boss number is the fallback. */
+export function supportWaMyDigits(): string {
   return normaliseOverride(process.env.NEXT_PUBLIC_SUPPORT_WA_MY, FALLBACK_MY_DIGITS);
 }
 
-function overrideId(): string {
+/** Active Indonesia digits: env override wins, Boss number is the fallback. */
+export function supportWaIdDigits(): string {
   return normaliseOverride(process.env.NEXT_PUBLIC_SUPPORT_WA_ID, FALLBACK_ID_DIGITS);
 }
 
-export const WHATSAPP_MY_DIGITS = "601149655880";
+/** Display helpers: derive human formats from any digits string. */
+function shortFrom(digits: string): string {
+  if (digits.startsWith("60") && digits.length >= 10) {
+    const rest = digits.slice(2);
+    return `0${rest.slice(0, 3)}-${rest.slice(3, 7)} ${rest.slice(7, 11)}`.trimEnd();
+  }
+  if (digits.startsWith("62") && digits.length >= 10) {
+    const rest = digits.slice(2);
+    return `0${rest.slice(0, 3)}-${rest.slice(3, 7)} ${rest.slice(7, 11)}`.trimEnd();
+  }
+  return digits;
+}
+
+function intlFrom(digits: string): string {
+  if (digits.startsWith("60"))
+    return `+${digits.slice(0, 4)}-${digits.slice(4, 8)} ${digits.slice(8, 12)}`.trimEnd();
+  if (digits.startsWith("62"))
+    return `+62 ${digits.slice(2, 5)}-${digits.slice(5, 9)} ${digits.slice(9, 13)}`.trimEnd();
+  return `+${digits}`;
+}
+
+/** Masked tel: link — keeps the full number out of the markup. */
+function maskedTelFrom(digits: string): string {
+  return `tel:+${digits.slice(0, 3)}****${digits.slice(-4)}`;
+}
+
+export const WHATSAPP_MY_DIGITS = FALLBACK_MY_DIGITS;
 export const WHATSAPP_MY_SHORT = "011-4965 5880";
 export const WHATSAPP_MY_INTL = "+6011-4965 5880";
 export const WHATSAPP_MY_TEL_URL = "tel:+601149655880";
@@ -58,24 +86,39 @@ export function isIdLocale(locale: Locale | string | undefined | null): boolean 
   return locale === "id";
 }
 
-/** wa.me digits for the active locale. */
+/** wa.me digits for the active locale (env override wins). */
 export function whatsappDigitsFor(locale: Locale | string | undefined | null): string {
-  return isIdLocale(locale) ? WHATSAPP_ID_DIGITS : WHATSAPP_MY_DIGITS;
+  return isIdLocale(locale) ? supportWaIdDigits() : supportWaMyDigits();
 }
 
 /** Human short display for the active locale. */
 export function whatsappShortFor(locale: Locale | string | undefined | null): string {
-  return isIdLocale(locale) ? WHATSAPP_ID_SHORT : WHATSAPP_MY_SHORT;
+  if (isIdLocale(locale)) {
+    const digits = supportWaIdDigits();
+    return digits === FALLBACK_ID_DIGITS ? WHATSAPP_ID_SHORT : shortFrom(digits);
+  }
+  const digits = supportWaMyDigits();
+  return digits === FALLBACK_MY_DIGITS ? WHATSAPP_MY_SHORT : shortFrom(digits);
 }
 
 /** Human international display for the active locale. */
 export function whatsappIntlFor(locale: Locale | string | undefined | null): string {
-  return isIdLocale(locale) ? WHATSAPP_ID_INTL : WHATSAPP_MY_INTL;
+  if (isIdLocale(locale)) {
+    const digits = supportWaIdDigits();
+    return digits === FALLBACK_ID_DIGITS ? WHATSAPP_ID_INTL : intlFrom(digits);
+  }
+  const digits = supportWaMyDigits();
+  return digits === FALLBACK_MY_DIGITS ? WHATSAPP_MY_INTL : intlFrom(digits);
 }
 
 /** tel: link for the active locale. */
 export function whatsappTelUrlFor(locale: Locale | string | undefined | null): string {
-  return isIdLocale(locale) ? WHATSAPP_ID_TEL_URL : WHATSAPP_MY_TEL_URL;
+  if (isIdLocale(locale)) {
+    const digits = supportWaIdDigits();
+    return digits === FALLBACK_ID_DIGITS ? WHATSAPP_ID_TEL_URL : maskedTelFrom(digits);
+  }
+  const digits = supportWaMyDigits();
+  return digits === FALLBACK_MY_DIGITS ? WHATSAPP_MY_TEL_URL : maskedTelFrom(digits);
 }
 
 /** wa.me chat link with a locale-aware pre-filled message. */

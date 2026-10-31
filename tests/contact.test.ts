@@ -6,6 +6,8 @@ import {
   WHATSAPP_NUMBER_INTL,
   WHATSAPP_NUMBER_SHORT,
   WHATSAPP_TEL_URL,
+  supportWaIdDigits,
+  supportWaMyDigits,
   whatsappDigitsFor,
   whatsappShortFor,
   whatsappUrl,
@@ -42,6 +44,32 @@ describe("official WhatsApp contact", () => {
   it("builds the Indonesian wa.me link when locale is id", () => {
     const url = whatsappUrl("Hai", "id");
     expect(url.startsWith("https://wa.me/6287892768208?text=")).toBe(true);
+  });
+
+  it("reads the official numbers from env, falling back to Boss numbers", () => {
+    expect(supportWaMyDigits()).toBe("601149655880");
+    expect(supportWaIdDigits()).toBe("6287892768208");
+  });
+
+  it("prefers env overrides when set, ignoring non-digit values", async () => {
+    const contact = await import("@/lib/contact");
+    const prevMy = process.env.NEXT_PUBLIC_SUPPORT_WA_MY;
+    const prevId = process.env.NEXT_PUBLIC_SUPPORT_WA_ID;
+    try {
+      process.env.NEXT_PUBLIC_SUPPORT_WA_MY = "601122223333";
+      process.env.NEXT_PUBLIC_SUPPORT_WA_ID = "+62 812-3456-789";
+      expect(contact.supportWaMyDigits()).toBe("601122223333");
+      expect(contact.supportWaIdDigits()).toBe("628123456789");
+      expect(contact.whatsappDigitsFor("ms")).toBe("601122223333");
+      expect(contact.whatsappDigitsFor("id")).toBe("628123456789");
+      process.env.NEXT_PUBLIC_SUPPORT_WA_MY = "bukan-nombor";
+      expect(contact.supportWaMyDigits()).toBe("601149655880");
+    } finally {
+      if (prevMy === undefined) delete process.env.NEXT_PUBLIC_SUPPORT_WA_MY;
+      else process.env.NEXT_PUBLIC_SUPPORT_WA_MY = prevMy;
+      if (prevId === undefined) delete process.env.NEXT_PUBLIC_SUPPORT_WA_ID;
+      else process.env.NEXT_PUBLIC_SUPPORT_WA_ID = prevId;
+    }
   });
 
   it("encodes prefill text so the link never breaks", () => {
