@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Check, Coins, CreditCard, ShieldCheck, Zap } from "lucide-react";
+import { Check, Coins, CreditCard, Landmark, ShieldCheck, Zap } from "lucide-react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 import { format, type Locale } from "@/lib/i18n/config";
@@ -19,9 +19,15 @@ import { TopUpButton } from "@/components/topup-button";
 /**
  * Premium fintech checkout card: amount picker on top, then the centered
  * order summary (tokens → price → payment method → email → CTA → trust).
- * ToyyibPay (FPX) is CLOSED — Stripe card is the single payment method.
- * `gateway: "stripe"` is always sent via `/api/topup`.
+ * Stripe (USD, global) is the default; Curlec (MYR: FPX / cards) is the
+ * Malaysian option. `gateway: "curlec"` is sent via `/api/topup` with
+ * `amountMyr` + `international` (locks the +3% foreign-card surcharge).
  */
+// Boss fixed rate RM4.70 = $1.00 — mirrors CURLEC_MYR_PER_USD in
+// `src/lib/payment/curlec.ts` (server). Kept local so the client bundle
+// never imports `node:crypto`.
+const MYR_PER_USD = 4.7;
+const INTERNATIONAL_SURCHARGE_BPS = 300;
 export function Pricing({
   locale,
   dict,
@@ -35,12 +41,23 @@ export function Pricing({
 }) {
   const [picked, setPicked] = useState<number | "custom">(1);
   const [custom, setCustom] = useState("");
+  const [gateway, setGateway] = useState<"stripe" | "curlec">("stripe");
+  const [international, setInternational] = useState(false);
   const customId = useId();
   const customErrorId = `${customId}-error`;
 
   const usd = picked === "custom" ? parseTopUpAmount(custom) : picked;
   const valid = usd !== null;
   const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD, locale);
+
+  // Curlec MYR quote: base = USD x 4.70, surcharge +3% (ceil) when the payer
+  // declares a foreign card — mirrors `quoteCurlecCharge` on the server.
+  const myrBase = valid ? Math.round((usd as number) * MYR_PER_USD * 100) / 100 : null;
+  const baseSen = myrBase !== null ? Math.round(myrBase * 100) : null;
+  const surchargeSen =
+    baseSen !== null && international ? Math.ceil((baseSen * INTERNATIONAL_SURCHARGE_BPS) / 10_000) : 0;
+  const totalSen = baseSen !== null ? baseSen + surchargeSen : null;
+  const curlecDisplay = totalSen !== null ? `RM${(totalSen / 100).toFixed(2)}` : null;
 
   return (
     <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 bg-[#0A0F1D] px-5 py-12 sm:px-6 sm:py-20">
@@ -163,38 +180,96 @@ export function Pricing({
               </p>
 
               <p className="mt-4 text-[44px] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums">
-                {preview.display}
+                {gateway === "curlec" ? (curlecDisplay ?? "—") : preview.display}
                 <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">
-                  {preview.baseCode}
+                  {gateway === "curlec" ? "MYR" : preview.baseCode}
                 </span>
               </p>
-              {preview.localDisplay && (
+              {gateway === "stripe" && preview.localDisplay && (
                 <p className="mt-2 text-sm font-medium text-slate-300 tabular-nums">
                   {preview.localDisplay}
+                </p>
+              )}
+              {gateway === "curlec" && baseSen !== null && totalSen !== null && (
+                <p className="mt-2 text-sm font-medium text-slate-300 tabular-nums">
+                  {surchargeSen > 0
+                    ? `RM${(baseSen / 100).toFixed(2)} + RM${(surchargeSen / 100).toFixed(2)} (3%)`
+                    : `≈ $${(valid ? (usd as number) : MIN_TOPUP_USD).toFixed(2)} · ${(preview.tokens ?? 0).toLocaleString("en-US")} ${dict.pricing.tokenUnit}`}
                 </p>
               )}
               <p className="mt-1.5 text-xs text-slate-300">{dict.pricing.priceLabel}</p>
             </div>
 
-            {/* Payment method: ToyyibPay CLOSED — Stripe card only. */}
+            {/* Payment method: Stripe (global USD) vs Curlec (MY FPX / cards). */}
             <div className="mt-5">
               <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
                 {dict.pricing.paymentMethodTitle}
               </p>
-              <div className="mt-2.5 flex min-h-[52px] items-center gap-2.5 rounded-xl border border-[#2563EB] bg-[#1E40AF]/15 px-3 py-3 shadow-[0_0_0_1px_#2563EB,0_8px_24px_-8px_rgba(37,99,235,0.55)] sm:gap-3 sm:px-4">
-                <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
-                <span className="min-w-0 flex-1 text-left">
-                  <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
-                    {dict.pricing.stripeTitle}
+              <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label={dict.pricing.paymentMethodTitle}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={gateway === "stripe"}
+                  onClick={() => setGateway("stripe")}
+                  className={`flex min-h-[52px] items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1220] focus-visible:outline-none sm:gap-3 sm:px-4 ${
+                    gateway === "stripe"
+                      ? "border-[#2563EB] bg-[#1E40AF]/15 shadow-[0_0_0_1px_#2563EB,0_8px_24px_-8px_rgba(37,99,235,0.55)]"
+                      : "border-white/10 bg-white/[0.03] hover:border-white/25"
+                  }`}
+                >
+                  <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                      {dict.pricing.stripeTitle}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
+                      {dict.pricing.stripeNote}
+                    </span>
                   </span>
-                  <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
-                    {dict.pricing.stripeNote}
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={gateway === "curlec"}
+                  onClick={() => setGateway("curlec")}
+                  className={`flex min-h-[52px] items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1220] focus-visible:outline-none sm:gap-3 sm:px-4 ${
+                    gateway === "curlec"
+                      ? "border-emerald-500 bg-emerald-500/10 shadow-[0_0_0_1px_#10b981,0_8px_24px_-8px_rgba(16,185,129,0.55)]"
+                      : "border-white/10 bg-white/[0.03] hover:border-white/25"
+                  }`}
+                >
+                  <Landmark className="size-5 shrink-0 text-emerald-300" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                      {dict.pricing.curlecTitle}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
+                      {dict.pricing.curlecNote}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 rounded-full bg-[#1E40AF]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2563EB]/50 ring-inset sm:text-[11px]">
-                  {dict.pricing.comingSoon}
-                </span>
+                </button>
               </div>
+              <p className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-slate-400">
+                <span className="rounded-full bg-white/[0.05] px-2 py-0.5 font-bold tracking-wide whitespace-nowrap uppercase ring-1 ring-white/10 ring-inset">
+                  {gateway === "curlec" ? dict.pricing.curlecBadge : dict.pricing.comingSoon}
+                </span>
+              </p>
+              {gateway === "curlec" && (
+                <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={international}
+                    onChange={(event) => setInternational(event.target.checked)}
+                    className="mt-0.5 size-4 shrink-0 accent-emerald-500"
+                  />
+                  <span className="min-w-0 text-left">
+                    <span className="block text-xs font-semibold text-white">{dict.pricing.internationalLabel}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">
+                      {dict.pricing.internationalNote}
+                    </span>
+                  </span>
+                </label>
+              )}
             </div>
 
             <div className="mt-5">
@@ -205,15 +280,17 @@ export function Pricing({
                 emailErrorText={dict.pricing.invalidEmail}
                 emailLabel={dict.pricing.emailLabel}
                 emailPlaceholder={dict.pricing.emailPlaceholder}
-                trustBadge={dict.pricing.trustBadge}
+                trustBadge={gateway === "curlec" ? dict.pricing.trustBadgeCurlec : dict.pricing.trustBadge}
                 whatsappNote={dict.pricing.whatsappNote}
                 whatsappLinkLabel={dict.contact.linkLabel}
                 whatsappPrefill={dict.contact.prefill}
                 className="btn-brand btn-glow cta-glow flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-bold"
                 amountUsd={valid ? (usd as number) : undefined}
+                amountMyr={gateway === "curlec" && myrBase !== null ? myrBase : undefined}
+                international={gateway === "curlec" ? international : false}
                 disabled={!valid}
                 collectEmail
-                gateway="stripe"
+                gateway={gateway}
               >
                 {dict.pricing.proceed}
               </TopUpButton>
@@ -222,11 +299,18 @@ export function Pricing({
             <div className="mt-3 space-y-1.5 text-center text-xs leading-relaxed text-slate-300">
               <p className="flex items-center justify-center gap-1.5">
                 <ShieldCheck className="size-3.5 shrink-0 text-emerald-400" aria-hidden />
-                {format(dict.pricing.topupNote, { currency: preview.currency })}
+                {gateway === "curlec"
+                  ? dict.pricing.curlecNote
+                  : format(dict.pricing.topupNote, { currency: preview.currency })}
               </p>
+              {gateway === "curlec" && (
+                <p className="font-medium text-slate-400">{dict.pricing.internationalNote}</p>
+              )}
               <p className="font-medium">
                 <span aria-hidden>💳 </span>
-                {dict.pricing.stripeTitle} · {dict.pricing.stripeNote}
+                {gateway === "curlec"
+                  ? `${dict.pricing.curlecTitle} · ${dict.pricing.curlecNote}`
+                  : `${dict.pricing.stripeTitle} · ${dict.pricing.stripeNote}`}
               </p>
             </div>
           </div>

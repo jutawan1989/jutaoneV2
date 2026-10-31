@@ -7,10 +7,29 @@ import type { Variant } from "@/lib/analytics/variant";
 import { whatsappShortFor, whatsappUrl } from "@/lib/contact";
 
 /**
- * Starts the Stripe top-up: the API logs `topup_click` and returns the
- * Stripe Checkout URL (or the sandbox page when Stripe is not configured).
- * ToyyibPay is CLOSED — every checkout sends `gateway: "stripe"`.
+ * Starts a top-up: Stripe Checkout URL redirect, or Curlec/Razorpay
+ * Checkout.js modal when `gateway: "curlec"`.
+ * ToyyibPay is CLOSED.
  */
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void; on?: (e: string, h: (r: unknown) => void) => void };
+  }
+}
+
+function loadRazorpayCheckout(): Promise<boolean> {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(Boolean(window.Razorpay));
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
 export function TopUpButton({
   locale,
   variant,
@@ -23,7 +42,10 @@ export function TopUpButton({
   trustBadge,
   disabled = false,
   amountUsd,
+  amountMyr,
+  international = false,
   collectEmail = false,
+  gateway = "stripe",
   whatsappNote,
   whatsappLinkLabel,
   whatsappPrefill,
@@ -47,10 +69,14 @@ export function TopUpButton({
   disabled?: boolean;
   /** Top-up size in USD. Defaults to $1 when omitted. */
   amountUsd?: number;
+  /** Top-up size in MYR for `gateway: "curlec"`. */
+  amountMyr?: number;
+  /** True when the payer declares a foreign card (locks +3% Curlec surcharge). */
+  international?: boolean;
   /** When true, render an email field and send it as the receipt destination. */
   collectEmail?: boolean;
-  /** Gateway override — always `"stripe"` (ToyyibPay closed). Kept as a prop for tests. */
-  gateway?: "toyyibpay" | "stripe";
+  /** Gateway selector: `"stripe"` (default) or `"curlec"` (MYR via Curlec). */
+  gateway?: "toyyibpay" | "stripe" | "curlec";
 }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -73,21 +99,56 @@ export function TopUpButton({
     setBusy(true);
     setFailed(false);
     try {
+      const isCurlec = gateway === "curlec";
       const response = await fetch("/api/topup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          locale,
-          variant,
-          amountUsd,
-          email: trimmedEmail,
-          // ToyyibPay closed: always route via Stripe.
-          gateway: "stripe",
-        }),
+        body: JSON.stringify(
+          isCurlec
+            ? { locale, variant, gateway: "curlec", amountMyr, international, email: trimmedEmail }
+            : { locale, variant, amountUsd, email: trimmedEmail, gateway: "stripe" },
+        ),
       });
-      const data = (await response.json()) as { checkoutUrl?: string | null };
+      const data = (await response.json()) as {
+        checkoutUrl?: string | null;
+        orderId?: string | null;
+        keyId?: string | null;
+        reference?: string | null;
+        amountSen?: number | null;
+      };
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
+        return;
+      }
+      // Curlec live mode: no redirect — open Razorpay Checkout.js with the order.
+      if (isCurlec && data.orderId && data.keyId && data.reference) {
+        const ready = await loadRazorpayCheckout();
+        if (!ready || !window.Razorpay) {
+          setFailed(true);
+          setBusy(false);
+          return;
+        }
+        const rzp = new window.Razorpay({
+          key: data.keyId,
+          order_id: data.orderId,
+          amount: data.amountSen ?? undefined,
+          currency: "MYR",
+          name: "JutaOne.Biz",
+          description: "Token top-up",
+          prefill: trimmedEmail ? { email: trimmedEmail } : undefined,
+          theme: { color: "#0B1220" },
+          handler: () => {
+            window.location.href = `/${locale}/topup?status=success&ref=${encodeURIComponent(data.reference as string)}`;
+          },
+          modal: { ondismiss: () => setBusy(false) },
+        });
+        rzp.open();
+        if (typeof rzp.on === "function") {
+          rzp.on("payment.failed", () => {
+            setFailed(true);
+            setBusy(false);
+          });
+        }
         return;
       }
       setFailed(true);
