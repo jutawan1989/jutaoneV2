@@ -25,21 +25,40 @@ type Captured = { topups: Record<string, unknown>[]; ledger: Record<string, unkn
 
 function mockDb(failLedgerOnce = false): {
   db: StripeCreditDb;
-  captured: Captured;
+  captured: Captured & { rpc: Array<{ fn: string; args: Record<string, unknown> }> };
   failWrites: { topups: boolean };
+  rpcCalls: Array<{ fn: string; args: Record<string, unknown> }>;
 } {
-  const captured: Captured = { topups: [], ledger: [] };
+  const captured: Captured & { rpc: Array<{ fn: string; args: Record<string, unknown> }> } = {
+    topups: [],
+    ledger: [],
+    rpc: [],
+  };
   const calls: { ledger: number } = { ledger: 0 };
   const failWrites = { topups: false };
+  const rpcCalls = captured.rpc;
   const db: StripeCreditDb = {
     from(table: string) {
-      const unsupported = {
+      if (table === "referral_codes") {
+        const chain = {
+          select: (..._a: unknown[]) => chain,
+          eq: (..._a: unknown[]) => chain,
+          maybeSingle: async () => ({ data: { id: 7 }, error: null }),
+          upsert: async () => ({ error: { message: `unexpected table ${table}` } }),
+          insert: async () => ({ error: { message: `unexpected table ${table}` } }),
+        };
+        return chain;
+      }
+      const base = {
         upsert: async () => ({ error: { message: `unexpected table ${table}` } }),
         insert: async () => ({ error: { message: `unexpected table ${table}` } }),
+        select: (..._a: unknown[]) => base,
+        eq: (..._a: unknown[]) => base,
+        maybeSingle: async () => ({ data: null as unknown, error: { message: `unexpected table ${table}` } }),
       };
       if (table === "topups") {
         return {
-          ...unsupported,
+          ...base,
           upsert: async (row: Record<string, unknown>) => {
             // Simulate the live Postgres bigint guard: a non-integer must
             // fail the write the way the real column does.
@@ -57,7 +76,7 @@ function mockDb(failLedgerOnce = false): {
       }
       if (table === "token_ledger") {
         return {
-          ...unsupported,
+          ...base,
           insert: async (row: Record<string, unknown>) => {
             calls.ledger += 1;
             if (failLedgerOnce && calls.ledger === 1) return { error: { message: "boom" } };
@@ -72,10 +91,24 @@ function mockDb(failLedgerOnce = false): {
           },
         };
       }
-      return unsupported;
+      if (table === "referral_codes") {
+        const chain = {
+          select: (..._a: unknown[]) => chain,
+          eq: (..._a: unknown[]) => chain,
+          maybeSingle: async () => ({ data: { id: 7 }, error: null }),
+          upsert: async () => ({ error: { message: `unexpected table ${table}` } }),
+          insert: async () => ({ error: { message: `unexpected table ${table}` } }),
+        };
+        return chain;
+      }
+      return base;
+    },
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      rpcCalls.push({ fn, args });
+      return { error: null, data: 2 };
     },
   };
-  return { db, captured, failWrites };
+  return { db, captured, failWrites, rpcCalls };
 }
 
 const OWNER = "3a8574f1d";
@@ -270,26 +303,63 @@ describe("stripe token credit (integer sen: 100 for $1.00)", () => {
   });
 
   it("records and credits: `credited: true` with 1,000,000 integer tokens", async () => {
-    const { db, captured } = mockDb();
+    const { db, captured, rpcCalls } = mockDb();
     const out = await recordStripeTopUp(db, paidSession());
-    expect(out).toEqual({ recorded: true, credited: true, tokens: 1_000_000, replayed: false });
+    expect(out).toEqual({
+      recorded: true,
+      credited: true,
+      tokens: 1_000_000,
+      replayed: false,
+      commissionLevels: 2,
+    });
     expect(captured.topups).toHaveLength(1);
-    expect(captured.topups[0]).toMatchObject({ provider: "stripe", provider_id: "stripe:cs_test_abc123", amount: 100 });
+    expect(captured.topups[0]).toMatchObject({
+      provider: "stripe",
+      provider_id: "stripe:cs_test_abc123",
+      amount: 100,
+      currency: "USD",
+    });
     expect(captured.ledger).toHaveLength(1);
     expect(captured.ledger[0]).toMatchObject({ visitor_key: OWNER, delta: 1_000_000, tokens: 1_000_000 });
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0]).toMatchObject({
+      fn: "jutaone_distribute_commission",
+      args: {
+        p_source: "topup",
+        p_from_code_id: 7,
+        p_gross_minor: 100,
+        p_currency: "USD",
+      },
+    });
   });
 
   it("REPLAYS a duplicate webhook as `credited: true, replayed: true`", async () => {
     let ledgerCalls = 0;
+    const chain = {
+      select: (..._a: unknown[]) => chain,
+      eq: (..._a: unknown[]) => chain,
+      maybeSingle: async () => ({ data: { id: 7 }, error: null }),
+      upsert: async () => ({ error: { message: "unexpected" } }),
+      insert: async () => ({ error: { message: "unexpected" } }),
+    };
     const replayDb: StripeCreditDb = {
-      from: (table: string) => ({
-        upsert: async () => ({ error: table === "topups" ? null : { message: `unexpected table ${table}` } }),
-        insert: async () => {
-          ledgerCalls += 1;
-          if (ledgerCalls === 1) return { error: { code: "23505", message: 'duplicate key value violates unique constraint "x"' } };
-          return { error: null };
-        },
-      }),
+      from: (table: string) => {
+        if (table === "topups") {
+          return {
+            ...chain,
+            upsert: async () => ({ error: null }),
+          };
+        }
+        return {
+          ...chain,
+          insert: async () => {
+            ledgerCalls += 1;
+            if (ledgerCalls === 1) return { error: { code: "23505", message: 'duplicate key value violates unique constraint "x"' } };
+            return { error: null };
+          },
+        };
+      },
+      rpc: async () => ({ error: null, data: 2 }),
     };
     const out = await recordStripeTopUp(replayDb, paidSession());
     expect(out).toEqual({ recorded: true, credited: true, tokens: 1_000_000, replayed: true });

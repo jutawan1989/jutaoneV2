@@ -67,12 +67,13 @@ export type ToyyibRequest = {
 export type ToyyibBill = {
   mode: "toyyibpay" | "mock";
   reference: string;
-  price: Price & { rmBase: number | null; fxRate: number | null };
-  /** Base RM in sen, before the RM1.00 fee — shown as the breakdown line. */
+  /** RETIRED (ToyyibPay CLOSED, 100% USD): kept so the legacy module compiles. */
+  price: Price & { rmBase: null; fxRate: null };
+  /** Base USD in cents, before the retired fee line. */
   baseSen: number;
-  /** Fee in sen (always 100). */
+  /** Fee in cents (retired gateway: always 0). */
   feeSen: number;
-  /** Total charged in sen (base + fee) — what the bill bills. */
+  /** Total charged in cents (base + fee). */
   totalSen: number;
   checkoutUrl: string | null;
 };
@@ -119,11 +120,13 @@ export class InvalidToyyibEmailError extends Error {
  */
 export async function createToyyibBill(req: ToyyibRequest): Promise<ToyyibBill> {
   const usd = parseTopUpAmount(req.amountUsd) ?? 1;
+  // RETIRED (ToyyibPay CLOSED): the live top-up path is Stripe-only.
+  // This adapter is kept compiling for the legacy callback route only.
   const { priceForCheckout } = await import("@/lib/pricing");
-  const price = await priceForCheckout("MYR", usd, req.locale);
+  const price = await priceForCheckout("USD", usd, req.locale);
 
   const baseSen = Math.round(price.amount * 100);
-  const feeSen = TOYYIBPAY_FEE_SEN;
+  const feeSen = 0;
   const totalSen = baseSen + feeSen;
   // ONE identity for the whole round trip: the UI reference handed to the
   // return page (`?ref=`) IS the vendor's `billExternalReferenceNo`, so the

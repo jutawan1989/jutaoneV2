@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { TOKENS_PER_USD, formatRm, parseTopUpAmount } from "@/lib/pricing";
+import { TOKENS_PER_USD, formatUsd, parseTopUpAmount } from "@/lib/pricing";
 
 /**
  * Stripe adapter — global card gateway (Test Mode).
@@ -83,7 +83,7 @@ export async function createStripeCheckoutSession(
   const reference = `JO-${Date.now().toString(36).toUpperCase()}`;
   const locale = typeof opts?.locale === "string" && /^[a-z]{2}$/.test(opts.locale) ? opts.locale : "ms";
   const origin = (opts?.origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://jutaone.biz").replace(/\/$/, "");
-  const display = formatRm(usd);
+  const display = formatUsd(usd);
 
   if (!stripeConfigured()) {
     return {
@@ -147,20 +147,30 @@ export async function createStripeCheckoutSession(
 }
 
 /**
- * Minimal database surface this module writes, narrowed to the two calls it
- * makes. Same shape as the ToyyibPay credit path so the mock-DB tests read
- * identically.
+ * Minimal database surface for the Stripe credit path: `topups` + `token_ledger` +
+ * `referral_codes` reads, `token_ledger` inserts, and the Kuda Merah commission RPC.
+ * Same narrowed-surface pattern as the retired gateway adapters so the mock-DB
+ * tests read identically.
  */
+type StripeTable = {
+  upsert: (
+    row: Record<string, unknown>,
+    opts?: Record<string, unknown>,
+  ) => PromiseLike<{ error: { code?: string; message: string } | null }>;
+  insert: (
+    row: Record<string, unknown>,
+  ) => PromiseLike<{ error: { code?: string; message: string } | null }>;
+  select: (...args: unknown[]) => StripeTable;
+  eq: (...args: unknown[]) => StripeTable;
+  maybeSingle: () => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+};
+
 export type StripeCreditDb = {
-  from(table: string): {
-    upsert: (
-      row: Record<string, unknown>,
-      opts?: Record<string, unknown>,
-    ) => PromiseLike<{ error: { code?: string; message: string } | null }>;
-    insert: (
-      row: Record<string, unknown>,
-    ) => PromiseLike<{ error: { code?: string; message: string } | null }>;
-  };
+  from: (table: string) => StripeTable;
+  rpc: (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => PromiseLike<{ error: { message: string } | null; data?: unknown }>;
 };
 
 export type StripeWebhookSession = {
@@ -290,13 +300,48 @@ export function tokensForStripeSession(session: Pick<StripeWebhookSession, "usdC
 
 /**
  * Records a verified Stripe checkout: one `topups` row (idempotent on
- * `provider_id`) plus one `token_ledger` credit (idempotent on `spend_ref`).
+ * `provider_id`) plus one `token_ledger` credit (idempotent on `spend_ref`)
+ * plus the Kuda Merah commission (70% of the USD-cent gross, idempotent per
+ * purchase via `jutaone_distribute_commission` unique indexes).
  *
  * Integer guarantee: `amount_total` arrives from Stripe as integer cents and
  * `metadata.usd_cents` is validated to safe-int before use. A float must
  * never reach the bigint columns, so anything non-integer fails closed with
  * `{recorded:false}` instead of writing.
  */
+
+/** 70% Kuda Merah split on a Stripe USD-cent top-up (buyer id resolved by the caller). */
+export async function distributeStripeCommission(
+  db: StripeCreditDb,
+  buyerOwnerRef: string,
+  grossCents: number,
+  topupId: number | null,
+): Promise<{ distributed: number } | { error: string }> {
+  const codeLookup = (await db
+    .from("referral_codes")
+    .select("id")
+    .eq("owner_ref", buyerOwnerRef)
+    .maybeSingle()) as unknown as { data: { id: number } | null; error: { message: string } | null };
+  const codeRow = codeLookup.data;
+  const codeError = codeLookup.error;
+  if (codeError || !codeRow) {
+    return { distributed: 0 };
+  }
+  const { error, data } = await db.rpc("jutaone_distribute_commission", {
+    p_source: "topup",
+    p_topup_id: topupId,
+    p_rent_id: null,
+    p_from_code_id: codeRow.id,
+    p_gross_minor: grossCents,
+    p_currency: "USD",
+  });
+  if (error) {
+    console.error("[jutaone] stripe commission distribute failed", error.message);
+    return { error: "distribute_failed" };
+  }
+  return { distributed: typeof data === "number" ? data : 0 };
+}
+
 export async function recordStripeTopUp(
   db: StripeCreditDb,
   session: StripeWebhookSession,
@@ -357,5 +402,13 @@ export async function recordStripeTopUp(
     });
     return { recorded: true, credited: false, reason: "credit_failed" };
   }
-  return { recorded: true, credited: true, tokens, replayed: false };
+  // Kuda Merah: 70% of the USD-cent gross to the upline (L1 50c + L2-19 15c +
+  // 5c milestone pool on a $1.00 sale), currency locked to USD. Idempotent per
+  // (topup, level) inside `jutaone_distribute_commission`, so webhook retries
+  // are safe. A missing buyer code means no referrer: 0 levels written.
+  const commission = await distributeStripeCommission(db, session.ownerRef, amountSen, null);
+  if ("error" in commission) {
+    return { recorded: true, credited: true, tokens, replayed: false, commission: "failed" };
+  }
+  return { recorded: true, credited: true, tokens, replayed: false, commissionLevels: commission.distributed };
 }

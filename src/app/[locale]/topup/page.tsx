@@ -6,7 +6,7 @@ import { resolveVariant } from "@/lib/analytics/variant";
 import { detectRegion } from "@/lib/geo";
 import { getDictionary } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n/config";
-import { chipConfigured } from "@/lib/payment/chip";
+import { stripeConfigured } from "@/lib/payment/stripe";
 import { formatTokenCount, getPrice, parseTopUpAmount, withUsdAmount } from "@/lib/pricing";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
@@ -32,7 +32,7 @@ export default async function TopUpPage({ params, searchParams }: TopUpPageProps
   const visitor = identifyVisitor(requestHeaders);
   const variant = resolveVariant(visitor.visitorKey);
 
-  const showSimulator = !chipConfigured() && process.env.NODE_ENV !== "production";
+  const showSimulator = !stripeConfigured() && process.env.NODE_ENV !== "production";
 
   return (
     <>

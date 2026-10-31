@@ -57,7 +57,7 @@ begin
   -- The buyer sits at the deepest node; level 1 is its parent (mx-19).
   select id into v_buyer from public.referral_codes where code = 'mx-20';
 
-  v_written := public.jutaone_distribute_commission('rent', null, (select id from public.store_subscriptions where owner_ref='mx-buyer'), v_buyer, v_gross, 'MYR');
+  v_written := public.jutaone_distribute_commission('rent', null, (select id from public.store_subscriptions where owner_ref='mx-buyer'), v_buyer, v_gross, 'USD');
 
   select coalesce(sum(affiliate_share_minor), 0) into v_paid
     from public.affiliate_earnings where referred_code_id = v_buyer;
@@ -117,7 +117,7 @@ begin
   -- Same subscription, same gross: this is exactly what a Chip retry does.
   v_written := public.jutaone_distribute_commission('rent', null,
     (select id from public.store_subscriptions where owner_ref='mx-buyer'),
-    v_buyer, 100000, 'MYR');
+    v_buyer, 100000, 'USD');
 
   select count(*) into v_after from public.affiliate_earnings where referred_code_id = v_buyer;
 
@@ -159,7 +159,7 @@ begin
   on conflict (owner_ref) do update set status='active';
   v_written := public.jutaone_distribute_commission('rent', null,
     (select id from public.store_subscriptions where owner_ref='mx-buyer-short'),
-    v_buyer, 100000, 'MYR');
+    v_buyer, 100000, 'USD');
   select coalesce(sum(affiliate_share_minor),0) into v_paid
     from public.affiliate_earnings where referred_code_id = v_buyer;
 

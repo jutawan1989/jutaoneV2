@@ -1,27 +1,30 @@
 import type { Locale, Region } from "@/lib/i18n/config";
 
-export type CurrencyCode = "MYR" | "IDR" | "USD";
+/**
+ * Boss final: every transaction settles in USD. There is no MYR, no IDR,
+ * no regional amount — $1.00 USD buys 1,000,000 tokens everywhere.
+ */
+export type CurrencyCode = "USD";
 
 export type Price = {
-  /** Currency actually charged at checkout, per billing region. */
+  /** Currency actually charged at checkout. Always USD. */
   currency: CurrencyCode;
   /** Top-up size in USD. The internal anchor every amount scales from. */
   usd: number;
-  /** Amount charged in major units, e.g. 4.70 or 16000. */
+  /** Amount charged in major units, e.g. 1.00 or 5.00. Always equals `usd`. */
   amount: number;
-  /** Chip.Asia expects integer minor units (sen / rupiah / cents). */
+  /** Integer USD cents, e.g. 100 for $1.00. Stripe `unit_amount` and bigint `topups.amount`. */
   amountMinor: number;
-  /** Headline price, always in RM with 2 decimals: `RM4.70`, `RM23.50`. */
+  /** Headline price, always USD with 2 decimals: `$1.00`, `$5.00`. */
   display: string;
-  /** ISO code shown beside the headline. */
-  baseCode: "MYR";
+  /** ISO code shown beside the headline. Always USD. */
+  baseCode: "USD";
   /**
-   * Secondary estimate under the RM headline. Rupiah (`≈ Rp18,000`) when the
-   * billing region is Indonesia or the visitor chose Bahasa Indonesia; the
-   * USD charged-equivalent (`≈ $1.00`) elsewhere outside Malaysia; null in
-   * Malaysia where the headline already is the charge.
+   * No secondary estimate: the headline IS the charge. Always null.
+   * Kept (instead of deleting the field) so every `Price` consumer —
+   * hero, navbar, pricing card, top-up page — compiles unchanged.
    */
-  localDisplay: string | null;
+  localDisplay: null;
   /** Tokens granted by this top-up. */
   tokens: number;
   tokensLabel: Record<Locale, string>;
@@ -33,47 +36,12 @@ export const TOKENS_PER_USD = 1_000_000;
 export const MIN_TOPUP_USD = 1;
 export const MAX_TOPUP_USD = 10_000;
 
-/**
- * ToyyibPay FPX/DuitNow QR fee passed to the Malaysian customer
- * (Boss + Linda decision). RM1.00 flat per bill, in RM and sen.
- */
-export const TOYYIBPAY_FEE_RM = 1;
-export const TOYYIBPAY_FEE_SEN = 100;
-
 /** Quick-pick buttons on the pricing card. */
 export const QUICK_TOPUP_AMOUNTS = [1, 5, 10, 50] as const;
 
-/** Local-charge estimates shown under the USD headline (not a second price). */
-const MYR_PER_USD = 4.7;
-/**
- * Static IDR anchor. The CHECKOUT path (`priceForCheckout`) overrides this
- * with the live/ops rate from `lib/fx.ts`; this constant only feeds the
- * synchronous display helpers (`formatIdrEstimate`, `getPrice`, and the
- * server-rendered headline) so they stay pure and cacheable.
- *
- * CMO margin spec (Linda): USD 1 = Rp17,900. The RM4.70 headline never moves;
- * only the Rupiah anchor changes.
- */
-const IDR_PER_USD = 17_900;
-
-const BASE_CURRENCY: Record<Region, CurrencyCode> = {
-  MY: "MYR",
-  ID: "IDR",
-  OTHER: "USD",
-};
-
+/** Headline formatter: `$1` -> `$1.00`. The ONLY money formatter for checkout. */
 export function formatUsd(usd: number): string {
   return `$${usd.toFixed(2)}`;
-}
-
-/** Headline formatter: the base price is always shown in RM. */
-export function formatRm(usd: number): string {
-  return `RM${(usd * MYR_PER_USD).toFixed(2)}`;
-}
-
-/** Rupiah estimate for Indonesian visitors (IP region or ID language). */
-export function formatIdrEstimate(usd: number): string {
-  return `\u2248 Rp${Math.round(usd * IDR_PER_USD).toLocaleString("en-US")}`;
 }
 
 /** `5000000, "en"` -> `"5,000,000 Tokens"`; ms/id use `Token`. */
@@ -97,84 +65,52 @@ export function parseTopUpAmount(value: unknown): number | null {
   return cents;
 }
 
-function localDisplayFor(currency: CurrencyCode, usd: number, locale: Locale): string | null {
-  if (currency === "IDR") return formatIdrEstimate(usd);
-  // Indonesian by language choice: still show the Rupiah estimate even when
-  // the billing region charges MYR or USD.
-  if (locale === "id") return formatIdrEstimate(usd);
-  // Outside Malaysia/Indonesia the charge is USD: show the charged equivalent
-  // under the RM headline so the headline never misleads.
-  if (currency === "USD") return `\u2248 ${formatUsd(usd)}`;
-  return null;
-}
-
-function buildPrice(currency: CurrencyCode, usd: number, locale: Locale): Price {
+function buildPrice(usd: number): Price {
   const tokens = Math.round(usd * TOKENS_PER_USD);
-  const amount =
-    currency === "MYR" ? usd * MYR_PER_USD : currency === "IDR" ? usd * IDR_PER_USD : usd;
-  // Chip treats IDR as a 2-decimal currency, like MYR: the checkout path is
-  // the proof — `priceForCheckout` derives whole rupiah (e.g. 17,900) then
-  // scales by 100. Sending whole rupiah without that scale undercharged
-  // Indonesia by 100x, so the x100 is load-bearing for both currencies.
-  const amountMinor = Math.round(amount * 100);
+  const amountMinor = Math.round(usd * 100);
   return {
-    currency,
+    currency: "USD",
     usd,
-    amount,
+    amount: usd,
     amountMinor,
-    display: formatRm(usd),
-    baseCode: "MYR",
-    localDisplay: localDisplayFor(currency, usd, locale),
+    display: formatUsd(usd),
+    baseCode: "USD",
+    localDisplay: null,
     tokens,
     tokensLabel: { en: "1 Million Tokens", ms: "1 Juta Token", id: "1 Juta Token" },
   };
 }
 
-/** Base $1.00 price for a region. `locale` only affects the Rupiah estimate. */
-export function getPrice(region: Region, locale: Locale = "ms"): Price {
-  return buildPrice(BASE_CURRENCY[region] ?? "USD", MIN_TOPUP_USD, locale);
+/**
+ * Base $1.00 price. `region`/`locale` are accepted so every existing caller
+ * keeps compiling, but they no longer affect the price — every market pays USD.
+ */
+export function getPrice(region?: Region, locale: Locale = "ms"): Price {
+  void region;
+  void locale;
+  return buildPrice(MIN_TOPUP_USD);
 }
 
-/** Scale a regional base price to the chosen USD amount. */
+/** Scale the base price to the chosen USD amount. */
 export function withUsdAmount(base: Price, usd: number, locale: Locale = "ms"): Price {
-  return buildPrice(base.currency, usd, locale);
+  void base;
+  void locale;
+  return buildPrice(usd);
 }
 
 /**
- * Checkout price for Indonesia: RM-anchored via `getExchangeRate()`.
+ * Checkout price. Pure USD passthrough — no FX, no regional amounts.
  *
- * Flow: USD amount -> RM base (MYR_PER_USD) -> IDR at the live/ops RM->IDR
- * rate, clamped by `applyIdrFloor` (never below Rp18,000 per $1) then rounded
- * with `roundIdr` so Chip receives a "cantik" whole-rupiah amount. The RM
- * base is kept on the returned `Price.rmBase` so the callback can record it
- * in Supabase. Non-IDR currencies pass through `withUsdAmount` unchanged.
+ * Kept async with `rmBase`/`fxRate` (always null) so the retired
+ * Chip/ToyyibPay adapters keep compiling while they are wound down.
  */
 export async function priceForCheckout(
   currency: CurrencyCode,
   usd: number,
   locale: Locale = "ms",
-): Promise<Price & { rmBase: number | null; fxRate: number | null }> {
-  if (currency !== "IDR") {
-    const plain = buildPrice(currency, usd, locale);
-    return { ...plain, rmBase: null, fxRate: null };
-  }
-  const { getExchangeRate, applyIdrFloor } = await import("@/lib/fx");
-  const rate = await getExchangeRate("IDR");
-  const rmBase = Math.round(usd * MYR_PER_USD * 100) / 100;
-  const idrAmount = applyIdrFloor(rmBase * rate, usd);
-  const tokens = Math.round(usd * TOKENS_PER_USD);
-  const amountMinor = Math.round(idrAmount * 100);
-  return {
-    currency: "IDR",
-    usd,
-    amount: idrAmount,
-    amountMinor,
-    display: formatRm(usd),
-    baseCode: "MYR",
-    localDisplay: `≈ Rp${idrAmount.toLocaleString("en-US")}`,
-    tokens,
-    tokensLabel: { en: "1 Million Tokens", ms: "1 Juta Token", id: "1 Juta Token" },
-    rmBase,
-    fxRate: rate,
-  };
+): Promise<Price & { rmBase: null; fxRate: null }> {
+  void currency;
+  void locale;
+  const plain = buildPrice(usd);
+  return { ...plain, rmBase: null, fxRate: null };
 }

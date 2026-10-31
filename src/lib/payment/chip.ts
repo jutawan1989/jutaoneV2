@@ -128,12 +128,9 @@ export async function createTopUpSession(req: TopUpRequest): Promise<TopUpSessio
   const customerEmail = parseCustomerEmail(req.customerEmail);
   if (!customerEmail) throw new InvalidCustomerEmailError();
   const whitelist = paymentMethodWhitelist();
-  // RM base + FX rate ride in the notes so the callback can record the RM
-  // value in Supabase even though Chip only settles the IDR amount.
-  const fxNote =
-    price.currency === "IDR" && "rmBase" in price && price.rmBase !== null
-      ? `;rm=${Math.round(price.rmBase * 100)};fx=${price.fxRate ?? ""}`
-      : "";
+  // 100% USD (Boss final): no FX note. Chip only serves legacy rent callbacks;
+  // Stripe records every amount in USD cents.
+  const fxNote = "";
   const body = {
     brand_id: process.env.CHIP_BRAND_ID,
     reference,

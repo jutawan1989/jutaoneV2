@@ -14,7 +14,7 @@ Commercial model: **token only** — USD 1 (≈ RM4.70 / ≈ Rp17,900) = 1,000,0
 | Styling   | Tailwind CSS v4                                         |
 | Database  | Supabase (Singapore, `ap-southeast-1`)                  |
 | AI        | Provider chain: OpenRouter → Meta AI (Llama API) → local template |
-| Payments  | Chip.Asia (FPX / cards), sandbox-ready stub             |
+| Payments  | Stripe (global cards, token top-up) + Chip.Asia (Store Rent only)             |
 | Hosting   | Cloudflare Pages                                         |
 
 ## Getting started
@@ -196,13 +196,19 @@ write.
 Migrating to a new region is the same two steps against the new project — the
 schema is idempotent.
 
-## Chip.Asia
+## Stripe (token top-up)
 
-Without `CHIP_API_KEY`/`CHIP_BRAND_ID` the top-up button opens a sandbox screen
-that records a simulated success. With keys present, `/api/topup` creates a real
-purchase and redirects to Chip's hosted checkout; `/api/topup/callback` verifies
-the RSA signature against `CHIP_PUBLIC_KEY` and rejects unsigned callbacks in
-production.
+Token top-up is Stripe-only (ToyyibPay/Chip CLOSED for top-up). Without
+`STRIPE_SECRET_KEY` the top-up button opens a sandbox screen that records a
+simulated success. With the key present, `/api/topup` creates a real Checkout
+Session (Test Mode while the key is `sk_test_...`: card 4242 4242 4242 4242,
+no real charge) and redirects to Stripe's hosted checkout;
+`/api/topup/stripe-callback` verifies the `Stripe-Signature` header against
+`STRIPE_WEBHOOK_SECRET` and credits tokens only on
+`checkout.session.completed` with `payment_status = "paid"`.
+
+Chip.Asia remains wired for Store Rent only (`/api/subscription/checkout` +
+`/api/topup/callback` rent branch) — not for token top-up.
 
 ## Building and deploying the Worker
 

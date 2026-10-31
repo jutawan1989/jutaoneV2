@@ -15,6 +15,7 @@ import { BizMatchSection } from "@/components/earn-sections";
 import { Hero } from "@/components/hero";
 import { Navbar } from "@/components/navbar";
 import { Pricing } from "@/components/pricing";
+import { SavingsCalculator } from "@/components/savings-calculator";
 import { WhySection } from "@/components/why-section";
 import { getKillSwitchState } from "@/lib/ai/budget";
 import { resolveVariant } from "@/lib/analytics/variant";
@@ -90,6 +91,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
           <BizMatchSection dict={dict} />
           <WhySection dict={dict} />
           <ValueStacking locale={locale} />
+          <SavingsCalculator locale={locale} dict={dict} />
           <Pricing locale={locale} dict={dict} price={price} variant={variant} />
         </div>
       </main>

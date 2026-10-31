@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  * Source of truth for the top-up return page (`?status=success&ref=...`).
  *
  * The gateway return URL is NOT proof of payment — the user lands here before
- * the server webhook (Chip/ToyyibPay callback) arrives. This endpoint checks
+ * the Stripe webhook (`/api/topup/stripe-callback`) arrives. This endpoint checks
  * the `topups` table: only a row with `status = 'paid'` counts as success.
  * Anything else means "still processing" and the UI must not claim any
  * token balance.
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     (rows?.[0]?.status as string | undefined) ?? "unknown";
 
   // Tokens actually credited by the webhook (spend_ref mirrors provider_id
-  // in both the Chip and ToyyibPay callbacks, plus the sandbox simulator).
+  // in the Stripe callback, plus the sandbox simulator).
   let tokens = 0;
   if (paid) {
     const spendRefs = paidRows
