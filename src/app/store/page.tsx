@@ -37,6 +37,7 @@ export default async function StoreDashboard() {
               isOpen: subscription.isOpen,
               trialDaysLeft: subscription.trialDaysLeft,
               trialEndsAt: subscription.trialEndsAt,
+              paidUntil: subscription.paidUntil,
             }
           : null
       }

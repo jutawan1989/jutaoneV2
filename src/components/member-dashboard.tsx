@@ -87,6 +87,78 @@ const CHAT_COST_TOKENS = 5_000;
 const METALS_COST_TOKENS = 2_000;
 /** One USD buys one million tokens (`TOKENS_PER_USD` in `lib/pricing.ts`). */
 const TOKENS_PER_USD = 1_000_000;
+/**
+ * Store Rent in tokens (CTO spec), mirrored from `STORE_RENT_TOKENS` in
+ * `lib/tokens.ts`. Client bundle cannot import that server module.
+ */
+const STORE_RENT_TOKENS = 5_000_000;
+
+/** Token-rent copy (CTO exact Malay wording; EN/ID equivalents). */
+const RENT_COPY: Record<DashLang, {
+  priceLine: string;
+  balanceLine: (balance: string) => string;
+  activate: string;
+  activating: string;
+  extend: string;
+  extending: string;
+  activeUntil: string;
+  topUp: string;
+  topUpHint: string;
+  okExtended: string;
+  okActivated: string;
+  insufficient: string;
+  failed: string;
+  network: string;
+}> = {
+  ms: {
+    priceLine: "Sewa Kedai: 5,000,000 Token (30 hari)",
+    balanceLine: (b) => `Baki Anda: ${b} Token`,
+    activate: "Aktifkan Kedai (Tolak 5,000,000 Token)",
+    activating: "Mengaktifkan…",
+    extend: "Panjangkan Sewa",
+    extending: "Memanjangkan…",
+    activeUntil: "Sewa aktif sehingga",
+    topUp: "Top-Up Token",
+    topUpHint: "Baki tidak cukup untuk sewa. Top-up melalui Curlec (FPX / kad).",
+    okExtended: "Sewa dipanjangkan 30 hari. Terima kasih!",
+    okActivated: "Kedai diaktifkan selama 30 hari. Selamat berniaga!",
+    insufficient: "Baki tidak cukup. Sila Top-Up Token.",
+    failed: "Pengaktifan gagal. Sila cuba lagi.",
+    network: "Rangkaian bermasalah. Sila cuba lagi.",
+  },
+  en: {
+    priceLine: "Shop Rental: 5,000,000 Tokens (30 days)",
+    balanceLine: (b) => `Your Balance: ${b} Tokens`,
+    activate: "Activate Shop (Deduct 5,000,000 Tokens)",
+    activating: "Activating…",
+    extend: "Extend Rental",
+    extending: "Extending…",
+    activeUntil: "Rental active until",
+    topUp: "Top-Up Tokens",
+    topUpHint: "Insufficient balance for rent. Top up via Curlec (FPX / card).",
+    okExtended: "Rental extended by 30 days. Thank you!",
+    okActivated: "Shop activated for 30 days. Happy selling!",
+    insufficient: "Insufficient balance. Please top up tokens.",
+    failed: "Activation failed. Please try again.",
+    network: "Network issue. Please try again.",
+  },
+  id: {
+    priceLine: "Sewa Toko: 5.000.000 Token (30 hari)",
+    balanceLine: (b) => `Saldo Anda: ${b} Token`,
+    activate: "Aktifkan Toko (Potong 5.000.000 Token)",
+    activating: "Mengaktifkan…",
+    extend: "Perpanjang Sewa",
+    extending: "Memperpanjang…",
+    activeUntil: "Sewa aktif hingga",
+    topUp: "Top-Up Token",
+    topUpHint: "Saldo kurang untuk sewa. Isi ulang via Curlec (FPX / kartu).",
+    okExtended: "Sewa diperpanjang 30 hari. Terima kasih!",
+    okActivated: "Toko diaktifkan selama 30 hari. Selamat berjualan!",
+    insufficient: "Saldo tidak cukup. Silakan top-up token.",
+    failed: "Aktivasi gagal. Silakan coba lagi.",
+    network: "Jaringan bermasalah. Silakan coba lagi.",
+  },
+};
 
 /* Dual-Tone: kad putih bersih dengan border nipis (gaya Dynadot body). */
 const PANEL = "gap-0 rounded-2xl border border-slate-200 bg-white py-0 shadow-sm ring-0";
@@ -1022,7 +1094,12 @@ export function MemberDashboard({
   const [accountHolder, setAccountHolder] = useState("");
   const [rankOpen, setRankOpen] = useState(false);
   const [lang, setLang] = useState<DashLang>("ms");
+  const [rentBusy, setRentBusy] = useState(false);
+  const [rentNote, setRentNote] = useState<string | null>(null);
+  const [rentPaidUntil, setRentPaidUntil] = useState<string | null>(null);
+  const [rentBalance, setRentBalance] = useState<number | null>(null);
   const t = DASH_STR[lang];
+  const rc = RENT_COPY[lang];
 
   const activeLevels = useMemo(
     () => (levels ?? []).filter((level) => level.people > 0),
@@ -1116,6 +1193,53 @@ export function MemberDashboard({
     : null;
 
   const deepestLevel = activeLevels.reduce((deep, level) => Math.max(deep, level.level), 0);
+
+  // ── Token rent state (CTO spec: 5,000,000 Token = 30 hari) ──
+  const effectiveBalance = rentBalance ?? tokens;
+  const effectivePaidUntil = rentPaidUntil ?? store.paidUntil;
+  const rentActive =
+    store.isOpen &&
+    store.subscriptionStatus === "active" &&
+    effectivePaidUntil !== null &&
+    new Date(effectivePaidUntil).getTime() > Date.now();
+  const rentSufficient = effectiveBalance >= STORE_RENT_TOKENS;
+  const rentExpiryLabel = effectivePaidUntil
+    ? new Date(effectivePaidUntil).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+  async function activateRent() {
+    if (rentBusy) return;
+    setRentBusy(true);
+    setRentNote(null);
+    try {
+      const response = await fetch("/api/subscription/activate-tokens", { method: "POST" });
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        code?: string;
+        balanceAfter?: number;
+        paidUntil?: string;
+        extended?: boolean;
+      } | null;
+      if (response.ok && data?.ok) {
+        if (typeof data.balanceAfter === "number") setRentBalance(data.balanceAfter);
+        if (typeof data.paidUntil === "string") setRentPaidUntil(data.paidUntil);
+        setRentNote(data.extended ? rc.okExtended : rc.okActivated);
+      } else if (response.status === 402 || data?.code === "insufficient_tokens") {
+        if (typeof data?.balanceAfter === "number") setRentBalance(data.balanceAfter);
+        setRentNote(rc.insufficient);
+      } else {
+        setRentNote(rc.failed);
+      }
+    } catch {
+      setRentNote(rc.network);
+    } finally {
+      setRentBusy(false);
+    }
+  }
 
   async function requestPayout() {
     if (
@@ -1725,26 +1849,27 @@ export function MemberDashboard({
                     </div>
 
                     <div className="mt-4">
-                      <p className="text-[13px] font-semibold text-slate-900">{t.shopRental}</p>
-                      <p className="text-[10px] text-slate-500">{t.monthlyCancel}</p>
+                      <p className="text-[13px] font-semibold text-slate-900">{rc.priceLine}</p>
+                      <p className="mt-1 text-[12px] font-medium text-slate-700 tabular-nums">
+                        {rc.balanceLine(effectiveBalance.toLocaleString("en-US"))}
+                      </p>
                     </div>
 
-                    <div className="mt-3 flex items-end gap-1.5">
-                      <span className="text-[34px] leading-none font-semibold tracking-[-0.03em] text-slate-900 tabular-nums">
-                        $5
-                      </span>
-                      <span className="pb-1 text-[11px] text-slate-500">{t.perMonth}</span>
-                    </div>
-
-                    <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-                      {store.subscriptionStatus === null
-                        ? t.notSubscribed
-                        : store.subscriptionStatus === "trial"
-                          ? `${trialDays} ${t.trialLeftDesc}`
-                          : store.isOpen
-                            ? t.subActiveDesc
+                    {rentActive ? (
+                      <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                        <p className="text-[11px] font-medium text-emerald-800">
+                          {rc.activeUntil}: {rentExpiryLabel ?? "—"}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                        {store.subscriptionStatus === null
+                          ? t.notSubscribed
+                          : store.subscriptionStatus === "trial"
+                            ? `${trialDays} ${t.trialLeftDesc}`
                             : t.subExpiredDesc}
-                    </p>
+                      </p>
+                    )}
 
                     <ul className="mt-3 space-y-1.5 text-[11px] text-slate-700">
                       {t.rentalFeatures.map((feature) => (
@@ -1768,12 +1893,41 @@ export function MemberDashboard({
                       </div>
                     )}
 
-                    <Button
-                      asChild
-                      className="cta-glow mt-4 min-h-[44px] w-full rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover"
-                    >
-                      <Link href="/store">{t.manageSubscription}</Link>
-                    </Button>
+                    {rentActive ? (
+                      <Button
+                        type="button"
+                        onClick={activateRent}
+                        disabled={rentBusy || !rentSufficient}
+                        className="cta-glow mt-4 min-h-[52px] w-full rounded-xl bg-brand text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-60"
+                      >
+                        {rentBusy ? rc.extending : rc.extend}
+                      </Button>
+                    ) : rentSufficient ? (
+                      <Button
+                        type="button"
+                        onClick={activateRent}
+                        disabled={rentBusy}
+                        className="cta-glow mt-4 min-h-[52px] w-full rounded-xl bg-brand text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-60"
+                      >
+                        {rentBusy ? rc.activating : rc.activate}
+                      </Button>
+                    ) : (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-[11px] leading-relaxed text-amber-700">{rc.topUpHint}</p>
+                        <Button
+                          asChild
+                          className="cta-glow min-h-[52px] w-full rounded-xl bg-amber-500 text-sm font-bold text-white hover:bg-amber-600"
+                        >
+                          <Link href={`/${lang}/topup`}>{rc.topUp}</Link>
+                        </Button>
+                      </div>
+                    )}
+
+                    {rentNote && (
+                      <p role="status" className="mt-2 text-[11px] leading-relaxed text-slate-600">
+                        {rentNote}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </div>

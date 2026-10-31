@@ -25,6 +25,13 @@ export const AD_COST_TOKENS = 20_000;
 /** Cost of one live Metals (gold/silver) quote, in tokens. */
 export const METALS_COST_TOKENS = 2_000;
 
+/**
+ * Store Rent paid in tokens (CTO spec): 5,000,000 Token for 30 days.
+ * Single source of truth — member-dashboard mirrors this value locally
+ * (client bundle cannot import this server module).
+ */
+export const STORE_RENT_TOKENS = 5_000_000;
+
 export const ledgerConfigured = (): boolean => Boolean(getSupabase());
 
 /** Current balance, or 0 when the visitor has no ledger rows yet. */

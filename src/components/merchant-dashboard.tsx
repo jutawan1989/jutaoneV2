@@ -1,15 +1,20 @@
 "use client";
 
-import { useRef, useState, type DragEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
+import Link from "next/link";
 import { ImagePlus, Loader2, ShoppingBag, X } from "lucide-react";
 import { StoreSubscriptionModal } from "@/components/store-subscription-modal";
 import { isDirectImageUrl, normalizeImageUrl, validateImageForSubmit } from "@/lib/product-image";
+
+/** CTO spec: Store Rent = 5,000,000 Token for 30 days (mirrors lib/tokens.ts). */
+const STORE_RENT_TOKENS = 5_000_000;
 
 type SubscriptionState = {
   status: string;
   isOpen: boolean;
   trialDaysLeft: number | null;
   trialEndsAt: string | null;
+  paidUntil: string | null;
 } | null;
 
 type Order = {
@@ -47,6 +52,68 @@ export function MerchantDashboard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<AddedProduct[]>([]);
+  // ── Token rent (CTO spec) ──
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [rentBusy, setRentBusy] = useState(false);
+  const [rentNote, setRentNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/tokens/balance", { cache: "no-store" });
+        const data = (await res.json().catch(() => null)) as { balance?: number } | null;
+        if (!cancelled && typeof data?.balance === "number") setTokenBalance(data.balance);
+      } catch {
+        /* balance stays null — rent card shows top-up path */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const rentActive =
+    subscription?.isOpen === true &&
+    subscription.status === "active" &&
+    subscription.paidUntil !== null &&
+    new Date(subscription.paidUntil).getTime() > Date.now();
+  const rentSufficient = (tokenBalance ?? 0) >= STORE_RENT_TOKENS;
+
+  async function activateRent() {
+    if (rentBusy) return;
+    setRentBusy(true);
+    setRentNote(null);
+    try {
+      const res = await fetch("/api/subscription/activate-tokens", { method: "POST" });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        code?: string;
+        balanceAfter?: number;
+        paidUntil?: string;
+        extended?: boolean;
+      } | null;
+      if (res.ok && data?.ok) {
+        if (typeof data.balanceAfter === "number") setTokenBalance(data.balanceAfter);
+        if (typeof data.paidUntil === "string") {
+          setSubscription((prev) =>
+            prev
+              ? { ...prev, status: "active", isOpen: true, paidUntil: data.paidUntil as string }
+              : { status: "active", isOpen: true, trialDaysLeft: null, trialEndsAt: null, paidUntil: data.paidUntil as string },
+          );
+        }
+        setRentNote(data.extended ? "Sewa dipanjangkan 30 hari. Terima kasih!" : "Kedai diaktifkan selama 30 hari. Selamat berniaga!");
+      } else if (res.status === 402 || data?.code === "insufficient_tokens") {
+        setRentNote("Baki tidak cukup. Sila Top-Up Token.");
+      } else {
+        setRentNote("Pengaktifan gagal. Sila cuba lagi.");
+      }
+    } catch {
+      setRentNote("Rangkaian bermasalah. Sila cuba lagi.");
+    } finally {
+      setRentBusy(false);
+    }
+  }
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Guards the stale-upload race: a late upload response must never overwrite
   // a URL the user typed/pasted after the upload started, and a submit that
@@ -288,10 +355,76 @@ export function MerchantDashboard({
             isOpen: true,
             trialDaysLeft: 7,
             trialEndsAt,
+            paidUntil: null,
           });
           setModalOpen(false);
         }}
       />
+
+      {/* ── Token rent card (CTO spec) ── */}
+      <section className="card mt-4 p-5" aria-labelledby="rent-title">
+        <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
+          Sewa Kedai
+        </p>
+        <h2 id="rent-title" className="mt-1.5 text-lg font-semibold text-white">
+          Sewa Kedai: 5,000,000 Token (30 hari)
+        </h2>
+        <p className="mt-1 text-sm text-silver tabular-nums">
+          {tokenBalance === null ? "Baki Anda: … Token" : `Baki Anda: ${tokenBalance.toLocaleString("en-US")} Token`}
+        </p>
+
+        {rentActive && subscription?.paidUntil ? (
+          <p className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+            Sewa aktif sehingga{" "}
+            {new Date(subscription.paidUntil).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+        ) : null}
+
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          {rentActive ? (
+            <button
+              type="button"
+              onClick={activateRent}
+              disabled={rentBusy || !rentSufficient}
+              className="btn-brand min-h-[52px] flex-1 px-4 py-3 text-base font-bold disabled:opacity-60"
+            >
+              {rentBusy ? "Memanjangkan…" : "Panjangkan Sewa"}
+            </button>
+          ) : rentSufficient ? (
+            <button
+              type="button"
+              onClick={activateRent}
+              disabled={rentBusy}
+              className="btn-brand min-h-[52px] flex-1 px-4 py-3 text-base font-bold disabled:opacity-60"
+            >
+              {rentBusy ? "Mengaktifkan…" : "Aktifkan Kedai (Tolak 5,000,000 Token)"}
+            </button>
+          ) : (
+            <Link
+              href="/ms/topup"
+              className="btn-brand flex min-h-[52px] flex-1 items-center justify-center px-4 py-3 text-center text-base font-bold"
+            >
+              Top-Up Token
+            </Link>
+          )}
+        </div>
+
+        {!rentActive && !rentSufficient && tokenBalance !== null ? (
+          <p className="mt-2 text-[11px] leading-relaxed text-amber-300">
+            Baki tidak cukup untuk sewa. Top-up melalui Curlec (FPX / kad) untuk aktifkan kedai.
+          </p>
+        ) : null}
+
+        {rentNote && (
+          <p role="status" className="mt-2 text-xs text-silver">
+            {rentNote}
+          </p>
+        )}
+      </section>
 
       {/* ── Light product form ── */}
       <form onSubmit={submit} className="container mx-auto mt-6 max-w-6xl rounded-xl bg-white p-5 shadow-md sm:p-7">
