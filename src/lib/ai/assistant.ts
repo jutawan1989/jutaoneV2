@@ -7,9 +7,10 @@ import type { Locale, Region } from "@/lib/i18n/config";
  *
  * Boss spec: "You are JutaOne Smart Assistant, a helpful business advisor for
  * SMEs in Malaysia and Indonesia. Answer concisely in the user's language."
- * Cost-saving chain (DeepSeek removed): Groq -> OpenRouter -> Gemini ->
- * OpenAI -> Meta -> local template. Same order as `lib/ai/index.ts`, so the
- * demo caption and the chat answer always agree on which provider is primary.
+ * Cost-saving chain (DeepSeek removed): Groq -> OpenRouter -> Top-Tools-Ai
+ * (custom) -> Gemini -> OpenAI -> Meta -> local template. Same order as
+ * `lib/ai/index.ts`, so the demo caption and the chat answer always agree on
+ * which provider is primary.
  *
  * Kept out of the route module because Next.js route files may only export
  * HTTP handlers and config — same rule as `purchase-kind.ts`.
@@ -56,6 +57,14 @@ function assistantProviders(): ChatProvider[] {
           key: process.env.OPENROUTER_API_KEY,
         }
       : null,
+    process.env.CUSTOM_AI_API_KEY
+      ? {
+          name: "custom",
+          base: process.env.CUSTOM_AI_BASE_URL || "https://top-tools-ai.com/api/v1",
+          model: process.env.CUSTOM_AI_MODEL || "Top-Tools-Ai",
+          key: process.env.CUSTOM_AI_API_KEY,
+        }
+      : null,
     process.env.GEMINI_API_KEY
       ? {
           name: "gemini",
@@ -87,9 +96,9 @@ function assistantProviders(): ChatProvider[] {
 }
 
 /**
- * Calls the AI chain (Groq -> OpenRouter -> Gemini -> OpenAI -> Meta) with
- * the assistant prompt. Falls back to the local template when no provider key
- * is configured. DeepSeek is out of the chain (cost decision) — a
+ * Calls the AI chain (Groq -> OpenRouter -> Top-Tools-Ai -> Gemini -> OpenAI
+ * -> Meta) with the assistant prompt. Falls back to the local template when
+ * no provider key is configured. DeepSeek is out of the chain (cost decision) — a
  * DEEPSEEK_API_KEY in the env is ignored, never read.
  */
 export async function generateAssistantReply(req: AssistantRequest): Promise<CaptionResult> {

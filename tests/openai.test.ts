@@ -79,19 +79,22 @@ describe("OpenAI adapter (gpt-4o-mini)", () => {
     await expect(generateWithOpenAI(REQUEST)).rejects.toThrow(/OpenAI responded 401/);
   });
 
-  it("sits last among paid providers: groq, openrouter, gemini, openai, meta", () => {
+  it("sits last among paid providers: groq, openrouter, custom, gemini, openai, meta", () => {
     process.env.GROQ_API_KEY = "k1";
     process.env.OPENROUTER_API_KEY = "k2";
-    process.env.GEMINI_API_KEY = "k3";
-    process.env.OPENAI_API_KEY = "k4";
-    process.env.META_AI_API_KEY = "k5";
+    process.env.CUSTOM_AI_API_KEY = "k3x";
+    process.env.GEMINI_API_KEY = "k4";
+    process.env.OPENAI_API_KEY = "k5";
+    process.env.META_AI_API_KEY = "k6";
     expect(providerChain().map((p) => p.name)).toEqual([
       "groq",
       "openrouter",
+      "custom",
       "gemini",
       "openai",
       "meta",
     ]);
+    delete process.env.CUSTOM_AI_API_KEY;
   });
 
   it("never includes deepseek, even with a key set", () => {

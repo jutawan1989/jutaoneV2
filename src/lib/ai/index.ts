@@ -1,5 +1,6 @@
 import { generateWithGemini, geminiConfigured } from "./gemini";
 import { generateWithGroq, groqConfigured } from "./groq";
+import { generateWithCustomAI, customAIConfigured } from "./custom";
 import { generateWithOpenAI, openAIConfigured } from "./openai";
 import { generateWithOpenRouter, openRouterConfigured } from "./openrouter";
 import { generateWithMeta, metaConfigured } from "./meta";
@@ -20,9 +21,12 @@ type Provider = {
  *
  *   1. Groq       — primary, fastest of the three (~120ms measured).
  *   2. OpenRouter — free tier, non-reasoning model.
- *   3. Gemini     — gemini-2.0-flash via the OpenAI-compatible endpoint.
- *   4. OpenAI     — gpt-4o-mini paid tier, the reliable paid fallback.
- *   5. Meta       — kept last: still blocked by `402 billing_not_configured`, so
+ *   3. Top-Tools-Ai (custom) — CTO directive: first fallback after
+ *                   Groq/OpenRouter. New unproven vendor, so it sits here:
+ *                   ahead of the paid chain, behind the proven free tier.
+ *   4. Gemini     — gemini-2.0-flash via the OpenAI-compatible endpoint.
+ *   5. OpenAI     — gpt-4o-mini paid tier, the reliable paid fallback.
+ *   6. Meta       — kept last: still blocked by `402 billing_not_configured`, so
  *                   it would only add a failing round trip if it came earlier.
  *
  * DeepSeek is out of the chain (cost decision). The adapter file
@@ -35,6 +39,7 @@ type Provider = {
 const PROVIDERS: Provider[] = [
   { name: "groq", configured: groqConfigured, generate: generateWithGroq },
   { name: "openrouter", configured: openRouterConfigured, generate: generateWithOpenRouter },
+  { name: "custom", configured: customAIConfigured, generate: generateWithCustomAI },
   { name: "gemini", configured: geminiConfigured, generate: generateWithGemini },
   { name: "openai", configured: openAIConfigured, generate: generateWithOpenAI },
   { name: "meta", configured: metaConfigured, generate: generateWithMeta },
@@ -89,4 +94,4 @@ export function providerChain(): Array<{ name: string; configured: boolean }> {
   return PROVIDERS.map((provider) => ({ name: provider.name, configured: provider.configured() }));
 }
 
-export { geminiConfigured, groqConfigured, metaConfigured, openAIConfigured, openRouterConfigured };
+export { customAIConfigured, geminiConfigured, groqConfigured, metaConfigured, openAIConfigured, openRouterConfigured };

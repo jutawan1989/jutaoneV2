@@ -13,7 +13,7 @@ export type CaptionResult = {
    * `mock-fallback` = a provider was configured but failed or timed out.
    * `mock` = no provider configured at all, so the local template ran directly.
    */
-  source: "groq" | "gemini" | "openai" | "openrouter" | "meta" | "mock" | "mock-fallback";
+  source: "groq" | "gemini" | "openai" | "openrouter" | "custom" | "meta" | "mock" | "mock-fallback";
   model: string;
   costUsd: number;
   latencyMs: number;
