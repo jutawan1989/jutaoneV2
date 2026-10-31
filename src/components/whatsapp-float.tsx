@@ -1,5 +1,6 @@
 import { whatsappUrl } from "@/lib/contact";
 import type { Dictionary } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/config";
 
 /**
  * Floating WhatsApp trust button — site-wide, bottom-right, above the
@@ -16,10 +17,10 @@ export function WhatsAppIcon({ className = "size-7" }: { className?: string }) {
   );
 }
 
-export function WhatsAppFloat({ dict }: { dict: Dictionary }) {
+export function WhatsAppFloat({ dict, locale }: { dict: Dictionary; locale?: Locale }) {
   return (
     <a
-      href={whatsappUrl(dict.contact.prefill)}
+      href={whatsappUrl(dict.contact.prefill, locale ?? "ms")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={dict.contact.buttonLabel}

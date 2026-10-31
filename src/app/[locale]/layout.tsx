@@ -82,7 +82,7 @@ export default async function LocaleLayout({
           {dict.a11y.skipToContent}
         </a>
         {children}
-        <WhatsAppFloat dict={dict} />
+        <WhatsAppFloat dict={dict} locale={locale as Locale} />
       </div>
     </>
   );

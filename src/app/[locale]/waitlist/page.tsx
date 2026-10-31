@@ -36,7 +36,7 @@ export default async function WaitlistPage({ params }: WaitlistPageProps) {
               {dict.waitlist.subtitle}
             </p>
             <div className="mt-7">
-              <WaitlistForm dict={dict} />
+              <WaitlistForm dict={dict} locale={locale} />
             </div>
           </div>
         </div>

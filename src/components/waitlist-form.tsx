@@ -3,7 +3,8 @@
 import { useId, useState } from "react";
 import { BellRing, Send } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
-import { WHATSAPP_NUMBER_SHORT, whatsappUrl } from "@/lib/contact";
+import type { Locale } from "@/lib/i18n/config";
+import { whatsappShortFor, whatsappUrl } from "@/lib/contact";
 
 /**
  * Waitlist form (Lead Ads landing). Posts `{ name, email }` to
@@ -11,7 +12,7 @@ import { WHATSAPP_NUMBER_SHORT, whatsappUrl } from "@/lib/contact";
  * Until a store is wired the API answers 503 honestly and the UI offers the
  * WhatsApp fallback, so no lead is ever silently lost.
  */
-export function WaitlistForm({ dict }: { dict: Dictionary }) {
+export function WaitlistForm({ dict, locale }: { dict: Dictionary; locale?: Locale }) {
   const copy = dict.waitlist;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -108,12 +109,12 @@ export function WaitlistForm({ dict }: { dict: Dictionary }) {
           {!invalidInput && (
             <p className="mt-1.5 text-sm text-slate-300">
               <a
-                href={whatsappUrl(dict.contact.prefill)}
+                href={whatsappUrl(dict.contact.prefill, locale ?? "ms")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-emerald-400 underline-offset-2 hover:underline"
               >
-                WhatsApp {WHATSAPP_NUMBER_SHORT}
+                WhatsApp {whatsappShortFor(locale ?? "ms")}
               </a>
             </p>
           )}

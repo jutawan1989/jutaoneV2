@@ -4,7 +4,7 @@ import { useId, useState, type ReactNode } from "react";
 import { Lock } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
-import { WHATSAPP_NUMBER_SHORT, whatsappUrl } from "@/lib/contact";
+import { whatsappShortFor, whatsappUrl } from "@/lib/contact";
 
 /**
  * Starts the Stripe top-up: the API logs `topup_click` and returns the
@@ -163,12 +163,12 @@ export function TopUpButton({
         <p className="mt-2 text-center text-xs leading-relaxed text-muted">
           {whatsappNote}{" "}
           <a
-            href={whatsappUrl(whatsappPrefill)}
+            href={whatsappUrl(whatsappPrefill, locale)}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-emerald-400 underline-offset-2 hover:underline"
           >
-            {whatsappLinkLabel} {WHATSAPP_NUMBER_SHORT}
+            {whatsappLinkLabel} {whatsappShortFor(locale)}
           </a>
         </p>
       )}
