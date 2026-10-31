@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { logEvent, parseUtm } from "@/lib/analytics/events";
+import { detectLocale, detectRegion } from "@/lib/geo";
 import { getSupabase } from "@/lib/db";
 import { normaliseWaitlistEntry } from "@/lib/leads";
+import { identifyVisitor } from "@/lib/trial/visitor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +46,20 @@ export async function POST(request: NextRequest) {
     console.error("[jutaone] waitlist insert failed", error.message);
     return NextResponse.json({ ok: false, code: "record_failed" }, { status: 502 });
   }
+
+  // Funnel metric only (no PII): Hermes owns the lead rows, analytics owns
+  // the count. Best-effort — a logging failure must not fail the signup.
+  const headers = request.headers;
+  const visitor = identifyVisitor(headers);
+  await logEvent({
+    event: "waitlist_signup",
+    locale: detectLocale(headers),
+    region: detectRegion(headers),
+    variant: "A",
+    utm: parseUtm(request.nextUrl.search),
+    visitorKey: visitor.visitorKey,
+    props: { source: entry.source },
+  });
 
   return NextResponse.json({ ok: true, id: (data as { id?: unknown } | null)?.id ?? null });
 }

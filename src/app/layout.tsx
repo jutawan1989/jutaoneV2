@@ -1,3 +1,4 @@
+import { TrackingPixels } from "@/components/tracking-pixels";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
@@ -39,7 +40,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
-      <body className="min-h-dvh bg-ink font-sans antialiased">{children}</body>
+      <body className="min-h-dvh bg-ink font-sans antialiased">
+        <TrackingPixels />
+        {children}
+      </body>
     </html>
   );
 }

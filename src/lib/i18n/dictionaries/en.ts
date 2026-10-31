@@ -207,6 +207,23 @@ export const en = {
     linkLabel: "WhatsApp us:",
     prefill: "Hi JutaOne.Biz, I'd like to know more about the AI tokens.",
   },
+  waitlist: {
+    eyebrow: "Lead Ads landing",
+    title: "Join the Waitlist",
+    subtitle:
+      "Be the first to know when new features launch. Leave your name and email — we'll reach out.",
+    nameLabel: "Name",
+    namePlaceholder: "Your name",
+    emailLabel: "Email",
+    emailPlaceholder: "you@example.com",
+    submit: "Join Now",
+    sending: "Sending…",
+    successTitle: "You're on the list!",
+    successBody: "Thank you! We'll email you when it's time.",
+    errorInvalid: "Please enter a valid name and email.",
+    errorUnavailable:
+      "Registration isn't fully open yet. Meanwhile, WhatsApp us — we'll hold your spot.",
+  },
   savings: {
     eyebrow: "Time savings calculator",
     title: "How many hours does manual marketing eat?",

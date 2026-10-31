@@ -208,6 +208,23 @@ export const id: Dictionary = {
     linkLabel: "WhatsApp kami:",
     prefill: "Hai JutaOne.Biz, saya tertarik untuk tahu lebih lanjut tentang token AI.",
   },
+  waitlist: {
+    eyebrow: "Halaman Lead Ads",
+    title: "Gabung Daftar Tunggu",
+    subtitle:
+      "Jadilah yang pertama tahu saat fitur baru diluncurkan. Tinggalkan nama dan email — kami akan menghubungi Anda.",
+    nameLabel: "Nama",
+    namePlaceholder: "Nama Anda",
+    emailLabel: "Email",
+    emailPlaceholder: "anda@contoh.com",
+    submit: "Gabung Sekarang",
+    sending: "Mengirim…",
+    successTitle: "Berhasil! Anda masuk daftar.",
+    successBody: "Terima kasih! Kami akan menghubungi Anda via email saat waktunya tiba.",
+    errorInvalid: "Silakan isi nama dan email yang valid.",
+    errorUnavailable:
+      "Pendaftaran belum dibuka penuh. Sementara itu, WhatsApp kami — kami simpan tempat Anda.",
+  },
   savings: {
     eyebrow: "Kalkulator Penghematan Waktu",
     title: "Berapa jam marketing manual memakan waktu Anda?",

@@ -17,6 +17,8 @@ export const ANALYTICS_EVENTS = [
   "chat_success",
   // Metals widget (live gold/silver quote, 2,000 tokens per fetch).
   "metals_success",
+  // Waitlist landing (Lead Ads destination) — funnel metric only, no PII.
+  "waitlist_signup",
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];

@@ -208,6 +208,23 @@ export const ms: Dictionary = {
     linkLabel: "WhatsApp kami:",
     prefill: "Hai JutaOne.Biz, saya berminat untuk tahu lebih lanjut tentang token AI.",
   },
+  waitlist: {
+    eyebrow: "Halaman Lead Ads",
+    title: "Sertai Senarai Menunggu",
+    subtitle:
+      "Jadilah yang terawal tahu bila ciri baharu dilancarkan. Tinggalkan nama dan emel — kami hubungi anda.",
+    nameLabel: "Nama",
+    namePlaceholder: "Nama anda",
+    emailLabel: "Emel",
+    emailPlaceholder: "anda@contoh.com",
+    submit: "Sertai Sekarang",
+    sending: "Menghantar…",
+    successTitle: "Berjaya! Anda dalam senarai.",
+    successBody: "Terima kasih! Kami akan hubungi anda di emel ini bila tiba masanya.",
+    errorInvalid: "Sila isi nama dan emel yang sah.",
+    errorUnavailable:
+      "Pendaftaran belum dibuka sepenuhnya. Sementara itu, WhatsApp kami — kami simpan tempat anda.",
+  },
   savings: {
     eyebrow: "Kalkulator Penjimatan Masa",
     title: "Berapa jam marketing manual makan masa anda?",
