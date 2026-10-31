@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 type Initial = {
   email: string;
@@ -15,7 +14,8 @@ type Initial = {
 };
 
 const INPUT =
-  "min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none disabled:bg-slate-50 disabled:text-slate-500";
+  "mt-1.5 min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-none focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:opacity-100";
+const LIGHT = { colorScheme: "light" } as const;
 
 const LABEL = "text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase";
 
@@ -103,26 +103,28 @@ export function MemberSettingsForm({ initial }: { initial: Initial }) {
               <label htmlFor="settings-name" className={LABEL}>
                 Nama Penuh
               </label>
-              <Input
+              <input
                 id="settings-name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Cth: Ahmad Bin Ali"
                 autoComplete="name"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
             <div>
               <label htmlFor="settings-email" className={LABEL}>
                 Emel
               </label>
-              <Input
+              <input
                 id="settings-email"
                 value={initial.email}
                 disabled
                 readOnly
                 autoComplete="email"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
           </div>
@@ -141,14 +143,15 @@ export function MemberSettingsForm({ initial }: { initial: Initial }) {
               <label htmlFor="settings-current" className={LABEL}>
                 Kata Laluan Lama
               </label>
-              <Input
+              <input
                 id="settings-current"
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
             <div>
@@ -156,13 +159,14 @@ export function MemberSettingsForm({ initial }: { initial: Initial }) {
                 Kata Laluan Baharu
               </label>
               <div className="relative mt-1.5">
-                <Input
+                <input
                   id="settings-new"
                   type={showNew ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Min. 8 aksara"
                   autoComplete="new-password"
+                  style={LIGHT}
                   className={`pr-11 ${INPUT}`}
                 />
                 <button
@@ -180,14 +184,15 @@ export function MemberSettingsForm({ initial }: { initial: Initial }) {
               <label htmlFor="settings-confirm" className={LABEL}>
                 Sahkan Kata Laluan Baharu
               </label>
-              <Input
+              <input
                 id="settings-confirm"
                 type={showNew ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Ulang kata laluan baharu"
                 autoComplete="new-password"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
           </div>
@@ -206,40 +211,43 @@ export function MemberSettingsForm({ initial }: { initial: Initial }) {
               <label htmlFor="settings-bank" className={LABEL}>
                 Nama Bank
               </label>
-              <Input
+              <input
                 id="settings-bank"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
                 placeholder="Cth: Maybank"
                 autoComplete="off"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
             <div>
               <label htmlFor="settings-account" className={LABEL}>
                 Nombor Akaun
               </label>
-              <Input
+              <input
                 id="settings-account"
                 value={accountNo}
                 onChange={(e) => setAccountNo(e.target.value)}
                 placeholder="Cth: 1234567890"
                 inputMode="numeric"
                 autoComplete="off"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="settings-holder" className={LABEL}>
                 Nama Pemegang Akaun
               </label>
-              <Input
+              <input
                 id="settings-holder"
                 value={accountHolder}
                 onChange={(e) => setAccountHolder(e.target.value)}
                 placeholder="Nama seperti dalam akaun bank"
                 autoComplete="off"
-                className={`mt-1.5 ${INPUT}`}
+                style={LIGHT}
+                className={INPUT}
               />
             </div>
           </div>
