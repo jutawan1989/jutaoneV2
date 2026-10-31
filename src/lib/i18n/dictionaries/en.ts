@@ -180,7 +180,7 @@ export const en = {
     emailLabel: "Email Address",
     emailPlaceholder: "For receipt and verification",
     proceed: "Proceed to Payment",
-    trustBadge: "Secure payment processed by Stripe",
+    trustBadge: "Secure payment processed by Curlec",
     invalidAmount: "Minimum top-up is $1.00",
     invalidEmail: "Enter a valid email — your payment code is sent there",
     tokenUnit: "Tokens",
@@ -205,7 +205,7 @@ export const en = {
       "No subscription, no auto-renewal",
       "Pay only when you are ready",
     ],
-    topupNote: "Payments are handled by Stripe. You pay in {currency}.",
+    topupNote: "Payments are handled by Curlec. You pay in MYR.",
     whatsappNote: "Questions before paying?",
   },
   contact: {

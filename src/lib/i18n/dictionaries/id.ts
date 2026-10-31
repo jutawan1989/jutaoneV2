@@ -181,7 +181,7 @@ export const id: Dictionary = {
     emailLabel: "Alamat Email",
     emailPlaceholder: "Untuk resi dan verifikasi",
     proceed: "Lanjutkan ke Pembayaran",
-    trustBadge: "Pembayaran aman diproses oleh Stripe",
+    trustBadge: "Pembayaran aman diproses oleh Curlec",
     invalidAmount: "Top-up minimum adalah $1.00",
     invalidEmail: "Masukkan email yang valid — kode pembayaran dikirim ke sana",
     tokenUnit: "Token",
@@ -206,7 +206,7 @@ export const id: Dictionary = {
       "Tanpa langganan, tanpa perpanjangan otomatis",
       "Bayar hanya saat Anda siap",
     ],
-    topupNote: "Pembayaran ditangani oleh Stripe. Anda membayar dalam {currency}.",
+    topupNote: "Pembayaran ditangani oleh Curlec. Anda bayar dalam MYR.",
     whatsappNote: "Ada pertanyaan sebelum membayar?",
   },
   contact: {

@@ -7,9 +7,9 @@ import type { Variant } from "@/lib/analytics/variant";
 import { whatsappShortFor, whatsappUrl } from "@/lib/contact";
 
 /**
- * Starts a top-up: Stripe Checkout URL redirect, or Curlec/Razorpay
- * Checkout.js modal when `gateway: "curlec"`.
- * ToyyibPay is CLOSED.
+ * Curlec-only top-up: creates a Curlec/Razorpay order via `/api/topup` and
+ * opens Razorpay Checkout.js modal (or redirects in mock mode).
+ * Stripe is CLOSED — every checkout sends `gateway: "curlec"`.
  */
 declare global {
   interface Window {
@@ -41,11 +41,9 @@ export function TopUpButton({
   emailPlaceholder,
   trustBadge,
   disabled = false,
-  amountUsd,
   amountMyr,
   international = false,
   collectEmail = false,
-  gateway = "stripe",
   whatsappNote,
   whatsappLinkLabel,
   whatsappPrefill,
@@ -58,7 +56,7 @@ export function TopUpButton({
   emailErrorText?: string;
   emailLabel?: string;
   emailPlaceholder?: string;
-  /** Small trust line rendered under the CTA (e.g. "Secure payment by Stripe"). */
+  /** Small trust line rendered under the CTA (e.g. "Secure payment by Curlec"). */
   trustBadge?: string;
   /** Help line under the pay button: "Questions before paying? WhatsApp us: …". */
   whatsappNote?: string;
@@ -75,8 +73,8 @@ export function TopUpButton({
   international?: boolean;
   /** When true, render an email field and send it as the receipt destination. */
   collectEmail?: boolean;
-  /** Gateway selector: `"stripe"` (default) or `"curlec"` (MYR via Curlec). */
-  gateway?: "toyyibpay" | "stripe" | "curlec";
+  /** Gateway selector: `"curlec"` only (Stripe CLOSED). Kept as a prop for tests. */
+  gateway?: "curlec";
 }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -99,14 +97,12 @@ export function TopUpButton({
     setBusy(true);
     setFailed(false);
     try {
-      const isCurlec = gateway === "curlec";
       const response = await fetch("/api/topup", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
-          isCurlec
-            ? { locale, variant, gateway: "curlec", amountMyr, international, email: trimmedEmail }
-            : { locale, variant, amountUsd, email: trimmedEmail, gateway: "stripe" },
+          // Stripe CLOSED: always route via Curlec.
+          { locale, variant, gateway: "curlec", amountMyr, international, email: trimmedEmail },
         ),
       });
       const data = (await response.json()) as {
@@ -121,7 +117,7 @@ export function TopUpButton({
         return;
       }
       // Curlec live mode: no redirect — open Razorpay Checkout.js with the order.
-      if (isCurlec && data.orderId && data.keyId && data.reference) {
+      if (data.orderId && data.keyId && data.reference) {
         const ready = await loadRazorpayCheckout();
         if (!ready || !window.Razorpay) {
           setFailed(true);
