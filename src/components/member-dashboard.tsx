@@ -68,6 +68,14 @@ type Tab = "overview" | "store" | "affiliate" | "tools";
  * the constant directly would drag the service-role SDK into this client bundle.
  */
 const SEARCH_COST_TOKENS = 10_000;
+
+/**
+ * Withdrawal gate, mirrored from `MIN_PAYOUT_MINOR` in `lib/affiliate.ts`.
+ * Boss spec: redeem $5.00 + $2.00 admin fee = $7.00 minimum (700 USD cents).
+ * Same reason as above — importing the constant directly would drag the
+ * Supabase server client into this client bundle.
+ */
+const MIN_PAYOUT_MINOR = 700;
 /** Mirrored from `AD_COST_TOKENS` in `lib/tokens.ts` (same reason as above). */
 const AD_COST_TOKENS = 20_000;
 /** Mirrored from `CHAT_COST_TOKENS` in `lib/tokens.ts`. */
@@ -233,8 +241,14 @@ const DASH_STR = {
     networkEmpty: "Rangkaian belum bermula",
     networkEmptyDesc: "Kongsi pautan kat atas tu. Setiap rakan yang menyertai dikira dalam rangkaian anda — makin ramai, makin masyuk.",
     withdrawable: "Boleh Tarik Duit",
-    minPayout: "Cukup RM10 baru boleh tarik duit.",
-    requestPayout: "Tarik Duit Sekarang",
+    minPayout: "Minimum penebusan: $5.00 USD (Caj admin: $2.00 USD).",
+    insufficient:
+      "Baki anda belum mencukupi. Anda perlukan sekurang-kurangnya $7.00 USD untuk menebus $5.00 (termasuk caj admin $2.00).",
+    requestPayout: "Tebus Komisen",
+    bankName: "Nama Bank",
+    accountNo: "Nombor Akaun",
+    accountHolder: "Nama Pemegang Akaun",
+    bankRequired: "Sila lengkapkan Nama Bank, Nombor Akaun dan Nama Pemegang Akaun dahulu.",
     confirmRequest: "Sahkan permintaan",
     confirmDesc: "Jumlah di bawah akan diproses secara manual oleh admin. Baki rangkaian anda akan diselaraskan selepas pembayaran dibuat.",
     amount: "Jumlah",
@@ -243,7 +257,8 @@ const DASH_STR = {
     sendRequest: "Hantar permintaan",
     payoutOk: "Permintaan dihantar. Admin akan memproses pembayaran secara manual.",
     payoutEmpty: "Belum ada duit untuk tarik buat masa ni. Kumpul komisen dulu!",
-    payoutMin: "Jumlah minimum pengeluaran ialah RM10.",
+    payoutMin:
+      "Baki anda belum mencukupi. Anda perlukan sekurang-kurangnya $7.00 USD untuk menebus $5.00 (termasuk caj admin $2.00).",
     payoutFail: "Permintaan gagal. Sila cuba lagi.",
     payoutNetwork: "Rangkaian bermasalah. Sila cuba lagi.",
     payoutHistory: "Sejarah pembayaran",
@@ -427,8 +442,14 @@ const DASH_STR = {
     networkEmpty: "Network not started",
     networkEmptyDesc: "Share the referral link above. Every member who joins counts toward your network — the more members, the more you earn.",
     withdrawable: "Withdrawable",
-    minPayout: "Minimum payout RM10.",
-    requestPayout: "Request payout",
+    minPayout: "Minimum redemption: $5.00 USD (Admin fee: $2.00 USD).",
+    insufficient:
+      "Your balance is not enough yet. You need at least $7.00 USD to redeem $5.00 (including the $2.00 admin fee).",
+    requestPayout: "Redeem Commission",
+    bankName: "Bank name",
+    accountNo: "Account number",
+    accountHolder: "Account holder name",
+    bankRequired: "Please complete the bank name, account number and account holder name first.",
     confirmRequest: "Confirm request",
     confirmDesc: "The amount below will be processed manually by an admin. Your network balance will be adjusted after payment.",
     amount: "Amount",
@@ -437,7 +458,8 @@ const DASH_STR = {
     sendRequest: "Send request",
     payoutOk: "Request sent. An admin will process the payment manually.",
     payoutEmpty: "No balance available to withdraw right now.",
-    payoutMin: "Minimum payout is RM10.",
+    payoutMin:
+      "Your balance is not enough yet. You need at least $7.00 USD to redeem $5.00 (including the $2.00 admin fee).",
     payoutFail: "Request failed. Please try again.",
     payoutNetwork: "Network issue. Please try again.",
     payoutHistory: "Payout history",
@@ -621,8 +643,14 @@ const DASH_STR = {
     networkEmpty: "Jaringan belum mulai",
     networkEmptyDesc: "Bagikan tautan rujukan di atas. Setiap anggota yang bergabung dihitung dalam jaringan Anda — semakin ramai, semakin besar penghasilan.",
     withdrawable: "Bisa Tarik Duit",
-    minPayout: "Cukup RM10 baru bisa tarik duit.",
-    requestPayout: "Tarik Duit Sekarang",
+    minPayout: "Minimum penebusan: $5.00 USD (Biaya admin: $2.00 USD).",
+    insufficient:
+      "Saldo Anda belum mencukupi. Anda memerlukan setidaknya $7.00 USD untuk menebus $5.00 (termasuk biaya admin $2.00).",
+    requestPayout: "Tebus Komisi",
+    bankName: "Nama bank",
+    accountNo: "Nomor rekening",
+    accountHolder: "Nama pemegang rekening",
+    bankRequired: "Silakan lengkapi nama bank, nomor rekening, dan nama pemegang rekening terlebih dahulu.",
     confirmRequest: "Konfirmasi permintaan",
     confirmDesc: "Jumlah di bawah akan diproses manual oleh admin. Saldo jaringan Anda akan disesuaikan setelah pembayaran dibuat.",
     amount: "Jumlah",
@@ -631,7 +659,8 @@ const DASH_STR = {
     sendRequest: "Kirim permintaan",
     payoutOk: "Permintaan terkirim. Admin akan memproses pembayaran secara manual.",
     payoutEmpty: "Belum ada duit untuk ditarik. Kumpulkan komisi dulu ya!",
-    payoutMin: "Jumlah minimum penarikan adalah RM10.",
+    payoutMin:
+      "Saldo Anda belum mencukupi. Anda memerlukan setidaknya $7.00 USD untuk menebus $5.00 (termasuk biaya admin $2.00).",
     payoutFail: "Permintaan gagal. Silakan coba lagi.",
     payoutNetwork: "Jaringan bermasalah. Silakan coba lagi.",
     payoutHistory: "Riwayat pembayaran",
@@ -724,6 +753,7 @@ function LangSwitch({
 
 function money(minor: number, currency: string): string {
   const value = minor / 100;
+  if (currency === "USD") return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   if (currency === "IDR") return `Rp${value.toLocaleString("id-ID")}`;
   return `RM${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
@@ -969,6 +999,9 @@ export function MemberDashboard({
   const [requesting, setRequesting] = useState(false);
   const [requestNote, setRequestNote] = useState<string | null>(null);
   const [payoutOpen, setPayoutOpen] = useState(false);
+  const [bankName, setBankName] = useState("");
+  const [accountNo, setAccountNo] = useState("");
+  const [accountHolder, setAccountHolder] = useState("");
   const [rankOpen, setRankOpen] = useState(false);
   const [lang, setLang] = useState<DashLang>("ms");
   const t = DASH_STR[lang];
@@ -1067,23 +1100,40 @@ export function MemberDashboard({
   const deepestLevel = activeLevels.reduce((deep, level) => Math.max(deep, level.level), 0);
 
   async function requestPayout() {
+    if (
+      bankName.trim() === "" ||
+      accountNo.trim() === "" ||
+      accountHolder.trim() === ""
+    ) {
+      setRequestNote(t.bankRequired);
+      return;
+    }
     setRequesting(true);
     setRequestNote(null);
     try {
       const response = await fetch("/api/affiliate/payout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ amount_minor: affiliate.availableMinor }),
+        body: JSON.stringify({
+          amount_minor: affiliate.availableMinor,
+          bank_name: bankName.trim(),
+          account_no: accountNo.trim(),
+          account_holder: accountHolder.trim(),
+        }),
       });
       const data = await response.json();
       setRequestNote(
         response.ok && data.ok
           ? t.payoutOk
-          : data.code === "nothing_available"
-            ? t.payoutEmpty
-            : data.code === "below_minimum"
-              ? t.payoutMin
-              : t.payoutFail,
+          : data.code === "insufficient_balance"
+            ? (data.message as string | undefined) || t.payoutMin
+            : data.code === "nothing_available"
+              ? t.payoutEmpty
+              : data.code === "below_minimum"
+                ? t.payoutMin
+                : data.code === "missing_bank_details"
+                  ? t.bankRequired
+                  : t.payoutFail,
       );
     } catch {
       setRequestNote(t.payoutNetwork);
@@ -1626,7 +1676,6 @@ export function MemberDashboard({
                         $5
                       </span>
                       <span className="pb-1 text-[11px] text-slate-500">{t.perMonth}</span>
-                      <span className="ml-auto pb-1 text-[10px] text-slate-500">≈ RM23.50</span>
                     </div>
 
                     <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
@@ -1873,10 +1922,19 @@ export function MemberDashboard({
                     </p>
                     <p className="mt-1 text-[11px] text-slate-500">{t.minPayout}</p>
 
+                    {affiliate.availableMinor > 0 && affiliate.availableMinor < MIN_PAYOUT_MINOR && (
+                      <p
+                        role="status"
+                        className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-800"
+                      >
+                        {t.insufficient}
+                      </p>
+                    )}
+
                     <Dialog open={payoutOpen} onOpenChange={setPayoutOpen}>
                       <DialogTrigger asChild>
                         <Button
-                          disabled={affiliate.availableMinor <= 0}
+                          disabled={affiliate.availableMinor < MIN_PAYOUT_MINOR}
                           className="cta-glow mt-4 min-h-[44px] w-full rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover disabled:bg-brand/40 disabled:shadow-none"
                         >
                           {t.requestPayout}
@@ -1894,6 +1952,61 @@ export function MemberDashboard({
                           <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">
                             {money(affiliate.availableMinor, affiliate.currency)}
                           </p>
+                          <p className="mt-1 text-[11px] text-slate-500">{t.minPayout}</p>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label
+                              htmlFor="payout-bank-name"
+                              className="text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase"
+                            >
+                              {t.bankName}
+                            </label>
+                            <input
+                              id="payout-bank-name"
+                              type="text"
+                              autoComplete="off"
+                              required
+                              value={bankName}
+                              onChange={(event) => setBankName(event.target.value)}
+                              className="mt-1.5 min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-900 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="payout-account-no"
+                              className="text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase"
+                            >
+                              {t.accountNo}
+                            </label>
+                            <input
+                              id="payout-account-no"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="off"
+                              required
+                              value={accountNo}
+                              onChange={(event) => setAccountNo(event.target.value)}
+                              className="mt-1.5 min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-900 tabular-nums focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="payout-account-holder"
+                              className="text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase"
+                            >
+                              {t.accountHolder}
+                            </label>
+                            <input
+                              id="payout-account-holder"
+                              type="text"
+                              autoComplete="off"
+                              required
+                              value={accountHolder}
+                              onChange={(event) => setAccountHolder(event.target.value)}
+                              className="mt-1.5 min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-900 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                            />
+                          </div>
                         </div>
                         <DialogFooter className="-mx-4 -mb-4 rounded-b-2xl border-slate-100 bg-slate-50">
                           <DialogClose asChild>
@@ -1906,8 +2019,13 @@ export function MemberDashboard({
                               setPayoutOpen(false);
                               void requestPayout();
                             }}
-                            disabled={requesting}
-                            className="min-h-[44px] rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover"
+                            disabled={
+                              requesting ||
+                              bankName.trim() === "" ||
+                              accountNo.trim() === "" ||
+                              accountHolder.trim() === ""
+                            }
+                            className="min-h-[44px] rounded-xl bg-brand text-xs font-semibold text-white hover:bg-brand-hover disabled:bg-brand/40"
                           >
                             {requesting ? t.sending : t.sendRequest}
                           </Button>
