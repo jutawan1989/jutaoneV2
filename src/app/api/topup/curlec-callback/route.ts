@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getSupabase();
-  let outcome: Record<string, unknown> = {};
-  if (db) {
-    outcome = await recordCurlecTopUp(db as unknown as CurlecCreditDb, payment);
+  if (!db) {
+    return NextResponse.json({ ok: false, code: "store_unavailable" }, { status: 503 });
   }
+  const outcome = await recordCurlecTopUp(db as unknown as CurlecCreditDb, payment);
 
   await logEvent({
     event: "topup_success",

@@ -521,8 +521,7 @@ export async function recordCurlecTopUp(
     { onConflict: "provider_id" },
   );
   if (error) {
-    console.error("[jutaone] curlec topup record failed", error.message, { providerId });
-    return { recorded: false };
+    return { recorded: false, reason: error.message.slice(0, 200) || "topup_record_failed" };
   }
   if (!payment.ownerRef) return { recorded: true, credited: false, reason: "missing_owner" };
 
