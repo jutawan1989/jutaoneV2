@@ -6,7 +6,7 @@ import { sessionOwnerFromHeaders } from "@/lib/auth/member";
 import { getSupabase } from "@/lib/db";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
-import { curlecConfigured } from "@/lib/payment/curlec";
+import { stripeConfigured } from "@/lib/payment/stripe";
 import { TOKENS_PER_USD } from "@/lib/pricing";
 import { identifyVisitor } from "@/lib/trial/visitor";
 
@@ -17,14 +17,14 @@ export const dynamic = "force-dynamic";
  * Sandbox helper: records a REAL `paid` topup row and credits the token
  * ledger, so the demo funnel is truthful end to end — the success screen
  * verifies against this row via `/api/topup/status` and the dashboard
- * balance actually increases. Disabled as soon as Curlec is configured or
+ * balance actually increases. Disabled as soon as Stripe is configured or
  * when running in production.
  *
  * Identity matches the dashboard: a signed-in member's `owner_ref` wins,
  * anonymous visitors fall back to the header-derived visitor hash.
  */
 export async function POST(request: NextRequest) {
-  if (curlecConfigured() || process.env.NODE_ENV === "production") {
+  if (stripeConfigured() || process.env.NODE_ENV === "production") {
     return NextResponse.json({ ok: false, code: "simulation_disabled" }, { status: 403 });
   }
 

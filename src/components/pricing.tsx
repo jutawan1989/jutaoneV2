@@ -1,10 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowRight, Check, Coins, Landmark, ShieldCheck, Zap } from "lucide-react";
+import { Check, Coins, CreditCard, ShieldCheck, Zap } from "lucide-react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n/config";
+import { format, type Locale } from "@/lib/i18n/config";
 import type { Variant } from "@/lib/analytics/variant";
 import {
   MIN_TOPUP_USD,
@@ -19,15 +19,9 @@ import { TopUpButton } from "@/components/topup-button";
 /**
  * Premium fintech checkout card: amount picker on top, then the centered
  * order summary (tokens → price → payment method → email → CTA → trust).
- * Curlec ONLY (MYR: FPX / cards / e-wallets). Stripe is CLOSED.
- * `gateway: "curlec"` is always sent via `/api/topup` with
- * `amountMyr` + `international` (locks the +3% foreign-card surcharge).
+ * ToyyibPay (FPX) is CLOSED — Stripe card is the single payment method.
+ * `gateway: "stripe"` is always sent via `/api/topup`.
  */
-// Boss fixed rate RM4.70 = $1.00 — mirrors CURLEC_MYR_PER_USD in
-// `src/lib/payment/curlec.ts` (server). Kept local so the client bundle
-// never imports `node:crypto`.
-const MYR_PER_USD = 4.7;
-const INTERNATIONAL_SURCHARGE_BPS = 300;
 export function Pricing({
   locale,
   dict,
@@ -41,22 +35,12 @@ export function Pricing({
 }) {
   const [picked, setPicked] = useState<number | "custom">(1);
   const [custom, setCustom] = useState("");
-  const [international, setInternational] = useState(false);
   const customId = useId();
   const customErrorId = `${customId}-error`;
 
   const usd = picked === "custom" ? parseTopUpAmount(custom) : picked;
   const valid = usd !== null;
   const preview = withUsdAmount(price, valid ? (usd as number) : MIN_TOPUP_USD, locale);
-
-  // Curlec MYR quote: base = USD x 4.70, surcharge +3% (ceil) when the payer
-  // declares a foreign card — mirrors `quoteCurlecCharge` on the server.
-  const myrBase = valid ? Math.round((usd as number) * MYR_PER_USD * 100) / 100 : null;
-  const baseSen = myrBase !== null ? Math.round(myrBase * 100) : null;
-  const surchargeSen =
-    baseSen !== null && international ? Math.ceil((baseSen * INTERNATIONAL_SURCHARGE_BPS) / 10_000) : 0;
-  const totalSen = baseSen !== null ? baseSen + surchargeSen : null;
-  const curlecDisplay = totalSen !== null ? `RM${(totalSen / 100).toFixed(2)}` : null;
 
   return (
     <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-24 bg-[#0A0F1D] px-5 py-12 sm:px-6 sm:py-20">
@@ -179,66 +163,38 @@ export function Pricing({
               </p>
 
               <p className="mt-4 text-[44px] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums">
-                {curlecDisplay ?? "—"}
+                {preview.display}
                 <span className="ml-2 align-middle text-xs font-semibold tracking-[0.16em] text-slate-300 uppercase">
-                  MYR
+                  {preview.baseCode}
                 </span>
               </p>
-              {baseSen !== null && totalSen !== null && (
+              {preview.localDisplay && (
                 <p className="mt-2 text-sm font-medium text-slate-300 tabular-nums">
-                  {surchargeSen > 0
-                    ? `RM${(baseSen / 100).toFixed(2)} + RM${(surchargeSen / 100).toFixed(2)} (3%)`
-                    : `≈ $${(valid ? (usd as number) : MIN_TOPUP_USD).toFixed(2)} · ${(preview.tokens ?? 0).toLocaleString("en-US")} ${dict.pricing.tokenUnit}`}
+                  {preview.localDisplay}
                 </p>
               )}
               <p className="mt-1.5 text-xs text-slate-300">{dict.pricing.priceLabel}</p>
             </div>
 
-            {/* Payment method: Curlec ONLY — single glowing Primary CTA. */}
+            {/* Payment method: ToyyibPay CLOSED — Stripe card only. */}
             <div className="mt-5">
               <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
                 {dict.pricing.paymentMethodTitle}
               </p>
-              {/* Payment method: Curlec ONLY — ONE clear button. Clicking it
-                runs the same checkout as "Teruskan ke Pembayaran" below and
-                opens the Curlec/Razorpay page with FPX / bank / card choice. */}
-            <button
-              type="button"
-              onClick={() => document.getElementById("topup-cta")?.click()}
-              disabled={!valid}
-              aria-label={dict.pricing.methodPayLabel}
-              className="btn-glow mt-2.5 flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 px-3 py-3 text-left shadow-[0_0_0_1px_#10b981,0_8px_24px_-8px_rgba(16,185,129,0.55)] transition-colors hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 sm:gap-3 sm:px-4"
-            >
-              <Landmark className="size-5 shrink-0 text-emerald-300" aria-hidden />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
-                  {dict.pricing.curlecTitle}
-                </span>
-                <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
-                  {dict.pricing.curlecNote}
-                </span>
-              </span>
-              <ArrowRight className="size-4 shrink-0 text-emerald-300" aria-hidden />
-            </button>
-              <p className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-slate-400">
-                <span className="rounded-full bg-white/[0.05] px-2 py-0.5 font-bold tracking-wide whitespace-nowrap uppercase ring-1 ring-white/10 ring-inset">
-                  {dict.pricing.curlecBadge}
-                </span>
-              </p>
-              <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5">
-                <input
-                  type="checkbox"
-                  checked={international}
-                  onChange={(event) => setInternational(event.target.checked)}
-                  className="mt-0.5 size-4 shrink-0 accent-emerald-500"
-                />
-                <span className="min-w-0 text-left">
-                  <span className="block text-xs font-semibold text-white">{dict.pricing.internationalLabel}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">
-                    {dict.pricing.internationalNote}
+              <div className="mt-2.5 flex min-h-[52px] items-center gap-2.5 rounded-xl border border-[#2563EB] bg-[#1E40AF]/15 px-3 py-3 shadow-[0_0_0_1px_#2563EB,0_8px_24px_-8px_rgba(37,99,235,0.55)] sm:gap-3 sm:px-4">
+                <CreditCard className="size-5 shrink-0 text-[#7AA5FF]" aria-hidden />
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                    {dict.pricing.stripeTitle}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
+                    {dict.pricing.stripeNote}
                   </span>
                 </span>
-              </label>
+                <span className="shrink-0 rounded-full bg-[#1E40AF]/30 px-2 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap text-[#BFD2FF] uppercase ring-1 ring-[#2563EB]/50 ring-inset sm:text-[11px]">
+                  {dict.pricing.comingSoon}
+                </span>
+              </div>
             </div>
 
             <div className="mt-5">
@@ -246,23 +202,18 @@ export function Pricing({
                 locale={locale}
                 variant={variant}
                 errorText={dict.generator.errorGeneric}
-                serviceErrorText={dict.pricing.serviceError}
-                checkoutLoadErrorText={dict.pricing.checkoutLoadError}
-                paymentFailedText={dict.pricing.paymentFailed}
                 emailErrorText={dict.pricing.invalidEmail}
                 emailLabel={dict.pricing.emailLabel}
                 emailPlaceholder={dict.pricing.emailPlaceholder}
-                trustBadge={dict.pricing.trustBadgeCurlec}
+                trustBadge={dict.pricing.trustBadge}
                 whatsappNote={dict.pricing.whatsappNote}
                 whatsappLinkLabel={dict.contact.linkLabel}
                 whatsappPrefill={dict.contact.prefill}
                 className="btn-brand btn-glow cta-glow flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-bold"
                 amountUsd={valid ? (usd as number) : undefined}
-                amountMyr={myrBase !== null ? myrBase : undefined}
-                international={international}
                 disabled={!valid}
                 collectEmail
-                gateway="curlec"
+                gateway="stripe"
               >
                 {dict.pricing.proceed}
               </TopUpButton>
@@ -271,12 +222,11 @@ export function Pricing({
             <div className="mt-3 space-y-1.5 text-center text-xs leading-relaxed text-slate-300">
               <p className="flex items-center justify-center gap-1.5">
                 <ShieldCheck className="size-3.5 shrink-0 text-emerald-400" aria-hidden />
-                {dict.pricing.curlecNote}
+                {format(dict.pricing.topupNote, { currency: preview.currency })}
               </p>
-              <p className="font-medium text-slate-400">{dict.pricing.internationalNote}</p>
               <p className="font-medium">
                 <span aria-hidden>💳 </span>
-                {`${dict.pricing.curlecTitle} · ${dict.pricing.curlecNote}`}
+                {dict.pricing.stripeTitle} · {dict.pricing.stripeNote}
               </p>
             </div>
           </div>
