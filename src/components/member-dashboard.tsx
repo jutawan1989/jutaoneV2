@@ -107,6 +107,7 @@ const RENT_COPY: Record<DashLang, {
   okExtended: string;
   okActivated: string;
   insufficient: string;
+  login: string;
   failed: string;
   network: string;
 }> = {
@@ -123,6 +124,7 @@ const RENT_COPY: Record<DashLang, {
     okExtended: "Sewa dipanjangkan 30 hari. Terima kasih!",
     okActivated: "Kedai diaktifkan selama 30 hari. Selamat berniaga!",
     insufficient: "Baki tidak cukup. Sila Top-Up Token.",
+    login: "Sila log masuk semula, kemudian cuba lagi.",
     failed: "Pengaktifan gagal. Sila cuba lagi.",
     network: "Rangkaian bermasalah. Sila cuba lagi.",
   },
@@ -139,6 +141,7 @@ const RENT_COPY: Record<DashLang, {
     okExtended: "Rental extended by 30 days. Thank you!",
     okActivated: "Shop activated for 30 days. Happy selling!",
     insufficient: "Insufficient balance. Please top up tokens.",
+    login: "Please sign in again, then try once more.",
     failed: "Activation failed. Please try again.",
     network: "Network issue. Please try again.",
   },
@@ -155,6 +158,7 @@ const RENT_COPY: Record<DashLang, {
     okExtended: "Sewa diperpanjang 30 hari. Terima kasih!",
     okActivated: "Toko diaktifkan selama 30 hari. Selamat berjualan!",
     insufficient: "Saldo tidak cukup. Silakan top-up token.",
+    login: "Silakan masuk semula, lalu coba lagi.",
     failed: "Aktivasi gagal. Silakan coba lagi.",
     network: "Jaringan bermasalah. Silakan coba lagi.",
   },
@@ -1227,6 +1231,8 @@ export function MemberDashboard({
         if (typeof data.balanceAfter === "number") setRentBalance(data.balanceAfter);
         if (typeof data.paidUntil === "string") setRentPaidUntil(data.paidUntil);
         setRentNote(data.extended ? rc.okExtended : rc.okActivated);
+      } else if (response.status === 401 || data?.code === "login_required") {
+        setRentNote(rc.login);
       } else if (response.status === 402 || data?.code === "insufficient_tokens") {
         if (typeof data?.balanceAfter === "number") setRentBalance(data.balanceAfter);
         setRentNote(rc.insufficient);

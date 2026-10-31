@@ -103,6 +103,8 @@ export function MerchantDashboard({
           );
         }
         setRentNote(data.extended ? "Sewa dipanjangkan 30 hari. Terima kasih!" : "Kedai diaktifkan selama 30 hari. Selamat berniaga!");
+      } else if (res.status === 401 || data?.code === "login_required") {
+        setRentNote("Sila log masuk dahulu untuk mengaktifkan kedai.");
       } else if (res.status === 402 || data?.code === "insufficient_tokens") {
         setRentNote("Baki tidak cukup. Sila Top-Up Token.");
       } else {
