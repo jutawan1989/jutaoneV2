@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Check, Coins, Landmark, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, Check, Coins, Landmark, ShieldCheck, Zap } from "lucide-react";
 import { PremiumArt } from "@/components/premium-art";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
@@ -199,17 +199,27 @@ export function Pricing({
               <p className="text-xs font-medium tracking-[0.12em] text-slate-300 uppercase">
                 {dict.pricing.paymentMethodTitle}
               </p>
-              <div className="btn-glow mt-2.5 flex min-h-[52px] items-center gap-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 px-3 py-3 shadow-[0_0_0_1px_#10b981,0_8px_24px_-8px_rgba(16,185,129,0.55)] sm:gap-3 sm:px-4">
-                <Landmark className="size-5 shrink-0 text-emerald-300" aria-hidden />
-                <span className="min-w-0 flex-1 text-left">
-                  <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
-                    {dict.pricing.curlecTitle}
-                  </span>
-                  <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
-                    {dict.pricing.curlecNote}
-                  </span>
+              {/* Payment method: Curlec ONLY — ONE clear button. Clicking it
+                runs the same checkout as "Teruskan ke Pembayaran" below and
+                opens the Curlec/Razorpay page with FPX / bank / card choice. */}
+            <button
+              type="button"
+              onClick={() => document.getElementById("topup-cta")?.click()}
+              disabled={!valid}
+              aria-label={dict.pricing.methodPayLabel}
+              className="btn-glow mt-2.5 flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 px-3 py-3 text-left shadow-[0_0_0_1px_#10b981,0_8px_24px_-8px_rgba(16,185,129,0.55)] transition-colors hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 sm:gap-3 sm:px-4"
+            >
+              <Landmark className="size-5 shrink-0 text-emerald-300" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] leading-snug font-semibold break-words text-white sm:text-sm">
+                  {dict.pricing.curlecTitle}
                 </span>
-              </div>
+                <span className="mt-0.5 block text-[11px] leading-snug break-words text-slate-400">
+                  {dict.pricing.curlecNote}
+                </span>
+              </span>
+              <ArrowRight className="size-4 shrink-0 text-emerald-300" aria-hidden />
+            </button>
               <p className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-center text-[11px] leading-relaxed text-slate-400">
                 <span className="rounded-full bg-white/[0.05] px-2 py-0.5 font-bold tracking-wide whitespace-nowrap uppercase ring-1 ring-white/10 ring-inset">
                   {dict.pricing.curlecBadge}
@@ -236,6 +246,9 @@ export function Pricing({
                 locale={locale}
                 variant={variant}
                 errorText={dict.generator.errorGeneric}
+                serviceErrorText={dict.pricing.serviceError}
+                checkoutLoadErrorText={dict.pricing.checkoutLoadError}
+                paymentFailedText={dict.pricing.paymentFailed}
                 emailErrorText={dict.pricing.invalidEmail}
                 emailLabel={dict.pricing.emailLabel}
                 emailPlaceholder={dict.pricing.emailPlaceholder}

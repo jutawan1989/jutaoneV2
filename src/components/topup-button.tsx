@@ -17,6 +17,54 @@ declare global {
   }
 }
 
+/** Exact JSON body POSTed to `/api/topup` (task spec: always Curlec). */
+export type TopUpRequestBody = {
+  locale: Locale;
+  variant: Variant;
+  gateway: "curlec";
+  amountMyr?: number;
+  /** Always an explicit boolean — `true` only when the payer ticked the foreign-card box. */
+  international: boolean;
+  email?: string;
+};
+
+/**
+ * Builds the `/api/topup` request body. Pure (unit-tested): the
+ * "Kad saya antarabangsa (+3%)" checkbox must arrive as
+ * `international: true`, never undefined or a string.
+ */
+export function buildTopUpRequestBody(input: {
+  locale: Locale;
+  variant: Variant;
+  amountMyr?: number;
+  international?: boolean;
+  email?: string;
+}): TopUpRequestBody {
+  return {
+    locale: input.locale,
+    variant: input.variant,
+    // Stripe CLOSED: always route via Curlec.
+    gateway: "curlec",
+    amountMyr: input.amountMyr,
+    international: input.international === true,
+    email: input.email,
+  };
+}
+
+/** Failure classes with distinct UI copy (never a bare "masalah teknikal"). */
+export type TopUpFailure = "email" | "service" | "checkout" | "failed" | "generic";
+
+/**
+ * Maps an API error `code` to a failure class. `invalid_email` (400) means
+ * the receipt address was rejected; `topup_unavailable` (502) means Curlec
+ * itself failed — nothing was charged, retry is safe.
+ */
+export function classifyTopUpErrorCode(code: unknown): TopUpFailure {
+  if (code === "invalid_email") return "email";
+  if (code === "topup_unavailable") return "service";
+  return "generic";
+}
+
 function loadRazorpayCheckout(): Promise<boolean> {
   if (typeof window === "undefined") return Promise.resolve(false);
   if (window.Razorpay) return Promise.resolve(true);
@@ -47,6 +95,10 @@ export function TopUpButton({
   whatsappNote,
   whatsappLinkLabel,
   whatsappPrefill,
+  ctaId = "topup-cta",
+  serviceErrorText,
+  checkoutLoadErrorText,
+  paymentFailedText,
 }: {
   locale: Locale;
   variant: Variant;
@@ -75,9 +127,17 @@ export function TopUpButton({
   collectEmail?: boolean;
   /** Gateway selector: `"curlec"` only (Stripe CLOSED). Kept as a prop for tests. */
   gateway?: "curlec";
+  /** DOM id of the CTA, so the payment-method button can trigger the same checkout. */
+  ctaId?: string;
+  /** Shown when Curlec itself fails (502): nothing charged, retry is safe. */
+  serviceErrorText?: string;
+  /** Shown when Razorpay Checkout.js cannot load (offline / ad-blocker). */
+  checkoutLoadErrorText?: string;
+  /** Shown when the payment fails or is cancelled inside the gateway. */
+  paymentFailedText?: string;
 }) {
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<TopUpFailure | null>(null);
   const [email, setEmail] = useState("");
   const [emailInvalid, setEmailInvalid] = useState(false);
   const emailId = useId();
@@ -89,38 +149,44 @@ export function TopUpButton({
       trimmedEmail = email.trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(trimmedEmail)) {
         setEmailInvalid(true);
-        setFailed(false);
+        setFailure(null);
         return;
       }
       setEmailInvalid(false);
     }
     setBusy(true);
-    setFailed(false);
+    setFailure(null);
     try {
       const response = await fetch("/api/topup", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
-          // Stripe CLOSED: always route via Curlec.
-          { locale, variant, gateway: "curlec", amountMyr, international, email: trimmedEmail },
+          buildTopUpRequestBody({ locale, variant, amountMyr, international, email: trimmedEmail }),
         ),
       });
-      const data = (await response.json()) as {
+      // A non-JSON error page (proxy 502/HTML) must not throw here — it is a
+      // service failure with its own copy, not a crash.
+      const data = (await response.json().catch(() => null)) as {
+        code?: string | null;
         checkoutUrl?: string | null;
         orderId?: string | null;
         keyId?: string | null;
         reference?: string | null;
         amountSen?: number | null;
-      };
-      if (data.checkoutUrl) {
+      } | null;
+      if (!response.ok) {
+        setFailure(classifyTopUpErrorCode(data?.code));
+        return;
+      }
+      if (data?.checkoutUrl) {
         window.location.href = data.checkoutUrl;
         return;
       }
       // Curlec live mode: no redirect — open Razorpay Checkout.js with the order.
-      if (data.orderId && data.keyId && data.reference) {
+      if (data?.orderId && data?.keyId && data?.reference) {
         const ready = await loadRazorpayCheckout();
         if (!ready || !window.Razorpay) {
-          setFailed(true);
+          setFailure("checkout");
           setBusy(false);
           return;
         }
@@ -141,19 +207,32 @@ export function TopUpButton({
         rzp.open();
         if (typeof rzp.on === "function") {
           rzp.on("payment.failed", () => {
-            setFailed(true);
+            setFailure("failed");
             setBusy(false);
           });
         }
         return;
       }
-      setFailed(true);
+      setFailure("generic");
     } catch {
-      setFailed(true);
+      setFailure("service");
     } finally {
       setBusy(false);
     }
   }
+
+  const failureText =
+    failure === "email"
+      ? (emailErrorText ?? errorText)
+      : failure === "service"
+        ? (serviceErrorText ?? errorText)
+        : failure === "checkout"
+          ? (checkoutLoadErrorText ?? errorText)
+          : failure === "failed"
+            ? (paymentFailedText ?? errorText)
+            : failure !== null
+              ? errorText
+              : null;
 
   return (
     <div className="w-full">
@@ -194,6 +273,7 @@ export function TopUpButton({
       )}
       <button
         type="button"
+        id={ctaId}
         onClick={handleClick}
         disabled={busy || disabled}
         aria-busy={busy}
@@ -211,9 +291,9 @@ export function TopUpButton({
           </span>
         )}
       </button>
-      {failed && (
+      {failureText && (
         <p role="alert" className="mt-2 text-center text-xs text-red-300">
-          {errorText}
+          {failureText}
         </p>
       )}
       {whatsappNote && whatsappLinkLabel && whatsappPrefill && (
