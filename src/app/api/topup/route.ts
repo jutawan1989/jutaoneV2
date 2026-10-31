@@ -4,10 +4,6 @@ import { isVariant, resolveVariant } from "@/lib/analytics/variant";
 import { detectLocale, detectRegion } from "@/lib/geo";
 import { isLocale } from "@/lib/i18n/config";
 import {
-  createStripeCheckoutSession,
-  InvalidStripeEmailError,
-} from "@/lib/payment/stripe";
-import {
   createCurlecOrder,
   InvalidCurlecEmailError,
 } from "@/lib/payment/curlec";
@@ -20,26 +16,26 @@ export const dynamic = "force-dynamic";
 type TopUpBody = {
   locale?: unknown;
   variant?: unknown;
-  amountUsd?: unknown;
   /** MYR amount for `gateway: "curlec"` (top-up size in ringgit). */
   amountMyr?: unknown;
   email?: unknown;
   name?: unknown;
-  /** Gateway selector: `"curlec"` routes to Curlec, everything else Stripe. */
+  /** Gateway selector: ONLY `"curlec"` is accepted (Stripe CLOSED). */
   gateway?: unknown;
   /** `true` when the payer declares a foreign card (locks +3% surcharge). */
   international?: unknown;
 };
 
 /**
- * Card top-up entry point: Stripe (global, USD) by default, Curlec
- * (Malaysia, MYR) when `gateway: "curlec"` is sent.
+ * Card top-up entry point: Curlec ONLY (Malaysia, MYR).
  *
- * Stripe Checkout opens a session (Test Mode while STRIPE_SECRET_KEY is a
- * sk_test_ key): card payments for every region. Curlec creates a Razorpay
- * order (Test Mode while CURLEC_KEY_ID is an rzp_test_ key, same host)
- * settled in MYR sen, and the UI completes it with Checkout.js. The
- * response names the gateway so the UI can label it.
+ * Stripe is CLOSED by CTO directive. Every non-`"curlec"` gateway value —
+ * including legacy `gateway: "stripe"` and a missing gateway — fails closed
+ * with 400 `unsupported_gateway`, never a checkout session.
+ *
+ * Curlec creates a Razorpay order (Test Mode while CURLEC_KEY_ID is an
+ * rzp_test_ key, same host) settled in MYR sen, and the UI completes it with
+ * Checkout.js. The response names the gateway so the UI can label it.
  */
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as TopUpBody | null;
@@ -61,60 +57,18 @@ export async function POST(request: NextRequest) {
   const utm = parseUtm(request.nextUrl.search);
 
   try {
-    // Curlec (Malaysia, MYR): explicit gateway choice from the UI card toggle.
-    if (typeof body?.gateway === "string" && body.gateway.toLowerCase() === "curlec") {
-      const declaredInternational = body?.international === true;
-      const order = await createCurlecOrder(body?.amountMyr, ownerRef, body?.email, {
-        origin: request.nextUrl.origin,
-        locale,
-        international: declaredInternational,
-      });
-
-      await logEvent({
-        event: "topup_click",
-        locale,
-        region,
-        variant,
-        utm,
-        visitorKey: visitor.visitorKey,
-        props: {
-          mode: order.mode,
-          provider: "curlec",
-          reference: order.reference,
-          amount: order.amountMYR,
-          baseSen: order.baseSen,
-          surchargeSen: order.surchargeSen,
-          international: order.international,
-        },
-      });
-
-      return NextResponse.json({
-        mode: order.mode,
-        provider: "curlec",
-        checkoutUrl: order.checkoutUrl,
-        // Checkout.js inputs: the UI posts these to Razorpay, no redirect.
-        orderId: order.orderId,
-        keyId: order.keyId,
-        reference: order.reference,
-        amountMyr: order.amountMYR,
-        amountSen: order.totalSen,
-        baseSen: order.baseSen,
-        surchargeSen: order.surchargeSen,
-        international: order.international,
-        amount: order.display,
-        tokens: order.tokens,
-        currency: "MYR",
-        paymentLabel: "Credit / Debit Card (Curlec)",
-      });
+    // Stripe CLOSED: only `gateway: "curlec"` is processed. Everything else
+    // fails closed so no legacy client can open a Stripe session.
+    const gateway = typeof body?.gateway === "string" ? body.gateway.toLowerCase() : "";
+    if (gateway !== "curlec") {
+      return NextResponse.json({ code: "unsupported_gateway" }, { status: 400 });
     }
 
-    // Default: Stripe (ToyyibPay CLOSED, Chip CLOSED — every other value,
-    // including legacy `gateway: "stripe"`, resolves to Stripe).
-    // The `gateway` field is accepted but only "curlec" diverts — kept so
-    // old clients that still send `gateway: "stripe"` keep working.
-    const session = await createStripeCheckoutSession(body?.amountUsd, ownerRef, body?.email, {
+    const declaredInternational = body?.international === true;
+    const order = await createCurlecOrder(body?.amountMyr, ownerRef, body?.email, {
       origin: request.nextUrl.origin,
       locale,
+      international: declaredInternational,
     });
 
     await logEvent({
@@ -125,25 +79,36 @@ export async function POST(request: NextRequest) {
       utm,
       visitorKey: visitor.visitorKey,
       props: {
-        mode: session.mode,
-        provider: "stripe",
-        reference: session.reference,
-        amount: session.usd,
+        mode: order.mode,
+        provider: "curlec",
+        reference: order.reference,
+        amount: order.amountMYR,
+        baseSen: order.baseSen,
+        surchargeSen: order.surchargeSen,
+        international: order.international,
       },
     });
 
     return NextResponse.json({
-      mode: session.mode,
-      provider: "stripe",
-      checkoutUrl: session.checkoutUrl,
-      reference: session.reference,
-      amount: session.display,
-      usd: session.usd,
-      tokens: session.tokens,
-      paymentLabel: "Credit / Debit Card (Stripe)",
+      mode: order.mode,
+      provider: "curlec",
+      checkoutUrl: order.checkoutUrl,
+      // Checkout.js inputs: the UI posts these to Razorpay, no redirect.
+      orderId: order.orderId,
+      keyId: order.keyId,
+      reference: order.reference,
+      amountMyr: order.amountMYR,
+      amountSen: order.totalSen,
+      baseSen: order.baseSen,
+      surchargeSen: order.surchargeSen,
+      international: order.international,
+      amount: order.display,
+      tokens: order.tokens,
+      currency: "MYR",
+      paymentLabel: "Credit / Debit Card (Curlec)",
     });
   } catch (error) {
-    if (error instanceof InvalidStripeEmailError || error instanceof InvalidCurlecEmailError) {
+    if (error instanceof InvalidCurlecEmailError) {
       return NextResponse.json({ code: "invalid_email" }, { status: 400 });
     }
     console.error("[jutaone] top-up session failed", error);
