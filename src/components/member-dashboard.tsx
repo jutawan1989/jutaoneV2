@@ -57,6 +57,8 @@ import { MemberChatFloat, OPEN_CHAT_EVENT } from "@/components/member-chat-float
 import { AFFILIATE_ENSURE_API } from "@/lib/ai-tools";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import { PremiumArt } from "@/components/premium-art";
+import { TelegramIcon } from "@/components/telegram-icon";
+import { TELEGRAM_URL } from "@/lib/contact";
 import { cn } from "@/lib/utils";
 import type { MemberOverview, MemberPayout } from "@/lib/member-data";
 import type { NetworkLevel } from "@/lib/affiliate";
@@ -290,6 +292,9 @@ const DASH_STR = {
     needHelp: "Perlukan bantuan?",
     teamHelp: "Tanya Perunding Bisnes AI kami — jawab serta-merta, 24/7.",
     contactUs: "Buka Chat AI",
+    communityTitle: "Sertai Komuniti Telegram",
+    communityDesc: "Tip bisnes, pengumuman & sokongan — terus di Telegram.",
+    communityButton: "Sertai Telegram",
     referralTitle: "Pautan rujukan anda",
     referralSub: "Kongsi pautan ni kat kawan-kawan. Setiap pembelian masuk terus ke poket rangkaian anda.",
     copyLink: "Salin pautan ni",
@@ -493,6 +498,9 @@ const DASH_STR = {
     needHelp: "Need help?",
     teamHelp: "Ask our AI Business Advisor — instant answers, 24/7.",
     contactUs: "Open AI Chat",
+    communityTitle: "Join the Telegram Community",
+    communityDesc: "Business tips, announcements & support — right on Telegram.",
+    communityButton: "Join Telegram",
     referralTitle: "Your referral link",
     referralSub: "Share this link. Every purchase is recorded straight into your network.",
     copyLink: "Copy link",
@@ -696,6 +704,9 @@ const DASH_STR = {
     needHelp: "Butuh bantuan?",
     teamHelp: "Tanya Konsultan Bisnis AI kami — jawaban instan, 24/7.",
     contactUs: "Buka Chat AI",
+    communityTitle: "Gabung Komunitas Telegram",
+    communityDesc: "Tips bisnis, pengumuman & dukungan — langsung di Telegram.",
+    communityButton: "Gabung Telegram",
     referralTitle: "Tautan rujukan Anda",
     referralSub: "Bagikan tautan ini. Setiap pembelian tercatat langsung ke jaringan Anda.",
     copyLink: "Salin tautan",
@@ -1484,6 +1495,32 @@ export function MemberDashboard({
                       );
                     })}
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className={PANEL}>
+                <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#229ED9]/12 text-[#229ED9] ring-1 ring-[#229ED9]/25 ring-inset">
+                      <TelegramIcon className="size-[18px]" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold text-slate-900">
+                        {t.communityTitle}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500">
+                        {t.communityDesc}
+                      </span>
+                    </span>
+                  </div>
+                  <Button
+                    asChild
+                    className="min-h-[44px] w-full shrink-0 gap-2 rounded-xl bg-[#229ED9] text-xs font-semibold text-white hover:bg-[#1b8ac0] sm:w-auto sm:px-6"
+                  >
+                    <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer">
+                      <TelegramIcon className="size-4" /> {t.communityButton}
+                    </a>
+                  </Button>
                 </CardContent>
               </Card>
 

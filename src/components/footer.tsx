@@ -1,9 +1,10 @@
 import { Logo } from "@/components/logo";
 import { LanguageSwitcher } from "@/components/navbar";
 import { WhatsAppIcon } from "@/components/whatsapp-float";
+import { TelegramIcon } from "@/components/telegram-icon";
 import { format, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
-import { whatsappIntlFor, whatsappUrl } from "@/lib/contact";
+import { TELEGRAM_URL, whatsappIntlFor, whatsappUrl } from "@/lib/contact";
 
 export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const year = new Date().getFullYear();
@@ -41,6 +42,16 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             >
               <WhatsAppIcon className="size-4 text-[#25D366]" />
               <span className="font-semibold tabular-nums">WhatsApp ID: {whatsappIntlFor("id")}</span>
+            </a>
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={dict.contact.telegramLabel}
+              className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
+            >
+              <TelegramIcon className="size-4 text-[#229ED9]" />
+              <span className="font-semibold tabular-nums">{dict.contact.telegramLabel}</span>
             </a>
           </p>
           <p className="text-xs leading-relaxed text-muted/80">{dict.compliance.disclaimer}</p>

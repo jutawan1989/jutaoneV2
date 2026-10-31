@@ -63,9 +63,12 @@ export const WHATSAPP_MY_DIGITS = FALLBACK_MY_DIGITS;
 export const WHATSAPP_MY_SHORT = "011-4965 5880";
 export const WHATSAPP_MY_INTL = "+6011-4965 5880";
 
-export const WHATSAPP_ID_DIGITS = "6287892768208";
+export const WHATSAPP_ID_DIGITS = FALLBACK_ID_DIGITS;
 export const WHATSAPP_ID_SHORT = "0878-9276 8208";
 export const WHATSAPP_ID_INTL = "+62 878-9276 8208";
+
+/** Official JutaOne Telegram channel (CTO spec, 31 Okt 2026). */
+export const TELEGRAM_URL = "https://t.me/JutaOneAi";
 
 /** Legacy default (Malaysia) — kept so old imports keep working. */
 export const WHATSAPP_DIGITS = WHATSAPP_MY_DIGITS;

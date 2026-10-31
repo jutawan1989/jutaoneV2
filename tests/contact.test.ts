@@ -7,6 +7,7 @@ import {
   WHATSAPP_NUMBER_SHORT,
   supportWaIdDigits,
   supportWaMyDigits,
+  TELEGRAM_URL,
   whatsappDigitsFor,
   whatsappShortFor,
   whatsappUrl,
@@ -68,6 +69,10 @@ describe("official WhatsApp contact", () => {
       if (prevId === undefined) delete process.env.NEXT_PUBLIC_SUPPORT_WA_ID;
       else process.env.NEXT_PUBLIC_SUPPORT_WA_ID = prevId;
     }
+  });
+
+  it("exposes the official Telegram channel for Ali's UI", () => {
+    expect(TELEGRAM_URL).toBe("https://t.me/JutaOneAi");
   });
 
   it("encodes prefill text so the link never breaks", () => {

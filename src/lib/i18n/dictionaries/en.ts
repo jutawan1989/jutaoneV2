@@ -205,6 +205,7 @@ export const en = {
   contact: {
     buttonLabel: "Chat with us on WhatsApp",
     linkLabel: "WhatsApp us:",
+    telegramLabel: "Our Telegram",
     prefill: "Hi JutaOne.Biz, I'd like to know more about the AI tokens.",
   },
   waitlist: {

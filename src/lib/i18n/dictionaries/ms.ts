@@ -206,6 +206,7 @@ export const ms: Dictionary = {
   contact: {
     buttonLabel: "Hubungi kami di WhatsApp",
     linkLabel: "WhatsApp kami:",
+    telegramLabel: "Telegram kami",
     prefill: "Hai JutaOne.Biz, saya berminat untuk tahu lebih lanjut tentang token AI.",
   },
   waitlist: {
