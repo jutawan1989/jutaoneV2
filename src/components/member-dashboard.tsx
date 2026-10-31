@@ -288,14 +288,14 @@ const DASH_STR = {
     trialRemaining: "Percubaan berbaki",
     days: "hari",
     manageSubscription: "Urus langganan",
-    notSubscribed: "Belum subscribe — ada 7 hari cuba percuma. Rugi tak cuba!",
+    notSubscribed: "Belum aktif — Sewa Kedai 5,000,000 Token (30 hari).",
     trialLeftDesc: "hari percubaan percuma berbaki.",
     subActiveDesc: "Langganan aktif. Kedai anda dibuka kepada pelanggan.",
     subExpiredDesc: "Langganan tamat. Kedai ditutup kepada pelanggan.",
     rentalFeatures: [
       "Kedai dibuka kepada pelanggan",
       "Pautan kedai boleh dikongsi",
-      "7 hari percubaan percuma",
+      "Bayar dengan Token (Curlec top-up)",
       "Urus produk dari dashboard",
     ],
     affiliateEyebrow: "Program Affiliate",
@@ -494,14 +494,14 @@ const DASH_STR = {
     trialRemaining: "Trial left",
     days: "days",
     manageSubscription: "Manage subscription",
-    notSubscribed: "Not subscribed — 7-day free trial available.",
+    notSubscribed: "Not active — Shop Rental 5,000,000 Tokens (30 days).",
     trialLeftDesc: "free trial days left.",
     subActiveDesc: "Subscription active. Your shop is open to customers.",
     subExpiredDesc: "Subscription expired. Shop is closed to customers.",
     rentalFeatures: [
       "Shop open to customers",
       "Shareable shop link",
-      "7-day free trial",
+      "Pay with Tokens (Curlec top-up)",
       "Manage products from dashboard",
     ],
     affiliateEyebrow: "Affiliate Program",
@@ -700,14 +700,14 @@ const DASH_STR = {
     trialRemaining: "Sisa uji coba",
     days: "hari",
     manageSubscription: "Kelola langganan",
-    notSubscribed: "Belum berlangganan — uji coba gratis 7 hari tersedia.",
+    notSubscribed: "Belum aktif — Sewa Toko 5.000.000 Token (30 hari).",
     trialLeftDesc: "hari uji coba gratis tersisa.",
     subActiveDesc: "Langganan aktif. Toko Anda terbuka untuk pelanggan.",
     subExpiredDesc: "Langganan berakhir. Toko tutup untuk pelanggan.",
     rentalFeatures: [
       "Toko terbuka untuk pelanggan",
       "Tautan toko bisa dibagikan",
-      "Uji coba gratis 7 hari",
+      "Bayar dengan Token (top-up Curlec)",
       "Kelola produk dari dasbor",
     ],
     affiliateEyebrow: "Program Afiliasi",
@@ -1168,8 +1168,7 @@ export function MemberDashboard({
 
   const directShare = totalEarnings > 0 ? Math.round((affiliate.directMinor / totalEarnings) * 100) : 0;
 
-  const trialDays = store.trialDaysLeft ?? 0;
-  const trialPercent = Math.max(0, Math.min(100, Math.round((trialDays / 7) * 100)));
+  void store.trialDaysLeft;
 
   const rankIndex = RANKS_UI.reduce(
     (best, rank, index) => (affiliate.networkSize >= rank.min ? index : best),
@@ -1216,7 +1215,7 @@ export function MemberDashboard({
     setRentBusy(true);
     setRentNote(null);
     try {
-      const response = await fetch("/api/subscription/activate-tokens", { method: "POST" });
+      const response = await fetch("/api/store/activate", { method: "POST" });
       const data = (await response.json().catch(() => null)) as {
         ok?: boolean;
         code?: string;
@@ -1781,11 +1780,11 @@ export function MemberDashboard({
                         </Pill>
                         <Pill tone="slate">
                           <Clock3 className="size-3" />
-                          {store.subscriptionStatus === "trial"
-                            ? `${trialDays} ${t.trialLeftDays}`
-                            : store.subscriptionStatus === "active"
-                              ? t.trialActive
-                              : t.noSubscription}
+                          {store.subscriptionStatus === "active" && rentActive
+                              ? t.subActiveDesc
+                              : store.subscriptionStatus === "active"
+                                ? t.subExpiredDesc
+                                : t.noSubscription}
                         </Pill>
                       </div>
                     </div>
@@ -1865,8 +1864,8 @@ export function MemberDashboard({
                       <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                         {store.subscriptionStatus === null
                           ? t.notSubscribed
-                          : store.subscriptionStatus === "trial"
-                            ? `${trialDays} ${t.trialLeftDesc}`
+                          : store.subscriptionStatus === "active" && rentActive
+                            ? t.subActiveDesc
                             : t.subExpiredDesc}
                       </p>
                     )}
@@ -1880,18 +1879,6 @@ export function MemberDashboard({
                       ))}
                     </ul>
 
-                    {store.subscriptionStatus === "trial" && (
-                      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-slate-500">{t.trialRemaining}</span>
-                          <span className="font-medium text-slate-700 tabular-nums">{trialDays}/7 {t.days}</span>
-                        </div>
-                        <Progress
-                          value={trialPercent}
-                          className="mt-2 h-1.5 bg-slate-200 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-brand [&>[data-slot=progress-indicator]]:to-sky-400"
-                        />
-                      </div>
-                    )}
 
                     {rentActive ? (
                       <Button

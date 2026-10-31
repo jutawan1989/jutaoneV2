@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+/** CTO spec, mirrored from `STORE_RENT_TOKENS` in `lib/rent.ts` (server-only module). */
+const STORE_RENT_TOKENS = 5_000_000;
+const STORE_RENT_DAYS = 30;
 
 /**
- * The "open your store" premium modal.
+ * The "open your store" premium modal — token-only (CTO spec).
  *
- * Two paths, deliberately unequal: the free trial is the primary action because
- * it is what converts a curious merchant, and paying is the secondary. The price
- * is shown in USD with the local approximation beneath it, matching how tokens
- * are priced, so the two products read consistently.
+ * ONE path: 5,000,000 Token = 30 hari via POST /api/store/activate.
+ * Trial/checkout/Stripe/Chip paths are CLOSED (TASK 1).
  *
  * Stability notes (Boss Task 4 — the "Aktifkan Kedai" glitch):
  *   - Rendered with `createPortal` into `document.body`, never inline. The
@@ -27,16 +28,16 @@ import { createPortal } from "react-dom";
 export function StoreSubscriptionModal({
   open,
   onClose,
-  onTrialStarted,
+  onRentActivated,
 }: {
   open: boolean;
   onClose: () => void;
-  onTrialStarted: (trialEndsAt: string) => void;
+  onRentActivated: (paidUntil: string) => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
-  const [busy, setBusy] = useState<"trial" | "pay" | null>(null);
+  const [busy, setBusy] = useState<"rent" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,42 +95,23 @@ export function StoreSubscriptionModal({
 
   if (!open || !mounted) return null;
 
-  async function startTrial() {
-    setBusy("trial");
+  async function activateWithTokens() {
+    if (busy) return;
+    setBusy("rent");
     setError(null);
     try {
-      const response = await fetch("/api/subscription/trial", { method: "POST" });
-      const data = await response.json();
-      if (!response.ok || !data.ok) {
-        setError(
-          data.code === "already_subscribed"
-            ? "Anda sudah mempunyai langganan. Sila log masuk semula."
-            : "Tidak berjaya memulakan percubaan. Sila cuba lagi.",
-        );
-        return;
-      }
-      onTrialStarted(data.trialEndsAt);
-    } catch {
-      setError("Rangkaian bermasalah. Sila cuba lagi.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function subscribeNow() {
-    setBusy("pay");
-    setError(null);
-    try {
-      const response = await fetch("/api/subscription/checkout", { method: "POST" });
-      const data = await response.json();
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      const response = await fetch("/api/store/activate", { method: "POST" });
+      const data = await response.json().catch(() => null);
+      if (response.ok && data?.ok) {
+        onRentActivated(data.paidUntil);
         return;
       }
       setError(
-        data.code === "chip_unavailable"
-          ? "Pembayaran belum tersedia. Cuba percubaan percuma dahulu."
-          : "Tidak berjaya membuka pembayaran.",
+        response.status === 402 || data?.code === "insufficient_tokens"
+          ? "Baki tidak cukup. Sila Top-Up Token."
+          : data?.code === "login_required"
+            ? "Sila log masuk dahulu."
+            : "Tidak berjaya mengaktifkan kedai. Sila cuba lagi.",
       );
     } catch {
       setError("Rangkaian bermasalah. Sila cuba lagi.");
@@ -173,28 +155,21 @@ export function StoreSubscriptionModal({
         </h2>
 
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Aktifkan Kedai Anda Hari Ini. Dapatkan{" "}
-          <span className="font-medium text-white">7 Hari Percubaan Percuma</span>. Selepas itu,
-          hanya <span className="font-medium text-white">$5.00/bulan</span>.
+          Sewa Kedai: <span className="font-medium text-white">{STORE_RENT_TOKENS.toLocaleString("en-US")} Token ({STORE_RENT_DAYS} hari)</span>.
         </p>
 
         <div className="mt-4 rounded-lg border border-line bg-ink/50 p-3.5">
-          <p className="text-[11px] font-medium tracking-[0.1em] text-muted uppercase">
-            Bandingkan
-          </p>
           <p className="mt-1.5 text-xs leading-relaxed text-silver">
-            Shopify caj <span className="font-medium text-white">$29/bulan</span> untuk kedai
-            sahaja. JutaOne.Biz beri anda Kedai + AI Marketing + Pembekal hanya dengan{" "}
-            <span className="font-medium text-white">$5.00</span>.
+            Ditolak daripada baki Token anda. Baki tidak cukup? Top-up melalui Curlec (FPX / kad).
           </p>
         </div>
 
         <ul className="mt-4 space-y-2 border-y border-line py-4 text-sm text-silver">
           {[
-            "Kedai awam dengan badge Verified",
+            "Kedai awam dibuka 30 hari",
             "Pesanan bertulis + invois PDF",
             "Produk tanpa had",
-            "Batal bila-bila masa",
+            "Boleh panjangkan bila-bila masa",
           ].map((item) => (
             <li key={item} className="flex items-start gap-2.5">
               <span aria-hidden className="mt-0.5 text-xs font-semibold text-brand">
@@ -207,20 +182,11 @@ export function StoreSubscriptionModal({
 
         <button
           type="button"
-          onClick={startTrial}
+          onClick={activateWithTokens}
           disabled={busy !== null}
           className="btn-brand mt-5 w-full"
         >
-          {busy === "trial" ? "Mengaktifkan…" : "Start 7-Day Free Trial"}
-        </button>
-
-        <button
-          type="button"
-          onClick={subscribeNow}
-          disabled={busy !== null}
-          className="btn-ghost mt-2.5 w-full"
-        >
-          {busy === "pay" ? "Membuka pembayaran…" : "Subscribe Now ($5)"}
+          {busy ? "Mengaktifkan…" : `Aktifkan Kedai (Tolak ${STORE_RENT_TOKENS.toLocaleString("en-US")} Token)`}
         </button>
 
         {error && (
@@ -230,7 +196,7 @@ export function StoreSubscriptionModal({
         )}
 
         <p className="mt-4 border-t border-line pt-3 text-[11px] leading-relaxed text-muted/80">
-          Tiada kontrak. Boleh batal bila-bila masa. Bayaran diproses oleh Chip.Asia.
+          Tiada kontrak. Sewa dibayar dengan Token, bukan kad.
         </p>
       </div>
     </div>,

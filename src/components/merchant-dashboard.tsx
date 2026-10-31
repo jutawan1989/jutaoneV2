@@ -85,7 +85,7 @@ export function MerchantDashboard({
     setRentBusy(true);
     setRentNote(null);
     try {
-      const res = await fetch("/api/subscription/activate-tokens", { method: "POST" });
+      const res = await fetch("/api/store/activate", { method: "POST" });
       const data = (await res.json().catch(() => null)) as {
         ok?: boolean;
         code?: string;
@@ -309,25 +309,9 @@ export function MerchantDashboard({
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          {!subscription ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                className="btn-brand min-h-[44px] px-3.5 py-2 text-sm"
-              >
-                Buka Kedai
-              </button>
-              <span className="text-xs text-muted">
-                7 hari percubaan percuma, kemudian $5.00/bulan
-              </span>
-            </>
-          ) : subscription.isOpen ? (
+          {rentActive ? (
             <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
-              Kedai aktif
-              {subscription.status === "trial" && subscription.trialDaysLeft !== null
-                ? ` · percubaan ${subscription.trialDaysLeft} hari lagi`
-                : " · Store Pro"}
+              Kedai aktif · sewa token
             </span>
           ) : (
             <>
@@ -339,7 +323,7 @@ export function MerchantDashboard({
                 onClick={() => setModalOpen(true)}
                 className="btn-brand min-h-[44px] px-3.5 py-2 text-sm"
               >
-                Aktifkan semula — $5.00/bulan
+                Aktifkan — 5,000,000 Token
               </button>
             </>
           )}
@@ -349,13 +333,13 @@ export function MerchantDashboard({
       <StoreSubscriptionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onTrialStarted={(trialEndsAt) => {
+        onRentActivated={(paidUntil) => {
           setSubscription({
-            status: "trial",
+            status: "active",
             isOpen: true,
-            trialDaysLeft: 7,
-            trialEndsAt,
-            paidUntil: null,
+            trialDaysLeft: null,
+            trialEndsAt: null,
+            paidUntil,
           });
           setModalOpen(false);
         }}

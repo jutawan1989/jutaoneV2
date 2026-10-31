@@ -1,17 +1,12 @@
-import { randomUUID } from "node:crypto";
 import { getSupabase } from "@/lib/db";
-import { STORE_RENT_TOKENS, chargeTokens, getTokenBalance } from "@/lib/tokens";
 
 /**
- * Store Rent pricing and subscription state.
+ * Store Rent state — token-only (CTO spec): 5,000,000 Token = 30 hari.
  *
- * Rent is a separate product from tokens: $5.00/month, billed in the visitor's
- * local currency the same way a top-up is, with a 7-day trial.
+ * No Stripe, no Chip, no trial. Rent is a token deduction, never a card
+ * payment. Legacy trial/checkout code is CLOSED (see TASK 1 routes).
  */
 
-export const RENT_USD_CENTS = 500;
-export const TRIAL_DAYS = 7;
-/** Billing period granted by one payment. */
 export const RENT_DAYS = 30;
 
 export type SubscriptionStatus = "trial" | "active" | "past_due" | "cancelled";
@@ -74,124 +69,16 @@ export async function getSubscription(ownerRef: string): Promise<Subscription | 
   };
 }
 
-/**
- * Starts the trial.
- *
- * Client-supplied dates are ignored: the end date is computed here, and the
- * unique index on `owner_ref` means a merchant cannot restart the clock by
- * calling this again.
- */
+/** CLOSED by CTO directive (TASK 1): 7-day trial removed. Kept as a stub. */
 export async function startTrial(
-  ownerRef: string,
+  _ownerRef: string,
 ): Promise<{ ok: true; subscription: Subscription } | { ok: false; reason: string }> {
-  const db = getSupabase();
-  if (!db) return { ok: false, reason: "supabase_not_configured" };
-
-  const existing = await getSubscription(ownerRef);
-  if (existing) {
-    // A merchant who already trialled or subscribed cannot trial again.
-    return { ok: false, reason: "already_subscribed" };
-  }
-
-  const trialEnds = new Date(Date.now() + TRIAL_DAYS * 86_400_000).toISOString();
-
-  const { error } = await db
-    .from("store_subscriptions")
-    .insert({
-      owner_ref: ownerRef,
-      plan: "store_pro",
-      status: "trial",
-      trial_ends_at: trialEnds,
-      next_billing_date: trialEnds,
-    })
-    .select("id, status, trial_ends_at, next_billing_date, paid_until")
-    .single();
-
-  if (error) {
-    const taken = /duplicate key|unique/i.test(error.message);
-    return { ok: false, reason: taken ? "already_subscribed" : error.message };
-  }
-
-  const subscription = await getSubscription(ownerRef);
-  return subscription ? { ok: true, subscription } : { ok: false, reason: "read_back_failed" };
+  return { ok: false, reason: "trial_closed" };
 }
 
 /**
- * Store Rent paid in tokens (CTO spec): 5,000,000 Token = 30 hari.
- *
- * Flow: check balance -> charge tokens (unique spend_ref per activation, so a
- * retried request cannot double-deduct) -> extend `paid_until` by RENT_DAYS
- * from max(existing paid_until, now) so early renewal is never punished.
+ * Canonical token-rent activation lives in `src/lib/rent.ts`
+ * (`activateStoreRent`, via POST /api/store/activate). This module keeps
+ * subscription state reads (`getSubscription`); the duplicate charge path
+ * was removed so there is exactly one place that deducts rent.
  */
-export async function activateRentWithTokens(
-  ownerRef: string,
-): Promise<
-  | { ok: true; subscription: Subscription; balanceAfter: number; extended: boolean }
-  | { ok: false; reason: "insufficient" | "ledger_error" | "store_unavailable" | string; balance?: number }
-> {
-  const db = getSupabase();
-  if (!db) return { ok: false, reason: "store_unavailable" };
-
-  const balance = await getTokenBalance(ownerRef);
-  if (balance < STORE_RENT_TOKENS) {
-    return { ok: false, reason: "insufficient", balance };
-  }
-
-  const spendRef = `store-rent:${ownerRef.slice(0, 24)}:${Date.now()}:${randomUUID().slice(0, 8)}`;
-  const charge = await chargeTokens({
-    visitorKey: ownerRef,
-    cost: STORE_RENT_TOKENS,
-    reference: spendRef,
-    note: `store-rent:${RENT_DAYS}d`,
-  });
-  if (!charge.ok) {
-    return { ok: false, reason: charge.reason, balance };
-  }
-
-  const existing = await getSubscription(ownerRef);
-  const baseMs = Math.max(
-    Date.now(),
-    existing?.paidUntil ? new Date(existing.paidUntil).getTime() : 0,
-  );
-  const paidUntil = new Date(baseMs + RENT_DAYS * 86_400_000).toISOString();
-
-  if (existing) {
-    const { error } = await db
-      .from("store_subscriptions")
-      .update({
-        status: "active",
-        paid_until: paidUntil,
-        next_billing_date: paidUntil,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("owner_ref", ownerRef);
-    if (error) return { ok: false, reason: error.message, balance: charge.balanceAfter };
-  } else {
-    const { error } = await db.from("store_subscriptions").insert({
-      owner_ref: ownerRef,
-      plan: "store_pro",
-      status: "active",
-      paid_until: paidUntil,
-      next_billing_date: paidUntil,
-    });
-    if (error) {
-      // A concurrent activation won the race — re-read instead of failing.
-      if (/duplicate key|unique/i.test(error.message)) {
-        const retry = await getSubscription(ownerRef);
-        if (retry) {
-          return { ok: true, subscription: retry, balanceAfter: charge.balanceAfter, extended: true };
-        }
-      }
-      return { ok: false, reason: error.message, balance: charge.balanceAfter };
-    }
-  }
-
-  const subscription = await getSubscription(ownerRef);
-  if (!subscription) return { ok: false, reason: "read_back_failed", balance: charge.balanceAfter };
-  return {
-    ok: true,
-    subscription,
-    balanceAfter: charge.balanceAfter,
-    extended: Boolean(existing?.isOpen),
-  };
-}
