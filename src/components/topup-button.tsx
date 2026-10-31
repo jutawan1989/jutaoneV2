@@ -55,13 +55,23 @@ export function buildTopUpRequestBody(input: {
 export type TopUpFailure = "email" | "service" | "checkout" | "failed" | "generic";
 
 /**
- * Maps an API error `code` to a failure class. `invalid_email` (400) means
- * the receipt address was rejected; `topup_unavailable` (502) means Curlec
- * itself failed — nothing was charged, retry is safe.
+ * Maps an API error `code` (+ HTTP `status` when the body is missing) to a
+ * failure class. `invalid_email` (400, empty email) means the receipt address
+ * was rejected — never show the generic "masalah teknikal" for it.
+ * `topup_unavailable` (502) means Curlec itself failed — nothing was charged,
+ * retry is safe. Generic ("Alamak, ada masalah teknikal") is reserved for
+ * true server failures (5xx).
  */
-export function classifyTopUpErrorCode(code: unknown): TopUpFailure {
+export function classifyTopUpErrorCode(code: unknown, status?: unknown): TopUpFailure {
   if (code === "invalid_email") return "email";
   if (code === "topup_unavailable") return "service";
+  if (typeof status === "number") {
+    // Body-less 400 (e.g. proxy strips JSON): empty email is the only 400
+    // this endpoint emits without a specific code path — treat as email.
+    if (status === 400 && (code == null || code === "")) return "email";
+    if (status === 502 || status === 503 || status === 504) return "service";
+    if (status >= 500) return "generic";
+  }
   return "generic";
 }
 
@@ -175,7 +185,7 @@ export function TopUpButton({
         amountSen?: number | null;
       } | null;
       if (!response.ok) {
-        setFailure(classifyTopUpErrorCode(data?.code));
+        setFailure(classifyTopUpErrorCode(data?.code, response.status));
         return;
       }
       if (data?.checkoutUrl) {

@@ -183,7 +183,7 @@ export const ms: Dictionary = {
     proceed: "Teruskan ke Pembayaran",
     trustBadge: "Pembayaran selamat diproses oleh Curlec",
     invalidAmount: "Top-up minimum ialah $1.00",
-    invalidEmail: "Masukkan emel yang sah — kod pembayaran dihantar ke sana",
+    invalidEmail: "Sila masukkan alamat email yang sah untuk resit.",
     tokenUnit: "Token",
     tokensFor: "Anda dapat",
     paymentMethodTitle: "Kaedah pembayaran",
