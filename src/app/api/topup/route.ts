@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       amount: order.display,
       tokens: order.tokens,
       currency: "MYR",
-      paymentLabel: "Credit / Debit Card (Curlec)",
+      paymentLabel: "FPX / Kad (Curlec)",
     });
   } catch (error) {
     if (error instanceof InvalidCurlecEmailError) {

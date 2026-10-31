@@ -229,6 +229,10 @@ describe("curlec order creation (Test Mode)", () => {
     expect(body.currency).toBe(CURLEC_CURRENCY);
     expect(body.receipt).toBe(order.reference);
     expect((body.notes as Record<string, unknown>).owner_ref).toBe(OWNER);
+    // Kunci CTO: jangan paksa `method: 'card'` — tanpa method/payment_method
+    // Curlec papar semua kaedah aktif (FPX + kad).
+    expect(body).not.toHaveProperty("method");
+    expect(body).not.toHaveProperty("payment_method");
   });
 
   it("locks +3% into the order when a foreign card is declared", async () => {
