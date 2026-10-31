@@ -1,18 +1,9 @@
 import { Logo } from "@/components/logo";
 import { LanguageSwitcher } from "@/components/navbar";
 import { WhatsAppIcon } from "@/components/whatsapp-float";
-import { Phone } from "lucide-react";
 import { format, type Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
-import {
-  WHATSAPP_ID_INTL,
-  WHATSAPP_ID_SHORT,
-  WHATSAPP_ID_TEL_URL,
-  WHATSAPP_MY_INTL,
-  WHATSAPP_MY_SHORT,
-  WHATSAPP_MY_TEL_URL,
-  whatsappUrl,
-} from "@/lib/contact";
+import { whatsappIntlFor, whatsappUrl } from "@/lib/contact";
 
 export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const year = new Date().getFullYear();
@@ -32,13 +23,6 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
         <div className="mt-10 space-y-2 border-t border-white/[0.06] pt-6">
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-silver">
             <a
-              href={WHATSAPP_MY_TEL_URL}
-              className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
-            >
-              <Phone className="size-4 shrink-0 text-emerald-400" aria-hidden />
-              <span className="font-semibold tabular-nums">{WHATSAPP_MY_INTL} (MY)</span>
-            </a>
-            <a
               href={whatsappUrl(dict.contact.prefill, "ms")}
               target="_blank"
               rel="noopener noreferrer"
@@ -46,14 +30,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
               className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
             >
               <WhatsAppIcon className="size-4 text-[#25D366]" />
-              <span className="font-semibold tabular-nums">{WHATSAPP_MY_SHORT} (MY)</span>
-            </a>
-            <a
-              href={WHATSAPP_ID_TEL_URL}
-              className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
-            >
-              <Phone className="size-4 shrink-0 text-emerald-400" aria-hidden />
-              <span className="font-semibold tabular-nums">{WHATSAPP_ID_INTL} (ID)</span>
+              <span className="font-semibold tabular-nums">WhatsApp MY: {whatsappIntlFor("ms")}</span>
             </a>
             <a
               href={whatsappUrl(dict.contact.prefill, "id")}
@@ -63,7 +40,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
               className="inline-flex min-h-[44px] items-center gap-1.5 transition-colors hover:text-white"
             >
               <WhatsAppIcon className="size-4 text-[#25D366]" />
-              <span className="font-semibold tabular-nums">{WHATSAPP_ID_SHORT} (ID)</span>
+              <span className="font-semibold tabular-nums">WhatsApp ID: {whatsappIntlFor("id")}</span>
             </a>
           </p>
           <p className="text-xs leading-relaxed text-muted/80">{dict.compliance.disclaimer}</p>

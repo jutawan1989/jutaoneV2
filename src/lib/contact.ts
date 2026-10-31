@@ -59,20 +59,13 @@ function intlFrom(digits: string): string {
   return `+${digits}`;
 }
 
-/** Masked tel: link — keeps the full number out of the markup. */
-function maskedTelFrom(digits: string): string {
-  return `tel:+${digits.slice(0, 3)}****${digits.slice(-4)}`;
-}
-
 export const WHATSAPP_MY_DIGITS = FALLBACK_MY_DIGITS;
 export const WHATSAPP_MY_SHORT = "011-4965 5880";
 export const WHATSAPP_MY_INTL = "+6011-4965 5880";
-export const WHATSAPP_MY_TEL_URL = "tel:+601149655880";
 
 export const WHATSAPP_ID_DIGITS = "6287892768208";
 export const WHATSAPP_ID_SHORT = "0878-9276 8208";
 export const WHATSAPP_ID_INTL = "+62 878-9276 8208";
-export const WHATSAPP_ID_TEL_URL = "tel:+6287892768208";
 
 /** Legacy default (Malaysia) — kept so old imports keep working. */
 export const WHATSAPP_DIGITS = WHATSAPP_MY_DIGITS;
@@ -80,7 +73,6 @@ export const WHATSAPP_DIGITS = WHATSAPP_MY_DIGITS;
 export const WHATSAPP_NUMBER_SHORT = WHATSAPP_MY_SHORT;
 /** Human display, international format. */
 export const WHATSAPP_NUMBER_INTL = WHATSAPP_MY_INTL;
-export const WHATSAPP_TEL_URL = WHATSAPP_MY_TEL_URL;
 
 export function isIdLocale(locale: Locale | string | undefined | null): boolean {
   return locale === "id";
@@ -109,16 +101,6 @@ export function whatsappIntlFor(locale: Locale | string | undefined | null): str
   }
   const digits = supportWaMyDigits();
   return digits === FALLBACK_MY_DIGITS ? WHATSAPP_MY_INTL : intlFrom(digits);
-}
-
-/** tel: link for the active locale. */
-export function whatsappTelUrlFor(locale: Locale | string | undefined | null): string {
-  if (isIdLocale(locale)) {
-    const digits = supportWaIdDigits();
-    return digits === FALLBACK_ID_DIGITS ? WHATSAPP_ID_TEL_URL : maskedTelFrom(digits);
-  }
-  const digits = supportWaMyDigits();
-  return digits === FALLBACK_MY_DIGITS ? WHATSAPP_MY_TEL_URL : maskedTelFrom(digits);
 }
 
 /** wa.me chat link with a locale-aware pre-filled message. */

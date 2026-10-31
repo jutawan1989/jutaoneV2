@@ -5,7 +5,6 @@ import {
   WHATSAPP_MY_DIGITS,
   WHATSAPP_NUMBER_INTL,
   WHATSAPP_NUMBER_SHORT,
-  WHATSAPP_TEL_URL,
   supportWaIdDigits,
   supportWaMyDigits,
   whatsappDigitsFor,
@@ -19,7 +18,6 @@ describe("official WhatsApp contact", () => {
     expect(WHATSAPP_DIGITS).toBe("601149655880");
     expect(WHATSAPP_NUMBER_SHORT).toBe("011-4965 5880");
     expect(WHATSAPP_NUMBER_INTL).toBe("+6011-4965 5880");
-    expect(WHATSAPP_TEL_URL).toBe("tel:+601149655880");
     expect(WHATSAPP_ID_DIGITS).toBe("6287892768208");
   });
 
