@@ -1,5 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
-import { trackingPixelIds, trackingSnippets } from "@/lib/tracking";
+import { TrackingPixels } from "@/components/tracking-pixels";
+import { trackingPixelIds, trackingPixelsHtml, trackingSnippets } from "@/lib/tracking";
 
 const KEYS = [
   "NEXT_PUBLIC_META_PIXEL_ID",
@@ -48,5 +51,23 @@ describe("tracking pixels (Lead Ads placeholders)", () => {
     const snippets = trackingSnippets(trackingPixelIds());
     expect(snippets.map((s) => s.id)).toEqual(["linkedin-pixel"]);
     expect(snippets[0].html).toContain('_linkedin_partner_id="777888"');
+  });
+
+  it("imports the real component without a syntax failure (Hermes report)", () => {
+    // No IDs: the component renders nothing.
+    expect(renderToStaticMarkup(createElement(TrackingPixels))).toBe("");
+    // With an ID: one container with the script and the noscript fallback.
+    process.env.NEXT_PUBLIC_META_PIXEL_ID = "1234567890";
+    const html = renderToStaticMarkup(createElement(TrackingPixels));
+    expect(html).toContain('id="tracking-pixels"');
+    expect(html).toContain("fbq('init','1234567890')");
+    expect(html).toContain("https://www.facebook.com/tr?id=1234567890");
+  });
+
+  it("builds the combined container HTML", () => {
+    process.env.NEXT_PUBLIC_X_PIXEL_ID = "x-1";
+    const html = trackingPixelsHtml(trackingPixelIds());
+    expect(html).toContain('<script id="x-pixel">');
+    expect(html).toContain("twq('config','x-1')");
   });
 });

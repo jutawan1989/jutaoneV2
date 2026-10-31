@@ -40,8 +40,7 @@ export type TrackingSnippet = {
 };
 
 /** Inline bodies for every configured vendor, in render order. */
-export function trackingSnippets(ids: TrackingIds): TrackingSnippet[] {
-  const out: TrackingSnippet[] = [];
+export function trackingSnippets(ids: TrackingIds): TrackingSnippet[] {  const out: TrackingSnippet[] = [];
   if (ids.meta) {
     out.push({
       id: "meta-pixel",
@@ -71,4 +70,20 @@ export function trackingSnippets(ids: TrackingIds): TrackingSnippet[] {
     });
   }
   return out;
+}
+
+/**
+ * Combined inner HTML for the `<div id="tracking-pixels">` container.
+ * Scripts and the Meta noscript fallback are concatenated as raw HTML so the
+ * React component stays trivially simple (no nested JSX constructs for
+ * bundlers/test runners to trip over).
+ */
+export function trackingPixelsHtml(ids: TrackingIds): string {
+  return trackingSnippets(ids)
+    .map((s) =>
+      s.noscriptImg
+        ? `<script id="${s.id}">${s.html}</script><noscript><img height="1" width="1" style="display:none" alt="" src="${s.noscriptImg}"/></noscript>`
+        : `<script id="${s.id}">${s.html}</script>`,
+    )
+    .join("");
 }
