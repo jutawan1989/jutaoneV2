@@ -25,7 +25,7 @@ export type AffiliateSummary = {
   totalPeople: number;
   /** Tier 1 earnings, which are direct referrals rather than passive. */
   directMinor: number;
-  /** Tiers 2-19: the network share of the commission. */
+  /** Tiers 2+: the network share of the commission. */
   passiveMinor: number;
   /** Available now (unpaid minus reserved payouts). */
   availableMinor: number;
@@ -33,11 +33,39 @@ export type AffiliateSummary = {
 };
 
 /**
+ * Commission schedule for DISPLAY (CTO final: 3-Level + Bonus Pencapaian).
+ *
+ * - Level 1 (direct referrals): 50%
+ * - Level 2: 10%
+ * - Level 3: 5%
+ * - Bonus Pencapaian: 5% (sehingga 70% jumlah keseluruhan)
+ *
+ * Exported as data so every UI (dashboard tab, affiliate page) renders one
+ * schedule: two copies of a payout rate is exactly how a member ends up
+ * seeing a number that disagrees with their own payout.
+ */
+export const COMMISSION_LEVELS = [
+  { level: 1, percent: 50 },
+  { level: 2, percent: 10 },
+  { level: 3, percent: 5 },
+] as const;
+
+/** Bonus Pencapaian: +5% on top of the 3 levels (max 70% total). */
+export const ACHIEVEMENT_BONUS_PERCENT = 5;
+
+/** Headline ceiling across 50 + 10 + 5 + 5. */
+export const MAX_COMMISSION_PERCENT = 70;
+
+/**
  * Commission percentages, mirrored from `jutaone_level_bps` for display.
  *
  * Exported so the member dashboard can summarise the referral commission
  * without duplicating the schedule: two copies of a payout rate is exactly
  * how a member ends up seeing a number that disagrees with their own payout.
+ *
+ * NOTE: the advertised customer-facing schedule is the 3-Level structure in
+ * `COMMISSION_LEVELS` above. This function mirrors the ledger/DB schedule
+ * (used by the money-contract tests) — do not repurpose it for UI copy.
  */
 export function percentFor(level: number): number {
   if (level === 1) return 50;
@@ -139,8 +167,8 @@ async function buildSummary(
     console.error("[jutaone] network counts failed", countsError.message);
   }
 
-  // `jutaone_network_counts` returns a stable 19 rows including zeros, so the
-  // table never shifts shape as a network grows.
+  // `jutaone_network_counts` returns one stable row per tier including zeros,
+  // so the table never shifts shape as a network grows.
   const rows = (counts ?? []) as Array<{
     level: number;
     people: number;

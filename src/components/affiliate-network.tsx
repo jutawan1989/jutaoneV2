@@ -1,4 +1,9 @@
 import type { AffiliateSummary } from "@/lib/affiliate";
+import {
+  ACHIEVEMENT_BONUS_PERCENT,
+  COMMISSION_LEVELS,
+  MAX_COMMISSION_PERCENT,
+} from "@/lib/affiliate";
 
 function money(minor: number, currency: string): string {
   const value = minor / 100;
@@ -9,10 +14,9 @@ function money(minor: number, currency: string): string {
 /**
  * Affiliate program dashboard: professional referral summary.
  *
- * Compliance (Chip.Asia): no MLM-flavoured breakdown is shown here — only
- * aggregate referral counts and commission amounts, plus one plain-language
- * line explaining the commission. The per-level payout schedule lives in the
- * database, not in the UI.
+ * CTO final: 3-Level commission (L1 50% / L2 10% / L3 5%) + 5% Bonus
+ * Pencapaian (max 70%). No 19-level / matrix breakdown is shown anywhere —
+ * only aggregate counts, earned amounts, and this plain 3-level schedule.
  */
 export function AffiliateNetwork({
   summary,
@@ -25,6 +29,58 @@ export function AffiliateNetwork({
   /** True when the code was malformed or matched no network. */
   invalidCode?: boolean;
 }) {
+  const levelNames = ["Rujukan langsung", "Rangkaian Level 2", "Rangkaian Level 3"];
+
+  const structure = (
+    <section aria-label="Struktur komisen" className="card mt-6 p-5 sm:p-6">
+      <p className="text-[11px] font-medium tracking-[0.12em] text-brand uppercase">
+        Struktur Komisen 3-Level
+      </p>
+      <h2 className="mt-2 text-base font-semibold text-white">
+        Jelas &amp; mudah — sehingga {MAX_COMMISSION_PERCENT}% komisen tunai
+      </h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {COMMISSION_LEVELS.map((tier, index) => (
+          <div
+            key={tier.level}
+            className={`relative overflow-hidden rounded-xl border p-4 ${
+              index === 0
+                ? "border-emerald-500/40 bg-emerald-500/[0.08]"
+                : "border-white/[0.08] bg-white/[0.02]"
+            }`}
+          >
+            <p className="text-[11px] font-medium tracking-[0.12em] text-muted uppercase">
+              Level {tier.level}
+            </p>
+            <p className="mt-1 text-3xl font-semibold tracking-tight text-white tabular-nums">
+              {tier.percent}
+              <span className="text-lg text-muted">%</span>
+            </p>
+            <p className="mt-1 text-xs text-silver">{levelNames[index]}</p>
+          </div>
+        ))}
+        <div className="relative overflow-hidden rounded-xl border border-amber-400/40 bg-amber-400/[0.07] p-4">
+          <p className="text-[11px] font-medium tracking-[0.12em] text-amber-300 uppercase">
+            Bonus Pencapaian
+          </p>
+          <p className="mt-1 text-3xl font-semibold tracking-tight text-white tabular-nums">
+            {ACHIEVEMENT_BONUS_PERCENT}
+            <span className="text-lg text-muted">%</span>
+          </p>
+          <p className="mt-1 text-xs text-silver">Ganjaran pencapaian jualan anda</p>
+        </div>
+      </div>
+      <p className="mt-4 max-w-prose text-sm leading-relaxed text-silver">
+        Setiap pembelian software oleh rakan yang anda rujuk membayar mengikut
+        level mereka — Level 1: 50%, Level 2: 10%, Level 3: 5% — tambah Bonus
+        Pencapaian 5%. Kongsi pautan, selebihnya automatik.
+      </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted/80">
+        Jumlah di atas dikemas kini automatik selepas setiap pembelian yang layak.
+      </p>
+    </section>
+  );
+
   if (!summary) {
     return (
       <main className="mx-auto w-full max-w-3xl px-5 py-12 sm:px-6">
@@ -57,11 +113,13 @@ export function AffiliateNetwork({
               mengumpul rakan dirujuk dan komisen tunai.
             </p>
             <p className="mt-3 text-xs leading-relaxed text-muted">
-              Dapatkan komisen tunai sehingga 70% daripada setiap pembelian software
-              oleh rakan yang anda rujuk.
+              Dapatkan komisen tunai sehingga {MAX_COMMISSION_PERCENT}% — Level 1: 50%,
+              Level 2: 10%, Level 3: 5%, tambah Bonus Pencapaian 5%.
             </p>
           </section>
         )}
+
+        {structure}
       </main>
     );
   }
@@ -108,17 +166,7 @@ export function AffiliateNetwork({
         </div>
       </section>
 
-      <section aria-label="Penerangan komisen" className="card mt-6 p-5 sm:p-6">
-        <h2 className="text-base font-semibold text-white">Bagaimana komisen berfungsi</h2>
-        <p className="mt-2 max-w-prose text-sm leading-relaxed break-words text-silver">
-          Dapatkan komisen tunai sehingga 70% daripada setiap pembelian software
-          oleh rakan yang anda rujuk — 50% komisen langsung dan sehingga 20%
-          daripada rangkaian anda. Kongsi pautan, selebihnya automatik.
-        </p>
-        <p className="mt-2 text-[11px] leading-relaxed break-words text-muted/80">
-          Jumlah di atas dikemas kini automatik selepas setiap pembelian yang layak.
-        </p>
-      </section>
+      {structure}
     </main>
   );
 }
